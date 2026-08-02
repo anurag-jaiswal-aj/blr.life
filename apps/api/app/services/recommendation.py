@@ -16,6 +16,8 @@ class CandidateLocality:
     id: int
     slug: str
     name: str
+    lat: float
+    lng: float
     work_distance_km: float
     metro_distance_m: float | None
     metro_confidence: str | None
@@ -133,7 +135,9 @@ def rank_candidates(
 
         explanations = generate_explanations(candidate, constraints)
 
-        metadata: dict[str, Any] = {}
+        metadata: dict[str, Any] = {
+            "coordinates": {"lat": candidate.lat, "lng": candidate.lng}
+        }
         if candidate.metro_extra_data:
             metadata["nearest_metro_station"] = {
                 "name": candidate.metro_extra_data.get("nearest_station_name"),

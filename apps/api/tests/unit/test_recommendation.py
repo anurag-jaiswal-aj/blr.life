@@ -45,6 +45,8 @@ def test_score_calculation_weights() -> None:
         id=1,
         slug="hsr-layout",
         name="HSR Layout",
+            lat=12.0,
+            lng=77.0,
         work_distance_km=2.0,  # norm = 1.0
         metro_distance_m=500.0,  # norm = 1.0
         metro_confidence="high",
@@ -55,6 +57,8 @@ def test_score_calculation_weights() -> None:
         id=2,
         slug="bellandur",
         name="Bellandur",
+            lat=12.0,
+            lng=77.0,
         work_distance_km=15.0,  # norm = 0.0
         metro_distance_m=3000.0,  # norm = 0.0
         metro_confidence="high",
@@ -65,6 +69,8 @@ def test_score_calculation_weights() -> None:
         id=3,
         slug="indiranagar",
         name="Indiranagar",
+            lat=12.0,
+            lng=77.0,
         work_distance_km=2.0,  # norm = 1.0
         metro_distance_m=3000.0,  # norm = 0.0
         metro_confidence="high",
@@ -75,6 +81,8 @@ def test_score_calculation_weights() -> None:
         id=4,
         slug="missing-metro",
         name="Missing Metro",
+            lat=12.0,
+            lng=77.0,
         work_distance_km=2.0,  # norm = 1.0
         metro_distance_m=None,  # norm = None
         metro_confidence=None,
@@ -85,6 +93,8 @@ def test_score_calculation_weights() -> None:
         id=5,
         slug="insufficient-metro",
         name="Insufficient Metro",
+            lat=12.0,
+            lng=77.0,
         work_distance_km=15.0,  # norm = 0.0
         metro_distance_m=500.0,  # norm = None (due to confidence)
         metro_confidence="insufficient",
@@ -140,6 +150,8 @@ def test_explanation_generation_rules() -> None:
         id=1,
         slug="a",
         name="a",
+            lat=12.0,
+            lng=77.0,
         work_distance_km=4.0,
         metro_distance_m=800.0,
         metro_confidence="high",
@@ -150,6 +162,8 @@ def test_explanation_generation_rules() -> None:
         id=2,
         slug="b",
         name="b",
+            lat=12.0,
+            lng=77.0,
         work_distance_km=16.0,
         metro_distance_m=4000.0,
         metro_confidence="high",
@@ -160,6 +174,8 @@ def test_explanation_generation_rules() -> None:
         id=3,
         slug="c",
         name="c",
+            lat=12.0,
+            lng=77.0,
         work_distance_km=10.0,
         metro_distance_m=None,
         metro_confidence=None,
@@ -170,6 +186,8 @@ def test_explanation_generation_rules() -> None:
         id=4,
         slug="d",
         name="d",
+            lat=12.0,
+            lng=77.0,
         work_distance_km=10.0,
         metro_distance_m=800.0,
         metro_confidence="insufficient",
@@ -200,6 +218,8 @@ def test_tie_breaking_slug_asc() -> None:
         id=1,
         slug="z-area",
         name="Z Area",
+            lat=12.0,
+            lng=77.0,
         work_distance_km=2.0,
         metro_distance_m=500.0,
         metro_confidence="high",
@@ -210,6 +230,8 @@ def test_tie_breaking_slug_asc() -> None:
         id=2,
         slug="a-area",
         name="A Area",
+            lat=12.0,
+            lng=77.0,
         work_distance_km=2.0,
         metro_distance_m=500.0,
         metro_confidence="high",
@@ -230,6 +252,8 @@ def test_hard_constraint_work_distance() -> None:
         id=1,
         slug="near",
         name="Near",
+            lat=12.0,
+            lng=77.0,
         work_distance_km=5.0,
         metro_distance_m=500.0,
         metro_confidence="high",
@@ -240,6 +264,8 @@ def test_hard_constraint_work_distance() -> None:
         id=2,
         slug="far",
         name="Far",
+            lat=12.0,
+            lng=77.0,
         work_distance_km=20.0,
         metro_distance_m=500.0,
         metro_confidence="high",

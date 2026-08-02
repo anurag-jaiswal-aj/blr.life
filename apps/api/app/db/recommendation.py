@@ -24,6 +24,8 @@ async def get_candidate_localities(
             Locality.id,
             Locality.slug,
             Locality.name,
+            func.ST_Y(Locality.centroid).label("lat"),
+            func.ST_X(Locality.centroid).label("lng"),
             (
                 func.ST_DistanceSphere(Locality.centroid, func.ST_GeomFromEWKT(work_point)) / 1000.0
             ).label("work_distance_km"),
@@ -51,6 +53,8 @@ async def get_candidate_localities(
                 id=row.id,
                 slug=row.slug,
                 name=row.name,
+                lat=float(row.lat),
+                lng=float(row.lng),
                 work_distance_km=float(row.work_distance_km),
                 metro_distance_m=float(row.metro_distance_m)
                 if row.metro_distance_m is not None
