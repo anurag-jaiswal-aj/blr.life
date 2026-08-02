@@ -48,3 +48,6 @@ ignore_missing_imports = true
 testpaths = ["tests"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff.format]
+exclude = ["alembic/versions/0001_*.py", "alembic/versions/0002_*.py", "alembic/versions/0003_*.py"]

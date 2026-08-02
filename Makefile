@@ -50,3 +50,14 @@ ingest-real-dry-run:
 ingest-real:
 	cd apps/api && uv run python -m app.ingestion.cli ingest --file ../../data/curated/bengaluru_localities_v1.json
 
+ingest-metro-dry-run:
+	cd apps/api && DATABASE_URL="postgresql+asyncpg://blrlife:blrlife_dev_password@localhost:5432/blrlife_test" uv run python -m app.ingestion.cli ingest-metro-data --file ../../data/curated/bengaluru_metro_stations_v1.json --dry-run
+
+ingest-metro:
+	cd apps/api && uv run python -m app.ingestion.cli ingest-metro-data --file ../../data/curated/bengaluru_metro_stations_v1.json
+
+calculate-metrics-dry-run:
+	cd apps/api && DATABASE_URL="postgresql+asyncpg://blrlife:blrlife_dev_password@localhost:5432/blrlife_test" uv run python -m app.ingestion.cli calculate-metro-metrics --dry-run
+
+calculate-metrics:
+	cd apps/api && uv run python -m app.ingestion.cli calculate-metro-metrics

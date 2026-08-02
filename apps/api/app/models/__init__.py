@@ -11,6 +11,7 @@ from app.models.locality import (
     Locality,
     LocalityAlias,
 )
+from app.models.metro import MetroStation
 from app.models.observations import (
     HousingConfiguration,
     LocalityMetric,
@@ -31,6 +32,7 @@ __all__ = [
     # locality
     "Locality",
     "LocalityAlias",
+    "MetroStation",
     # observations
     "LocalityMetric",
     "LocalityRentObservation",

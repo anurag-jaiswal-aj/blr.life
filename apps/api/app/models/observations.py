@@ -39,6 +39,7 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -283,6 +284,14 @@ class LocalityMetric(Base):
     calculated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
+    )
+
+    # Optional unstructured metadata for explainability
+    # e.g., {"nearest_station_slug": "indiranagar"}
+    extra_data = mapped_column(
+        "extra_data",
+        JSONB,
+        nullable=True,
     )
 
     # Which dataset snapshot was the input to this calculation

@@ -31,6 +31,30 @@ def parse_args() -> argparse.Namespace:
         help="Run the ingestion process without committing changes to the database",
     )
 
+    ingest_metro_parser = subparsers.add_parser(
+        "ingest-metro-data", help="Run a metro data ingestion payload"
+    )
+    ingest_metro_parser.add_argument(
+        "--file",
+        type=str,
+        required=True,
+        help="Path to the JSON payload file",
+    )
+    ingest_metro_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Run without committing changes",
+    )
+
+    calculate_metro_parser = subparsers.add_parser(
+        "calculate-metro-metrics", help="Calculate metro distance metrics"
+    )
+    calculate_metro_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Run without committing changes",
+    )
+
     return parser.parse_args()
 
 
@@ -76,11 +100,71 @@ async def ingest_command(file_path: str, dry_run: bool) -> None:
             sys.exit(1)
 
 
+async def ingest_metro_command(file_path: str, dry_run: bool) -> None:
+    from app.ingestion.metro_models import IngestMetroPayload
+    from app.ingestion.metro_pipeline import run_metro_ingestion
+
+    path = Path(file_path)
+    if not path.is_file():
+        logger.error(f"File not found: {file_path}")
+        sys.exit(1)
+
+    try:
+        with open(path, "rb") as f:
+            raw_bytes = f.read()
+        raw_data = json.loads(raw_bytes.decode("utf-8"))
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON: {e}")
+        sys.exit(1)
+
+    try:
+        payload = IngestMetroPayload.model_validate(raw_data)
+        content_checksum = hashlib.sha256(
+            payload.model_dump_json(serialize_as_any=True).encode("utf-8")
+        ).hexdigest()
+    except ValidationError as e:
+        logger.error(f"Payload validation failed: {e}")
+        sys.exit(1)
+
+    async with AsyncSessionLocal() as session:
+        try:
+            stats = await run_metro_ingestion(
+                session, payload, dry_run=dry_run, content_checksum=content_checksum
+            )
+            logger.info(
+                f"Metro ingestion completed. Created: {stats['created']}, "
+                f"Updated: {stats['updated']}, Unchanged: {stats.get('unchanged', 0)}, "
+                f"Deactivated: {stats.get('deactivated', 0)}"
+            )
+        except Exception as e:
+            logger.error(f"Ingestion failed: {e}")
+            sys.exit(1)
+
+
+async def calculate_metro_metrics_command(dry_run: bool) -> None:
+    from app.ingestion.metro_pipeline import calculate_metro_metrics
+
+    async with AsyncSessionLocal() as session:
+        try:
+            stats = await calculate_metro_metrics(session, dry_run=dry_run)
+            logger.info(
+                f"Metrics calculation completed. Created: {stats['created']}, "
+                f"Updated: {stats['updated']}, Unchanged: {stats.get('unchanged', 0)}"
+            )
+        except Exception as e:
+            logger.error(f"Calculation failed: {e}")
+            sys.exit(1)
+
+
 async def main_async() -> None:
     args = parse_args()
 
     if args.command == "ingest":
         await ingest_command(file_path=args.file, dry_run=args.dry_run)
+    elif args.command == "ingest-metro-data":
+        await ingest_metro_command(file_path=args.file, dry_run=args.dry_run)
+    elif args.command == "calculate-metro-metrics":
+        await calculate_metro_metrics_command(dry_run=args.dry_run)
 
 
 def main() -> None:
