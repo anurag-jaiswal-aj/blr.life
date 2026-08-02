@@ -1,86 +1,107 @@
 # Domain Model
 
-## Conceptual Entities
+This document outlines the core domain entities and relationships implemented in **blr.life** (Work Unit #4: Domain Schema & PostGIS Foundation).
 
-### `Area` (Neighbourhood)
-The core geographical unit (e.g., HSR Layout, Indiranagar).
-- **Attributes**: `id`, `name`, `slug`, `geometry` (PostGIS Polygon), `centroid` (PostGIS Point), `is_active`.
-- **Responsibilities**: Represents the boundaries and core identity of a neighbourhood.
+---
 
-### `AreaMetric`
-Normalized data points associated with an area (e.g., average rent, cafe density).
-- **Attributes**: `id`, `area_id`, `metric_type`, `value` (numeric), `confidence_score` (0.0 - 1.0), `updated_at`.
-- **Responsibilities**: Stores quantifiable data that the recommendation engine can use for scoring.
+## 1. Domain Entities
 
-### `Location` (POI / Workplace)
-A specific point of interest, usually the user's workplace or a major transit hub.
-- **Attributes**: `id`, `name`, `coordinates` (PostGIS Point), `type` (e.g., office, metro_station).
+### `Locality`
+The canonical geographical unit in Bengaluru (e.g. HSR Layout, Koramangala, Indiranagar).
+- **Attributes**: `id` (BigInteger PK), `name` (String), `slug` (String Unique), `parent_zone` (String), `is_active` (Boolean), `geometry` (PostGIS MultiPolygon, SRID 4326), `centroid` (PostGIS Point, SRID 4326, NOT NULL), `geometry_source` (Enum), `geometry_confidence` (Enum), `external_source_id` (String), `geometry_snapshot_id` (FK -> DatasetSnapshot).
+- **Responsibilities**: Represents neighbourhood boundaries, canonical identity, and point centroid for distance calculations.
 
-### `RecommendationRequest`
-The inputs provided by the user.
-- **Attributes**: `id`, `work_location` (Point), `max_rent`, `min_bhk`, `max_commute_mins`, `preferences` (JSON/Dictionary of weightings), `created_at`.
-- **Lifecycle**: Created when a user submits a search. Often anonymous in V1.
+### `LocalityAlias`
+Search synonyms, abbreviations, and common misspellings for a locality.
+- **Attributes**: `id` (BigInteger PK), `locality_id` (FK -> Locality, CASCADE), `alias` (String), `alias_lower` (String Unique).
+- **Responsibilities**: Enables flexible, case-insensitive searching and normalization (e.g. "BTM" -> BTM Layout).
 
-### `RecommendationResult`
-The output of the engine for a specific request and area.
-- **Attributes**: `id`, `request_id`, `area_id`, `overall_score`, `commute_estimate_mins`, `rent_estimate`, `rank`.
+### `LocalityRentObservation`
+Rent band observations for residential housing in a locality.
+- **Attributes**: `id` (BigInteger PK), `locality_id` (FK -> Locality, CASCADE), `housing_config` (Enum: 1rk, 1bhk, 2bhk, 3bhk), `rent_min_inr` (Integer), `rent_max_inr` (Integer), `currency_code` (String), `observed_on` (DateTime), `snapshot_id` (FK -> DatasetSnapshot), `confidence` (Enum), `sample_size` (Integer), `notes` (Text), `is_current` (Boolean).
+- **Responsibilities**: Stores coarse rent range bands per housing configuration.
 
-### `RecommendationScoreComponent`
-The breakdown of *why* an area received its score (Explainability).
-- **Attributes**: `result_id`, `factor_name` (e.g., "Commute", "Nightlife"), `factor_score`, `explanation_text` (e.g., "Excellent metro access boosts connectivity.").
+### `LocalityMetric`
+Precomputed derived locality-level metrics from offline data pipelines.
+- **Attributes**: `id` (BigInteger PK), `locality_id` (FK -> Locality, CASCADE), `metric_type` (Enum: cafe_density, metro_distance_m, etc.), `value` (Numeric 12,4), `unit` (String), `calc_version` (String), `calculated_at` (DateTime), `snapshot_id` (FK -> DatasetSnapshot), `confidence` (Enum), `is_current` (Boolean).
+- **Responsibilities**: Quantifiable scores and measurements used by the recommendation engine.
 
-## Entity Relationship Diagram
+### `DataSource`
+Origin registry for all imported external data.
+- **Attributes**: `id` (BigInteger PK), `key` (String Unique), `display_name` (String), `source_url` (Text), `license_identifier` (String), `attribution_text` (Text), `notes` (Text), `status` (Enum: active, deprecated).
+- **Responsibilities**: Legal, license, and provenance tracking for data sources.
+
+### `DatasetSnapshot`
+A concrete import run / snapshot version from a data source.
+- **Attributes**: `id` (BigInteger PK), `data_source_id` (FK -> DataSource, RESTRICT), `source_version` (String), `retrieved_at` (DateTime), `content_checksum` (String), `status` (Enum: pending, completed, failed, partial), `is_current` (Boolean).
+- **Responsibilities**: Versioning and audit trail for imported datasets.
+
+---
+
+## 2. Entity Relationship Diagram
 
 ```mermaid
 erDiagram
-    AREA {
-        uuid id PK
+    DATA_SOURCE ||--o{ DATASET_SNAPSHOT : "originates"
+    DATASET_SNAPSHOT ||--o{ LOCALITY : "defines boundary"
+    DATASET_SNAPSHOT ||--o{ LOCALITY_RENT_OBSERVATION : "sources"
+    DATASET_SNAPSHOT ||--o{ LOCALITY_METRIC : "inputs to"
+
+    LOCALITY ||--o{ LOCALITY_ALIAS : "has synonyms"
+    LOCALITY ||--o{ LOCALITY_RENT_OBSERVATION : "has rent bands"
+    LOCALITY ||--o{ LOCALITY_METRIC : "has derived metrics"
+
+    LOCALITY {
+        bigint id PK
         string name
+        string slug UK
         geometry geometry
         geometry centroid
         boolean is_active
     }
-    
-    AREA_METRIC {
-        uuid id PK
-        uuid area_id FK
+
+    LOCALITY_ALIAS {
+        bigint id PK
+        bigint locality_id FK
+        string alias
+        string alias_lower UK
+    }
+
+    LOCALITY_RENT_OBSERVATION {
+        bigint id PK
+        bigint locality_id FK
+        string housing_config
+        integer rent_min_inr
+        integer rent_max_inr
+    }
+
+    LOCALITY_METRIC {
+        bigint id PK
+        bigint locality_id FK
         string metric_type
-        float value
-        float confidence_score
+        numeric value
+        string calc_version
     }
-    
-    RECOMMENDATION_REQUEST {
-        uuid id PK
-        geometry work_location
-        integer max_rent
-        integer max_commute_mins
-        jsonb preferences
-    }
-    
-    RECOMMENDATION_RESULT {
-        uuid id PK
-        uuid request_id FK
-        uuid area_id FK
-        float overall_score
-        integer rank
+
+    DATA_SOURCE {
+        bigint id PK
+        string key UK
+        string display_name
         string status
     }
-    
-    RECOMMENDATION_SCORE_COMPONENT {
-        uuid id PK
-        uuid result_id FK
-        string factor_name
-        float factor_score
-        string explanation_text
-    }
 
-    AREA ||--o{ AREA_METRIC : "has"
-    RECOMMENDATION_REQUEST ||--o{ RECOMMENDATION_RESULT : "generates"
-    RECOMMENDATION_RESULT }o--|| AREA : "ranks"
-    RECOMMENDATION_RESULT ||--o{ RECOMMENDATION_SCORE_COMPONENT : "is explained by"
+    DATASET_SNAPSHOT {
+        bigint id PK
+        bigint data_source_id FK
+        string source_version
+        string status
+    }
 ```
 
-## PostGIS Considerations
-- Use `GEOMETRY(Polygon, 4326)` for `Area.geometry` to store boundaries.
-- Use `GEOGRAPHY(Point, 4326)` for distances (e.g., workplace to area centroid) to accurately calculate meters over the earth's surface.
-- Spatial indexes (GIST) must be applied to all geometry/geography columns.
+---
+
+## 3. PostGIS & Spatial Considerations
+
+- `Locality.geometry` uses `GEOMETRY(MULTIPOLYGON, 4326)`.
+- `Locality.centroid` uses `GEOMETRY(POINT, 4326)` and is `NOT NULL`.
+- Both geometry columns are indexed with spatial **GIST** indexes (`ix_locality_geometry`, `ix_locality_centroid`).
