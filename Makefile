@@ -30,3 +30,14 @@ format:
 typecheck:
 	cd apps/api && uv run mypy app
 	cd apps/web && npm run typecheck
+
+# -----------------------------------------------------------------------------
+# Data Ingestion
+# -----------------------------------------------------------------------------
+# We use the integration test database to prevent accidental pollution of the dev db.
+ingest-synthetic-dry-run:
+	cd apps/api && DATABASE_URL="postgresql+asyncpg://blrlife:blrlife_dev_password@localhost:5432/blrlife_test" uv run python -m app.ingestion.cli ingest --file tests/fixtures/synthetic_ingestion.json --dry-run
+
+ingest-synthetic:
+	cd apps/api && DATABASE_URL="postgresql+asyncpg://blrlife:blrlife_dev_password@localhost:5432/blrlife_test" uv run python -m app.ingestion.cli ingest --file tests/fixtures/synthetic_ingestion.json
+

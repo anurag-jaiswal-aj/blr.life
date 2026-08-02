@@ -1,0 +1,42 @@
+{
+    "data_source_key": "synthetic_test_source",
+    "source_version": "v1.0",
+    "notes": "Synthetic dataset for testing",
+    "localities": [
+        {
+            "name": "Fiction Nagar",
+            "slug": "fiction-nagar",
+            "parent_zone": "Synthetic Zone",
+            "is_active": true,
+            "geometry_wkt": "MULTIPOLYGON(((77.5 12.9, 77.6 12.9, 77.6 13.0, 77.5 13.0, 77.5 12.9)))",
+            "centroid_wkt": "POINT(77.55 12.95)",
+            "geometry_source": "manual_curation",
+            "geometry_confidence": "high",
+            "external_source_id": "FN-001",
+            "aliases": [
+                {
+                    "alias": "F. Nagar"
+                },
+                {
+                    "alias": "Fiction Area"
+                }
+            ]
+        },
+        {
+            "name": "Test Layout",
+            "slug": "test-layout",
+            "parent_zone": "Synthetic Zone",
+            "is_active": true,
+            "geometry_wkt": null,
+            "centroid_wkt": "POINT(77.65 13.05)",
+            "geometry_source": "osm_point",
+            "geometry_confidence": "low",
+            "external_source_id": "TL-002",
+            "aliases": [
+                {
+                    "alias": "TL"
+                }
+            ]
+        }
+    ]
+}
