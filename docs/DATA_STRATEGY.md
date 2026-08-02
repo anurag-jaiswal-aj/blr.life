@@ -6,25 +6,25 @@ V1 relies entirely on deterministic data. We must acquire, normalize, and store 
 
 ### 1. Bengaluru Neighbourhood Boundaries (Areas)
 - **Why**: To know where an area is, calculate distances, and display on a map.
-- **Source**: OpenStreetMap (OSM) administrative boundaries, or manual GeoJSON curation.
-- **Free/Open**: Yes (OSM).
-- **Confidence**: High, though unofficial borders can be fuzzy.
-- **REQUIRES DATA VALIDATION**: Need to verify if OSM has distinct boundaries for areas like "HSR Layout Sector 1" vs just "HSR Layout".
+- **Source**: OpenStreetMap (OSM) administrative boundaries (polygons).
+- **Free/Open**: Yes (OSM ODbL).
+- **Confidence**: High for verified polygons, lower for fallback buffers.
+- **Status**: V1 will use OSM polygons where available. If missing, V1 will fall back to a 1.5km buffer around the OSM point (centroid).
 
 ### 2. Rent Estimates
 - **Why**: To filter out unaffordable areas.
-- **Source**: Web scraping (NoBroker/Housing.com public aggregated data - if legal), manual curation of baseline averages, or crowdsourced data.
-- **Free/Open**: Tricky. 
-- **Confidence**: Medium. Rent fluctuates.
-- **Fallback**: Use wide rent bands (e.g., "Budget: ₹15k - ₹25k") and map areas to bands rather than exact figures.
-- **REQUIRES DATA VALIDATION**: We must establish a legal, viable baseline rent dataset for the top 50 areas.
+- **Source**: Manual curation of baseline bands (e.g., from market reports, open datasets, and community data). Web scraping of property portals (e.g., NoBroker, MagicBricks) is strictly prohibited as it violates their Terms of Service.
+- **Free/Open**: Yes, but requires manual effort.
+- **Confidence**: Low. Rent fluctuates significantly.
+- **Fallback**: Omit exact figures in favor of wide affordability bands for top areas.
+- **Status**: V1 will launch with a static, curated list of rent bands for the top ~50 localities.
 
 ### 3. Commute & Routing (Distance)
 - **Why**: To score areas based on proximity to the user's workplace.
-- **Source**: PostGIS straight-line distance (haversine/geography) with a "Bengaluru Traffic Penalty Heuristic", OR an open routing engine like OSRM (Open Source Routing Machine).
-- **Free/Open**: Yes.
-- **Confidence**: Medium. Traffic varies wildly.
-- **Strategy**: V1 will use spatial distance adjusted by heuristic speeds, explicitly warning users that times are estimates.
+- **Source**: Self-hosted OSRM (Open Source Routing Machine) using offline OSM data.
+- **Free/Open**: Yes (MIT license, ODbL data).
+- **Confidence**: High for distance, medium for time (lacks real-time traffic).
+- **Strategy**: V1 will use OSRM traffic-free duration and driving distance, explicitly warning users that times are estimates and do not account for live traffic.
 
 ### 4. Metro Accessibility
 - **Why**: A major lifestyle and commute preference.
@@ -34,10 +34,10 @@ V1 relies entirely on deterministic data. We must acquire, normalize, and store 
 
 ### 5. Amenities & Lifestyle Indicators (Cafes, Parks, Hospitals)
 - **Why**: To score preferences like "Nightlife", "Quietness", "Healthcare".
-- **Source**: OSM POI (Points of Interest) data (Overpass API).
-- **Free/Open**: Yes.
+- **Source**: OSM POI data ingested offline (via Geofabrik extracts).
+- **Free/Open**: Yes (ODbL).
 - **Confidence**: High for quantity, medium for quality.
-- **Strategy**: Calculate density (e.g., cafes per square km) and normalize it to a 0-100 score for each area.
+- **Strategy**: Calculate density (e.g., cafes per square km) and normalize it to a 0-100 score for each area, without relying on live Overpass API calls.
 
 ## Avoiding Fake Data
 **Rule**: If we lack data for a specific metric in a specific area, we do not invent it.
