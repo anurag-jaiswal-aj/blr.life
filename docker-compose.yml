@@ -1,0 +1,64 @@
+name: blr-life
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: blr_life_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-blrlife}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-blrlife_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-blrlife}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-blrlife} -d ${POSTGRES_DB:-blrlife}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: blr_life_api
+    restart: always
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-blrlife}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-blrlife_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-blrlife}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-blrlife}:${POSTGRES_PASSWORD:-blrlife_dev_password}@db:5432/${POSTGRES_DB:-blrlife}
+      CORS_ORIGINS: '${CORS_ORIGINS:-["http://localhost:3000"]}'
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: blr_life_web
+    restart: always
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

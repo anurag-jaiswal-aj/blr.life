@@ -10,19 +10,68 @@ Finding the right neighbourhood in Bengaluru is notoriously difficult. It involv
 ## V1 Objective
 Deliver a fast, intuitive web application where users can input their workplace, budget, and preferences to receive a ranked, data-driven, and highly explainable list of recommended Bengaluru neighbourhoods.
 
-## Planned Technology Stack
-- **Frontend**: Next.js, TypeScript, Tailwind CSS
-- **Backend**: Python, FastAPI, Pydantic, SQLAlchemy, Alembic
-- **Database**: PostgreSQL with PostGIS for geospatial queries
-- **Maps**: MapLibre (open-source approach)
+## Technology Stack
+- **Frontend**: Next.js (App Router), TypeScript, Tailwind CSS, Vitest
+- **Backend**: Python 3.11+, FastAPI, Pydantic Settings, SQLAlchemy 2.x, Alembic, pytest, Ruff, mypy
+- **Database**: PostgreSQL with PostGIS extension
 - **Infrastructure**: Docker & Docker Compose (Modular Monolith)
 
 ## High-Level Architecture
-The system is designed as a modular monolith. The Next.js frontend communicates via REST with a FastAPI backend. The backend manages domains such as `users`, `areas`, `locations`, `datasets`, and `recommendations`. A deterministic recommendation engine queries the PostGIS database to generate scored and explainable neighbourhood recommendations based on hard constraints and weighted preferences.
+The system is designed as a modular monolith. The Next.js frontend (`apps/web`) communicates via REST with a FastAPI backend (`apps/api`). The backend connects to PostgreSQL + PostGIS for geospatial and metric queries.
 
 ## Repository Status
-⚠️ **STATUS: FOUNDATION & PLANNING STAGE** ⚠️
-This repository currently contains only foundational engineering and product documentation. No application source code has been implemented yet. 
+🟢 **STATUS: APPLICATION FOUNDATION STAGE** 🟢
+The executable application foundation is running. Frontend, backend, database migrations, and testing infrastructures are configured. Product features (recommendations, maps, area data) will be built in subsequent work units.
+
+## Prerequisites
+- Node.js v20+ & npm v10+
+- Python 3.11+ & `uv` (recommended)
+- Docker & Docker Compose
+
+## Local Development Quick Start
+
+### 1. Environment Setup
+```bash
+cp .env.example .env
+```
+
+### 2. Docker Compose (Recommended)
+```bash
+make up
+make migrate
+```
+
+### 3. Local Development (Without Docker)
+
+**Backend Setup:**
+```bash
+cd apps/api
+uv venv
+source .venv/bin/activate
+uv pip install -e ".[dev]"
+uvicorn app.main:app --reload --port 8000
+```
+
+**Frontend Setup:**
+```bash
+cd apps/web
+npm install
+npm run dev
+```
+
+### 4. Code Quality & Testing Commands
+```bash
+make lint       # Runs Ruff (backend) & ESLint (frontend)
+make format     # Formats Python backend code
+make typecheck  # Runs mypy (backend) & tsc (frontend)
+make test       # Runs pytest (backend) & Vitest (frontend)
+```
+
+## Expected Local Endpoints
+- **Frontend App**: [http://localhost:3000](http://localhost:3000)
+- **Backend API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Liveness Health Check**: [http://localhost:8000/health](http://localhost:8000/health)
+- **Database Readiness Check**: [http://localhost:8000/ready](http://localhost:8000/ready)
 
 ## Documentation Index
 All foundational documentation is located in the `docs/` directory:
