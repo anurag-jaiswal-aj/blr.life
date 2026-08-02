@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -41,26 +42,33 @@ async def ingest_command(file_path: str, dry_run: bool) -> None:
         sys.exit(1)
 
     try:
-        with open(path, encoding="utf-8") as f:
-            raw_data = json.load(f)
+        with open(path, "rb") as f:
+            raw_bytes = f.read()
+
+        raw_data = json.loads(raw_bytes.decode("utf-8"))
     except json.JSONDecodeError as e:
         logger.error(f"Invalid JSON in {file_path}: {e}")
         sys.exit(1)
 
     try:
         payload = IngestPayload.model_validate(raw_data)
+        canonical_json_bytes = payload.model_dump_json(serialize_as_any=True).encode("utf-8")
+        content_checksum = hashlib.sha256(canonical_json_bytes).hexdigest()
     except ValidationError as e:
         logger.error(f"Payload validation failed: {e}")
         sys.exit(1)
 
     async with AsyncSessionLocal() as session:
         try:
-            stats = await run_ingestion(session, payload, dry_run=dry_run)
-            
+            stats = await run_ingestion(
+                session, payload, dry_run=dry_run, content_checksum=content_checksum
+            )
+
             logger.info("Ingestion completed successfully.")
             logger.info(f"Localities Created: {stats['created']}")
             logger.info(f"Localities Updated: {stats['updated']}")
-            
+            logger.info(f"Localities Unchanged: {stats.get('unchanged', 0)}")
+
             if dry_run:
                 logger.info("DRY RUN completed. No changes were committed.")
         except IngestionError as e:

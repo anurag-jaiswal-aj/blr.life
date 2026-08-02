@@ -1,0 +1,453 @@
+{
+  "data_source_key": "blr_life_curated_locality_registry",
+  "source_version": "v2.0",
+  "notes": "V1 Canonical Bengaluru Localities with verified OSM centroids",
+  "localities": [
+    {
+      "name": "HSR Layout",
+      "slug": "hsr-layout",
+      "parent_zone": "South-East",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.6388622 12.9116225)",
+      "geometry_source": "osm_polygon",
+      "geometry_confidence": "medium",
+      "external_source_id": "relation/17168010",
+      "aliases": []
+    },
+    {
+      "name": "Koramangala",
+      "slug": "koramangala",
+      "parent_zone": "South-East",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.6240810 12.9357366)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/429918282",
+      "aliases": []
+    },
+    {
+      "name": "Indiranagar",
+      "slug": "indiranagar",
+      "parent_zone": "East",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.6404672 12.9732913)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/448991617",
+      "aliases": []
+    },
+    {
+      "name": "Whitefield",
+      "slug": "whitefield",
+      "parent_zone": "East",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.7579489 12.9957428)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/5760197744",
+      "aliases": []
+    },
+    {
+      "name": "BTM Layout",
+      "slug": "btm-layout",
+      "parent_zone": "South",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.6102821 12.9140008)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/447032046",
+      "aliases": [
+        {
+          "alias": "BTM"
+        }
+      ]
+    },
+    {
+      "name": "Electronic City",
+      "slug": "electronic-city",
+      "parent_zone": "South",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.6482530 12.8487599)",
+      "geometry_source": "osm_polygon",
+      "geometry_confidence": "medium",
+      "external_source_id": "way/287685707",
+      "aliases": [
+        {
+          "alias": "E-City"
+        },
+        {
+          "alias": "Electronics City"
+        }
+      ]
+    },
+    {
+      "name": "Jayanagar",
+      "slug": "jayanagar",
+      "parent_zone": "South",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.5824229 12.9292731)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/429853334",
+      "aliases": []
+    },
+    {
+      "name": "JP Nagar",
+      "slug": "jp-nagar",
+      "parent_zone": "South",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.5866067 12.9096941)",
+      "geometry_source": "osm_polygon",
+      "geometry_confidence": "medium",
+      "external_source_id": "relation/17205864",
+      "aliases": []
+    },
+    {
+      "name": "Malleshwaram",
+      "slug": "malleshwaram",
+      "parent_zone": "West",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.5703253 13.0027353)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/427595936",
+      "aliases": [
+        {
+          "alias": "Malleswaram"
+        }
+      ]
+    },
+    {
+      "name": "Rajajinagar",
+      "slug": "rajajinagar",
+      "parent_zone": "West",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.5496996 13.0005359)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/1565099120",
+      "aliases": []
+    },
+    {
+      "name": "Hebbal",
+      "slug": "hebbal",
+      "parent_zone": "North",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.5919000 13.0382184)",
+      "geometry_source": "osm_polygon",
+      "geometry_confidence": "medium",
+      "external_source_id": "relation/19883365",
+      "aliases": []
+    },
+    {
+      "name": "Yelahanka",
+      "slug": "yelahanka",
+      "parent_zone": "North",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.5963454 13.1006982)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/430143744",
+      "aliases": []
+    },
+    {
+      "name": "Bellandur",
+      "slug": "bellandur",
+      "parent_zone": "South-East",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.6842915 12.9320495)",
+      "geometry_source": "osm_polygon",
+      "geometry_confidence": "medium",
+      "external_source_id": "relation/19884585",
+      "aliases": [
+        {
+          "alias": "Bellanduru"
+        }
+      ]
+    },
+    {
+      "name": "Marathahalli",
+      "slug": "marathahalli",
+      "parent_zone": "East",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.6984163 12.9552572)",
+      "geometry_source": "osm_polygon",
+      "geometry_confidence": "medium",
+      "external_source_id": "relation/19884550",
+      "aliases": []
+    },
+    {
+      "name": "Mahadevapura",
+      "slug": "mahadevapura",
+      "parent_zone": "East",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.6927176 12.9965445)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/5760197764",
+      "aliases": []
+    },
+    {
+      "name": "CV Raman Nagar",
+      "slug": "cv-raman-nagar",
+      "parent_zone": "East",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.6680720 12.9855509)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/4686183789",
+      "aliases": []
+    },
+    {
+      "name": "Basavanagudi",
+      "slug": "basavanagudi",
+      "parent_zone": "South",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.5755021 12.9417261)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/429937956",
+      "aliases": []
+    },
+    {
+      "name": "Banashankari",
+      "slug": "banashankari",
+      "parent_zone": "South",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.5566210 12.9278196)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/12816045429",
+      "aliases": [
+        {
+          "alias": "BSK"
+        }
+      ]
+    },
+    {
+      "name": "Kalyan Nagar",
+      "slug": "kalyan-nagar",
+      "parent_zone": "North",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.6403368 13.0221416)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/567772575",
+      "aliases": []
+    },
+    {
+      "name": "Kammanahalli",
+      "slug": "kammanahalli",
+      "parent_zone": "North",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.6382029 13.0148544)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/6330202097",
+      "aliases": []
+    },
+    {
+      "name": "KR Puram",
+      "slug": "kr-puram",
+      "parent_zone": "East",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.6959350 13.0075160)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/442134548",
+      "aliases": [
+        {
+          "alias": "Krishnarajapuram"
+        }
+      ]
+    },
+    {
+      "name": "RR Nagar",
+      "slug": "rr-nagar",
+      "parent_zone": "South-West",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.5290964 12.9314733)",
+      "geometry_source": "osm_polygon",
+      "geometry_confidence": "medium",
+      "external_source_id": "way/1157397987",
+      "aliases": [
+        {
+          "alias": "Rajarajeshwari Nagar"
+        }
+      ]
+    },
+    {
+      "name": "Kengeri",
+      "slug": "kengeri",
+      "parent_zone": "South-West",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.4837568 12.9176571)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/308062102",
+      "aliases": [
+        {
+          "alias": "Kengeri Satellite Town"
+        }
+      ]
+    },
+    {
+      "name": "Vijayanagar",
+      "slug": "vijayanagar",
+      "parent_zone": "West",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.5373851 12.9709537)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/5760197784",
+      "aliases": []
+    },
+    {
+      "name": "Yeshwanthpur",
+      "slug": "yeshwanthpur",
+      "parent_zone": "West",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.5555009 13.0176937)",
+      "geometry_source": "osm_polygon",
+      "geometry_confidence": "medium",
+      "external_source_id": "way/1238794971",
+      "aliases": [
+        {
+          "alias": "Yeshwantpur"
+        }
+      ]
+    },
+    {
+      "name": "Richmond Town",
+      "slug": "richmond-town",
+      "parent_zone": "Central",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.6015856 12.9635550)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/5164714917",
+      "aliases": []
+    },
+    {
+      "name": "Vasanth Nagar",
+      "slug": "vasanth-nagar",
+      "parent_zone": "Central",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.5914590 12.9921738)",
+      "geometry_source": "osm_polygon",
+      "geometry_confidence": "medium",
+      "external_source_id": "relation/19883309",
+      "aliases": []
+    },
+    {
+      "name": "Sadashivanagar",
+      "slug": "sadashivanagar",
+      "parent_zone": "North",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.5808641 13.0110193)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/461539035",
+      "aliases": []
+    },
+    {
+      "name": "Shanthi Nagar",
+      "slug": "shanthi-nagar",
+      "parent_zone": "Central",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.5922821 12.9546254)",
+      "geometry_source": "osm_polygon",
+      "geometry_confidence": "medium",
+      "external_source_id": "way/1455412267",
+      "aliases": []
+    },
+    {
+      "name": "Nagavara",
+      "slug": "nagavara",
+      "parent_zone": "North",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.6236020 13.0374647)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/2463849020",
+      "aliases": []
+    },
+    {
+      "name": "Sahakara Nagar",
+      "slug": "sahakara-nagar",
+      "parent_zone": "North",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.5800614 13.0621474)",
+      "geometry_source": "osm_polygon",
+      "geometry_confidence": "medium",
+      "external_source_id": "way/552430276",
+      "aliases": []
+    },
+    {
+      "name": "Jakkur",
+      "slug": "jakkur",
+      "parent_zone": "North",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.6068938 13.0784743)",
+      "geometry_source": "osm_polygon",
+      "geometry_confidence": "medium",
+      "external_source_id": "relation/19883249",
+      "aliases": []
+    },
+    {
+      "name": "Hennur",
+      "slug": "hennur",
+      "parent_zone": "North",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.6413572 13.0370770)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/12468364695",
+      "aliases": []
+    },
+    {
+      "name": "Banaswadi",
+      "slug": "banaswadi",
+      "parent_zone": "East",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.6518539 13.0141618)",
+      "geometry_source": "osm_polygon",
+      "geometry_confidence": "medium",
+      "external_source_id": "relation/19883482",
+      "aliases": []
+    },
+    {
+      "name": "Brookefield",
+      "slug": "brookefield",
+      "parent_zone": "East",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.7179360 12.9652094)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/378717492",
+      "aliases": []
+    },
+    {
+      "name": "Kadubeesanahalli",
+      "slug": "kadubeesanahalli",
+      "parent_zone": "South-East",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.6964066 12.9389650)",
+      "geometry_source": "osm_polygon",
+      "geometry_confidence": "medium",
+      "external_source_id": "way/1073338551",
+      "aliases": []
+    },
+    {
+      "name": "Domlur",
+      "slug": "domlur",
+      "parent_zone": "East",
+      "is_active": true,
+      "centroid_wkt": "POINT(77.6381958 12.9624669)",
+      "geometry_source": "osm_point",
+      "geometry_confidence": "medium",
+      "external_source_id": "node/347261886",
+      "aliases": []
+    }
+  ]
+}

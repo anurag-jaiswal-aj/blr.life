@@ -13,7 +13,7 @@ class IngestLocalityAlias(BaseModel):
 
 class IngestLocality(BaseModel):
     """Pydantic model for validating incoming locality data.
-    
+
     Expects geometries as standard WKT strings for simplicity during the
     initial dataset loading phase.
     """

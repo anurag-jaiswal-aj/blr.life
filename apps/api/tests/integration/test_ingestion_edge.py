@@ -1,4 +1,3 @@
-
 import pytest
 import pytest_asyncio
 from pydantic import ValidationError
@@ -14,16 +13,14 @@ from tests.integration.test_domain_integration import TEST_ASYNC_URL
 @pytest_asyncio.fixture
 async def async_db_session():
     engine = create_async_engine(TEST_ASYNC_URL, echo=False)
-    async_session_factory = async_sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
-    )
-    
+    async_session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
     async with engine.connect() as conn:
         await conn.begin_nested()
         async with async_session_factory(bind=conn) as session:
             yield session
         await conn.rollback()
-    
+
     await engine.dispose()
 
 
@@ -35,7 +32,7 @@ async def test_invalid_geometry():
             name="Test",
             slug="test",
             centroid_wkt="POINT(77.6 12.9)",
-            geometry_wkt="POINT(77.6 12.9)"
+            geometry_wkt="POINT(77.6 12.9)",
         )
     assert "geometry_wkt must be a POLYGON or MULTIPOLYGON" in str(exc.value)
 
@@ -45,7 +42,7 @@ async def test_invalid_geometry():
             name="Test",
             slug="test",
             centroid_wkt="POLYGON((77.6 12.9, ...))",
-            geometry_wkt="POLYGON((77.6 12.9, ...))"
+            geometry_wkt="POLYGON((77.6 12.9, ...))",
         )
     assert "centroid_wkt must be a POINT" in str(exc.value)
 
@@ -55,7 +52,8 @@ async def test_alias_conflict(async_db_session):
     await async_db_session.execute(
         text(
             "INSERT INTO data_source (key, display_name, status) "
-            "VALUES ('test_source', 'Test Source', 'active')"
+            "VALUES ('test_source', 'Test Source', 'active') "
+            "ON CONFLICT DO NOTHING"
         )
     )
 
@@ -64,10 +62,12 @@ async def test_alias_conflict(async_db_session):
         data_source_key="test_source",
         localities=[
             IngestLocality(
-                name="BTM Layout", slug="btm-layout", centroid_wkt="POINT(77.6 12.9)",
-                aliases=[IngestLocalityAlias(alias="BTM")]
+                name="BTM Layout",
+                slug="btm-layout",
+                centroid_wkt="POINT(77.6 12.9)",
+                aliases=[IngestLocalityAlias(alias="BTM")],
             )
-        ]
+        ],
     )
     await run_ingestion(async_db_session, payload1)
 
@@ -76,12 +76,14 @@ async def test_alias_conflict(async_db_session):
         data_source_key="test_source",
         localities=[
             IngestLocality(
-                name="Another Layout", slug="another-layout", centroid_wkt="POINT(77.6 12.9)",
-                aliases=[IngestLocalityAlias(alias="btm ")]
+                name="Another Layout",
+                slug="another-layout",
+                centroid_wkt="POINT(77.6 12.9)",
+                aliases=[IngestLocalityAlias(alias="btm ")],
             )
-        ]
+        ],
     )
-    
+
     with pytest.raises(IngestionError):
         await run_ingestion(async_db_session, payload2)
 
@@ -91,7 +93,8 @@ async def test_transaction_rollback_on_partial_failure(async_db_session):
     await async_db_session.execute(
         text(
             "INSERT INTO data_source (key, display_name, status) "
-            "VALUES ('test_source', 'Test Source', 'active')"
+            "VALUES ('test_source', 'Test Source', 'active') "
+            "ON CONFLICT DO NOTHING"
         )
     )
 
@@ -99,15 +102,19 @@ async def test_transaction_rollback_on_partial_failure(async_db_session):
         data_source_key="test_source",
         localities=[
             IngestLocality(
-                name="Good Locality", slug="good-locality", centroid_wkt="POINT(77.6 12.9)",
+                name="Good Locality",
+                slug="good-locality",
+                centroid_wkt="POINT(77.6 12.9)",
             ),
             IngestLocality(
                 # Empty canonical name is invalid at DB layer (constraint)
-                name="  ", slug="bad-locality", centroid_wkt="POINT(77.6 12.9)",
-            )
-        ]
+                name="  ",
+                slug="bad-locality",
+                centroid_wkt="POINT(77.6 12.9)",
+            ),
+        ],
     )
-    
+
     with pytest.raises(IngestionError):
         await run_ingestion(async_db_session, payload)
 
@@ -117,3 +124,76 @@ async def test_transaction_rollback_on_partial_failure(async_db_session):
     )
     assert result.scalar_one_or_none() is None
 
+
+@pytest.mark.asyncio
+async def test_alias_reconciliation_removal(async_db_session):
+    from app.models.locality import LocalityAlias
+
+    await async_db_session.execute(
+        text(
+            "INSERT INTO data_source (key, display_name, status) "
+            "VALUES ('test_source', 'Test Source', 'active') "
+            "ON CONFLICT DO NOTHING"
+        )
+    )
+
+    # Initial payload with 2 aliases
+    payload1 = IngestPayload(
+        data_source_key="test_source",
+        source_version="v1",
+        localities=[
+            IngestLocality(
+                name="Test Locality",
+                slug="test-locality",
+                centroid_wkt="POINT(77.6 12.9)",
+                aliases=[
+                    IngestLocalityAlias(alias="Example"),
+                    IngestLocalityAlias(alias="Old Alias"),
+                ],
+            )
+        ],
+    )
+    await run_ingestion(async_db_session, payload1)
+
+    # Verify both exist
+    loc = (
+        await async_db_session.execute(select(Locality).where(Locality.slug == "test-locality"))
+    ).scalar_one()
+    aliases_before = (
+        (
+            await async_db_session.execute(
+                select(LocalityAlias).where(LocalityAlias.locality_id == loc.id)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    assert len(aliases_before) == 2
+
+    # New version payload with only 1 alias
+    payload2 = IngestPayload(
+        data_source_key="test_source",
+        source_version="v2",
+        localities=[
+            IngestLocality(
+                name="Test Locality",
+                slug="test-locality",
+                centroid_wkt="POINT(77.6 12.9)",
+                aliases=[IngestLocalityAlias(alias="Example")],
+            )
+        ],
+    )
+    await run_ingestion(async_db_session, payload2)
+
+    # Verify "Old Alias" was removed
+    aliases_after = (
+        (
+            await async_db_session.execute(
+                select(LocalityAlias).where(LocalityAlias.locality_id == loc.id)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    assert len(aliases_after) == 1
+    assert aliases_after[0].alias == "Example"

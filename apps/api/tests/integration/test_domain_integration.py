@@ -435,7 +435,7 @@ class TestLocalityRentObservation:
             )
         # Check should fail anyway as rent_min_inr is NOT NULL
         with pytest.raises(sa.exc.SQLAlchemyError):
-             db.execute(
+            db.execute(
                 text(
                     "INSERT INTO locality_rent_observation "
                     "(locality_id, housing_config, confidence, is_current) "
@@ -480,7 +480,7 @@ class TestLocalityMetric:
 
     def test_duplicate_version_rejected(self, db) -> None:  # type: ignore[no-untyped-def]
         lid = _insert_locality(db, _unique_slug("metric-dup"))
-        
+
         # Need to insert a dataset snapshot first to make snapshot_id non-null
         # Otherwise, Postgres treats NULL != NULL in unique constraints.
         ds_id = _insert_source(db, _unique_slug("src-dup"))
@@ -489,9 +489,11 @@ class TestLocalityMetric:
                 "INSERT INTO dataset_snapshot (data_source_id, source_version, retrieved_at, status) "  # noqa: E501
                 "VALUES (:ds_id, 'snapshot-dup', now(), 'pending'::snapshot_status)"
             ),
-            {"ds_id": ds_id}
+            {"ds_id": ds_id},
         )
-        snap_id = db.execute(text("SELECT id FROM dataset_snapshot WHERE source_version = 'snapshot-dup'")).scalar_one()  # noqa: E501
+        snap_id = db.execute(
+            text("SELECT id FROM dataset_snapshot WHERE source_version = 'snapshot-dup'")
+        ).scalar_one()  # noqa: E501
 
         db.execute(
             text(

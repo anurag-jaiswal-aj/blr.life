@@ -25,27 +25,58 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
+
 def include_name(name, type_, parent_names):
     if type_ == "table":
         if name in (
-            "spatial_ref_sys", "geometry_columns", "geography_columns",
-            "layer", "topology", "pagc_rules", "pagc_lex", "pagc_gaz",
-            "loader_platform", "loader_variables", "loader_lookuptables",
-            "geocode_settings", "geocode_settings_default",
-            "direction_lookup", "secondary_unit_lookup", "state_lookup",
-            "county_lookup", "place_lookup", "countysub_lookup",
-            "street_type_lookup", "zip_lookup", "zip_lookup_base",
-            "zip_lookup_all", "zip_state", "zip_state_loc",
-            "state", "county", "cousub", "place", "tract",
-            "bg", "tabblock", "tabblock20", "zcta5", "faces",
-            "edges", "addrfeat", "addr", "featnames"
+            "spatial_ref_sys",
+            "geometry_columns",
+            "geography_columns",
+            "layer",
+            "topology",
+            "pagc_rules",
+            "pagc_lex",
+            "pagc_gaz",
+            "loader_platform",
+            "loader_variables",
+            "loader_lookuptables",
+            "geocode_settings",
+            "geocode_settings_default",
+            "direction_lookup",
+            "secondary_unit_lookup",
+            "state_lookup",
+            "county_lookup",
+            "place_lookup",
+            "countysub_lookup",
+            "street_type_lookup",
+            "zip_lookup",
+            "zip_lookup_base",
+            "zip_lookup_all",
+            "zip_state",
+            "zip_state_loc",
+            "state",
+            "county",
+            "cousub",
+            "place",
+            "tract",
+            "bg",
+            "tabblock",
+            "tabblock20",
+            "zcta5",
+            "faces",
+            "edges",
+            "addrfeat",
+            "addr",
+            "featnames",
         ):
             return False
     return True
 
+
 _db_url: str = settings.DATABASE_URL or config.get_main_option("sqlalchemy.url", "")
 _sync_url = _db_url.replace("postgresql+asyncpg://", "postgresql+psycopg://")
 config.set_main_option("sqlalchemy.url", _sync_url)
+
 
 def run_migrations_offline() -> None:
     url = config.get_main_option("sqlalchemy.url")
@@ -59,6 +90,7 @@ def run_migrations_offline() -> None:
     with context.begin_transaction():
         context.run_migrations()
 
+
 def run_migrations_online() -> None:
     connectable = create_engine(_sync_url, poolclass=pool.NullPool)
     with connectable.connect() as connection:
@@ -69,6 +101,7 @@ def run_migrations_online() -> None:
         )
         with context.begin_transaction():
             context.run_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()

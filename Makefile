@@ -41,3 +41,12 @@ ingest-synthetic-dry-run:
 ingest-synthetic:
 	cd apps/api && DATABASE_URL="postgresql+asyncpg://blrlife:blrlife_dev_password@localhost:5432/blrlife_test" uv run python -m app.ingestion.cli ingest --file tests/fixtures/synthetic_ingestion.json
 
+validate-localities:
+	cd apps/api && DATABASE_URL="postgresql+asyncpg://blrlife:blrlife_dev_password@localhost:5432/blrlife_test" uv run python -m app.ingestion.cli ingest --file ../../data/curated/bengaluru_localities_v1.json --dry-run
+
+ingest-real-dry-run:
+	cd apps/api && DATABASE_URL="postgresql+asyncpg://blrlife:blrlife_dev_password@localhost:5432/blrlife_test" uv run python -m app.ingestion.cli ingest --file ../../data/curated/bengaluru_localities_v1.json --dry-run
+
+ingest-real:
+	cd apps/api && uv run python -m app.ingestion.cli ingest --file ../../data/curated/bengaluru_localities_v1.json
+
