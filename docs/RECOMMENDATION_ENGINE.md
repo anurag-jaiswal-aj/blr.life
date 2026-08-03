@@ -12,7 +12,13 @@ The V1 recommendation engine is deterministic and mathematical. It does not use 
 3. **Feature Representation**: Normalize metrics to a (0.0 to 1.0) scale for remaining areas:
    - *Metro Access*: `1.0` if <= 500m, decays to `0.0` at 3000m.
    - *Work Distance*: `1.0` if <= 2km, decays to `0.0` at 15km.
-   - *Amenity Density*: `min(raw_count / provisional_cap, 1.0)`. **IMPORTANT**: The current caps (Cafes: 15, Restaurants: 30, Parks: 5, Healthcare: 5, Nightlife: 10) are explicitly *PROVISIONAL* engineering mechanisms. They are NOT derived from a representative Bengaluru data distribution and MUST be empirically recalibrated once real OSM amenity data is successfully ingested.
+   - *Amenity Density*: `min(raw_count / cap, 1.0)`. **Empirical Calibration**: The V1 caps are empirically calibrated against a 37-locality dataset derived from the Geofabrik Southern India OSM extract (snapshot dated 2026-08-03). The caps represent the P90 (90th percentile) of raw 1.5km accessibility counts, calculated using `numpy.percentile(values, 90)` (linear interpolation) and truncated via `int()`.
+     - Cafe = 59 (Exact float: 59.60)
+     - Restaurant = 143 (Exact float: 143.80)
+     - Park = 41 (Exact float: 41.60)
+     - Healthcare = 83 (Exact float: 83.80)
+     - Nightlife = 25 (Exact float: 25.20)
+     *Note: These represent actual density heuristics within the specific OSM snapshot and extraction methodology. They are not universal quality thresholds or dynamic request-time percentiles. They will require recalibration if the source dataset materially changes.*
 4. **Weighted Scoring**: Apply user preference weights to the normalized metrics. If a locality lacks a metric (or has insufficient confidence), its active weights are renormalized.
 5. **Ranking**: Sort by the final `BLR Score` (with a deterministic tie-breaker on locality slug).
 6. **Explanation Generation**: Derive human-readable pros/cons and warnings based on metric values and missing data.

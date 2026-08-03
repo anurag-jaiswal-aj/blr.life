@@ -291,9 +291,9 @@ def test_amenity_scoring_and_renormalization() -> None:
         work_distance_km=2.0,  # 1.0
         metro_distance_m=500.0,  # 1.0
         metro_confidence="high",
-        cafe_count=15.0,
+        cafe_count=59.0,
         cafe_confidence="high",  # 1.0
-        restaurant_count=30.0,
+        restaurant_count=143.0,
         restaurant_confidence="high",  # 1.0
         park_count=0.0,
         park_confidence="high",  # 0.0
@@ -307,9 +307,9 @@ def test_amenity_scoring_and_renormalization() -> None:
         work_distance_km=2.0,  # 1.0
         metro_distance_m=500.0,  # 1.0
         metro_confidence="high",
-        cafe_count=15.0,
+        cafe_count=59.0,
         cafe_confidence="high",  # 1.0
-        restaurant_count=30.0,
+        restaurant_count=143.0,
         restaurant_confidence="high",  # 1.0
         park_count=None,
         park_confidence=None,  # Missing
@@ -327,7 +327,7 @@ def test_amenity_scoring_and_renormalization() -> None:
         cafe_confidence="high",  # 0.0
         restaurant_count=0.0,
         restaurant_confidence="high",  # 0.0
-        park_count=5.0,
+        park_count=41.0,
         park_confidence="high",  # 1.0
     )
 
@@ -369,21 +369,21 @@ def test_amenity_explanations() -> None:
         work_distance_km=2.0,
         metro_distance_m=500.0,
         metro_confidence="high",
-        cafe_count=15.0,
-        cafe_confidence="high",  # Strong
-        restaurant_count=15.0,
-        restaurant_confidence="high",  # Moderate (15/30 = 0.5)
-        park_count=1.0,
-        park_confidence="high",  # Limited (1/5 = 0.2)
+        cafe_count=50.0,
+        cafe_confidence="high",  # Strong (50/59 = 0.84)
+        restaurant_count=72.0,
+        restaurant_confidence="high",  # Moderate (72/143 = 0.5)
+        park_count=8.0,
+        park_confidence="high",  # Limited (8/41 = 0.2)
         healthcare_count=None,
         healthcare_confidence=None,  # Unavailable
     )
     constraints = RecommendationConstraints()
     ex = generate_explanations(c, constraints)
 
-    assert "High cafe count within 1.5km (provisional)" in ex.pros
-    assert "Moderate restaurant count within 1.5km (provisional)" in ex.pros
-    assert "Low park count within 1.5km (provisional)" in ex.warnings
+    assert "High cafe count within 1.5km" in ex.pros
+    assert "Moderate restaurant count within 1.5km" in ex.pros
+    assert "Low park count within 1.5km" in ex.warnings
     assert "Healthcare data unavailable" in ex.warnings
 
 

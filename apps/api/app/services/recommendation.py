@@ -35,11 +35,20 @@ class CandidateLocality:
     calc_version: str | None = None
 
 
-CAFE_CAP = 15.0
-RESTAURANT_CAP = 30.0
-PARK_CAP = 5.0
-HEALTHCARE_CAP = 5.0
-NIGHTLIFE_CAP = 10.0
+# -----------------------------------------------------------------------------
+# Empirical Amenity Normalization Caps
+# -----------------------------------------------------------------------------
+# Derived from Geofabrik Karnataka OSM Extract (karnataka-latest.osm.pbf)
+# Date: 2026-08-03
+# Methodology: 90th percentile (P90) of raw amenity counts across 37
+# canonical Bengaluru localities using `numpy.percentile(arr, 90)`
+# (linear interpolation) and truncated to integer `int()`.
+# -----------------------------------------------------------------------------
+CAFE_CAP = 59.0
+RESTAURANT_CAP = 143.0
+PARK_CAP = 41.0
+HEALTHCARE_CAP = 83.0
+NIGHTLIFE_CAP = 25.0
 
 
 def normalize_amenity(count: float | None, confidence: str | None, cap: float) -> float | None:
@@ -116,11 +125,11 @@ def generate_explanations(
         if norm is None:
             warnings.append(f"{name.capitalize()} data unavailable")
         elif norm >= 0.8:
-            pros.append(f"High {name} count within 1.5km (provisional)")
+            pros.append(f"High {name} count within 1.5km")
         elif norm >= 0.4:
-            pros.append(f"Moderate {name} count within 1.5km (provisional)")
+            pros.append(f"Moderate {name} count within 1.5km")
         else:
-            warnings.append(f"Low {name} count within 1.5km (provisional)")
+            warnings.append(f"Low {name} count within 1.5km")
 
     return RecommendationExplanations(pros=pros, warnings=warnings)
 

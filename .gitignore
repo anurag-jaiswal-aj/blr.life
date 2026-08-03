@@ -30,3 +30,6 @@ htmlcov/
 # Docker / OS
 .DS_Store
 Thumbs.db
+
+# Data
+*.osm.pbf

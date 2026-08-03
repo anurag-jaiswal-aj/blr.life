@@ -166,7 +166,7 @@ async def test_recommend_amenities(
     m_cafe = LocalityMetric(
         locality_id=l1.id,
         metric_type=MetricType.CAFE_ACCESSIBILITY,
-        value=15.0,
+        value=59.0,
         calc_version="v1",
         calculated_at=datetime.now(UTC),
         confidence=MetricConfidence.HIGH,
@@ -191,6 +191,6 @@ async def test_recommend_amenities(
     recs = data["recommendations"]
     l1_rec = next(r for r in recs if r["slug"] == "near-metro")
 
-    assert l1_rec["raw_metrics"]["cafe_accessibility"] == 15.0
+    assert l1_rec["raw_metrics"]["cafe_accessibility"] == 59.0
     assert l1_rec["component_scores"]["cafe"] == 1.0
-    assert "High cafe count within 1.5km (provisional)" in l1_rec["explanations"]["pros"]
+    assert "High cafe count within 1.5km" in l1_rec["explanations"]["pros"]
