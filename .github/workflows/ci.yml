@@ -37,7 +37,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./apps/api
-        run: uv sync --frozen
+        run: uv sync --frozen --all-extras
 
       - name: Ruff Check
         working-directory: ./apps/api
