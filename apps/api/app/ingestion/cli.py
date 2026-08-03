@@ -55,6 +55,30 @@ def parse_args() -> argparse.Namespace:
         help="Run without committing changes",
     )
 
+    ingest_amenity_parser = subparsers.add_parser(
+        "ingest-amenity-data", help="Run an amenity POI data ingestion"
+    )
+    ingest_amenity_parser.add_argument(
+        "--file",
+        type=str,
+        required=True,
+        help="Path to the JSON payload file",
+    )
+    ingest_amenity_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Run without committing changes",
+    )
+
+    calculate_amenity_parser = subparsers.add_parser(
+        "calculate-amenity-metrics", help="Calculate centroid-radius amenity metrics"
+    )
+    calculate_amenity_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Run without committing changes",
+    )
+
     return parser.parse_args()
 
 
@@ -156,6 +180,54 @@ async def calculate_metro_metrics_command(dry_run: bool) -> None:
             sys.exit(1)
 
 
+async def ingest_amenity_command(file_path: str, dry_run: bool) -> None:
+    import hashlib
+
+    from app.ingestion.amenity_pipeline import run_amenity_ingestion
+
+    path = Path(file_path)
+    if not path.is_file():
+        logger.error(f"File not found: {file_path}")
+        sys.exit(1)
+
+    try:
+        with open(path, "rb") as f:
+            raw_bytes = f.read()
+    except Exception as e:
+        logger.error(f"Failed to read file: {e}")
+        sys.exit(1)
+
+    content_checksum = hashlib.sha256(raw_bytes).hexdigest()
+
+    async with AsyncSessionLocal() as session:
+        try:
+            stats = await run_amenity_ingestion(
+                session, file_path, dry_run=dry_run, content_checksum=content_checksum
+            )
+            logger.info(
+                f"Amenity ingestion completed. Created: {stats['created']}, "
+                f"Updated: {stats['updated']}, Unchanged: {stats.get('unchanged', 0)}"
+            )
+        except Exception as e:
+            logger.error(f"Ingestion failed: {e}")
+            sys.exit(1)
+
+
+async def calculate_amenity_metrics_command(dry_run: bool) -> None:
+    from app.ingestion.amenity_pipeline import calculate_amenity_metrics
+
+    async with AsyncSessionLocal() as session:
+        try:
+            stats = await calculate_amenity_metrics(session, dry_run=dry_run)
+            logger.info(
+                f"Amenity metrics calculation completed. Created: {stats['created']}, "
+                f"Updated: {stats['updated']}, Unchanged: {stats.get('unchanged', 0)}"
+            )
+        except Exception as e:
+            logger.error(f"Calculation failed: {e}")
+            sys.exit(1)
+
+
 async def main_async() -> None:
     args = parse_args()
 
@@ -165,6 +237,10 @@ async def main_async() -> None:
         await ingest_metro_command(file_path=args.file, dry_run=args.dry_run)
     elif args.command == "calculate-metro-metrics":
         await calculate_metro_metrics_command(dry_run=args.dry_run)
+    elif args.command == "ingest-amenity-data":
+        await ingest_amenity_command(file_path=args.file, dry_run=args.dry_run)
+    elif args.command == "calculate-amenity-metrics":
+        await calculate_amenity_metrics_command(dry_run=args.dry_run)
 
 
 def main() -> None:

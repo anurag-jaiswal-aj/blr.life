@@ -117,14 +117,14 @@ def rank_candidates(
         # Weighted Score
         w_metro = preferences.metro_access_weight
         w_work = preferences.short_commute_weight
-        
+
         available_weight_sum = 0.0
         score_sum = 0.0
 
         if norm_metro is not None:
             available_weight_sum += w_metro
             score_sum += w_metro * norm_metro
-            
+
         available_weight_sum += w_work
         score_sum += w_work * norm_work
 
@@ -135,9 +135,7 @@ def rank_candidates(
 
         explanations = generate_explanations(candidate, constraints)
 
-        metadata: dict[str, Any] = {
-            "coordinates": {"lat": candidate.lat, "lng": candidate.lng}
-        }
+        metadata: dict[str, Any] = {"coordinates": {"lat": candidate.lat, "lng": candidate.lng}}
         if candidate.metro_extra_data:
             metadata["nearest_metro_station"] = {
                 "name": candidate.metro_extra_data.get("nearest_station_name"),

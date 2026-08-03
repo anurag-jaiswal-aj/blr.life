@@ -41,19 +41,16 @@ async def setup_recommendation_data(async_db_session):
         name="Near Metro",
         slug="near-metro",
         is_active=True,
-        centroid="SRID=4326;POINT(77.5946 12.9716)"
+        centroid="SRID=4326;POINT(77.5946 12.9716)",
     )
     l2 = Locality(
-        name="Far Area",
-        slug="far-area",
-        is_active=True,
-        centroid="SRID=4326;POINT(77.65 13.0)"
+        name="Far Area", slug="far-area", is_active=True, centroid="SRID=4326;POINT(77.65 13.0)"
     )
     l3 = Locality(
         name="No Metro Data",
         slug="no-metro",
         is_active=True,
-        centroid="SRID=4326;POINT(77.60 12.98)"
+        centroid="SRID=4326;POINT(77.60 12.98)",
     )
 
     async_db_session.add_all([l1, l2, l3])
@@ -88,25 +85,25 @@ async def test_recommend_success_standard(async_client: AsyncClient, setup_recom
         "work_location": {"lat": 12.9716, "lng": 77.5946},
         "constraints": {},
         "preferences": {"metro_access_weight": 1.0, "short_commute_weight": 1.0},
-        "limit": 10
+        "limit": 10,
     }
     response = await async_client.post("/api/v1/recommend", json=payload)
     assert response.status_code == 200
     data = response.json()
-    
+
     assert "recommendations" in data
     assert "provenance" in data
     assert "v1" in data["provenance"]["calc_versions_used"]
-    
+
     recs = data["recommendations"]
     assert len(recs) == 3
     assert recs[0]["slug"] == "near-metro"
     assert recs[0]["total_score"] == 100.0  # distance is 0, metro is 500
     assert recs[0]["rank"] == 1
-    
+
     assert recs[1]["slug"] == "no-metro"
     assert recs[1]["component_scores"]["metro"] is None
-    
+
     assert recs[2]["slug"] == "far-area"
 
 
@@ -117,13 +114,13 @@ async def test_recommend_hard_constraint_work_distance(
     payload = {
         "work_location": {"lat": 12.9716, "lng": 77.5946},
         "constraints": {"max_work_distance_km": 2.0},
-        "limit": 10
+        "limit": 10,
     }
     response = await async_client.post("/api/v1/recommend", json=payload)
     assert response.status_code == 200
     data = response.json()
     recs = data["recommendations"]
-    
+
     # far-area should be filtered out
     assert len(recs) == 2
     for r in recs:
@@ -137,7 +134,7 @@ async def test_unsupported_rent_constraint_rejected(
     payload = {
         "work_location": {"lat": 12.9716, "lng": 77.5946},
         "constraints": {"max_rent_inr": 25000},
-        "limit": 10
+        "limit": 10,
     }
     response = await async_client.post("/api/v1/recommend", json=payload)
     assert response.status_code == 422
@@ -146,14 +143,14 @@ async def test_unsupported_rent_constraint_rejected(
 @pytest.mark.asyncio
 async def test_recommend_validation_errors(async_client: AsyncClient):
     payload = {
-        "work_location": {"lat": 100.0, "lng": 77.5946}, # Invalid lat
+        "work_location": {"lat": 100.0, "lng": 77.5946},  # Invalid lat
     }
     response = await async_client.post("/api/v1/recommend", json=payload)
     assert response.status_code == 422
-    
+
     payload = {
         "work_location": {"lat": 12.9716, "lng": 77.5946},
-        "preferences": {"metro_access_weight": 0.0, "short_commute_weight": 0.0} # Zero weight
+        "preferences": {"metro_access_weight": 0.0, "short_commute_weight": 0.0},  # Zero weight
     }
     response = await async_client.post("/api/v1/recommend", json=payload)
     assert response.status_code == 422

@@ -56,8 +56,8 @@ _ENUM_DEFINITIONS = [
     ("metric_confidence", "'high', 'medium', 'low', 'insufficient'"),
     (
         "metric_type",
-        "'cafe_density', 'restaurant_density', 'park_accessibility', "
-        "'healthcare_accessibility', 'metro_distance_m', "
+        "'cafe_accessibility', 'restaurant_accessibility', 'park_accessibility', "
+        "'healthcare_accessibility', 'nightlife_accessibility', 'metro_distance_m', "
         "'metro_walk_distance_m', 'amenity_composite'",
     ),
 ]
@@ -469,7 +469,7 @@ class TestLocalityMetric:
             text(
                 "INSERT INTO locality_metric "
                 "(locality_id, metric_type, value, calc_version, calculated_at, confidence, is_current) "  # noqa: E501
-                "VALUES (:lid, 'cafe_density'::metric_type, 8.2500, 'cafe-density-v1', now(), 'medium'::metric_confidence, true)"  # noqa: E501
+                "VALUES (:lid, 'cafe_accessibility'::metric_type, 8.2500, 'cafe-accessibility-v1', now(), 'medium'::metric_confidence, true)"  # noqa: E501
             ),
             {"lid": lid},
         )
@@ -531,7 +531,7 @@ class TestLocalityMetric:
             text(
                 "INSERT INTO locality_metric "
                 "(locality_id, metric_type, value, calc_version, calculated_at, confidence, is_current) "  # noqa: E501
-                "VALUES (:lid, 'restaurant_density'::metric_type, 12.3456, 'rest-density-v1', now(), 'medium'::metric_confidence, true)"  # noqa: E501
+                "VALUES (:lid, 'restaurant_accessibility'::metric_type, 12.3456, 'rest-accessibility-v1', now(), 'medium'::metric_confidence, true)"  # noqa: E501
             ),
             {"lid": lid},
         )

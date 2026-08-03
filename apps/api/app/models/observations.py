@@ -82,14 +82,16 @@ class MetricType(enum.StrEnum):
     proliferation and ensure each type has a documented semantic meaning.
     """
 
-    # Count of cafe amenities within locality boundary or centroid radius
-    CAFE_DENSITY = "cafe_density"
-    # Count of restaurant amenities within locality boundary
-    RESTAURANT_DENSITY = "restaurant_density"
+    # Count of cafe amenities within walkable radius
+    CAFE_ACCESSIBILITY = "cafe_accessibility"
+    # Count of restaurant amenities within walkable radius
+    RESTAURANT_ACCESSIBILITY = "restaurant_accessibility"
     # Count of park amenities / green space access
     PARK_ACCESSIBILITY = "park_accessibility"
     # Count of hospital/clinic amenities
     HEALTHCARE_ACCESSIBILITY = "healthcare_accessibility"
+    # Count of nightlife amenities (pubs/bars/clubs)
+    NIGHTLIFE_ACCESSIBILITY = "nightlife_accessibility"
     # Distance in metres to the nearest Namma Metro station centroid
     METRO_DISTANCE_M = "metro_distance_m"
     # Distance in metres to nearest Metro station (walking network)

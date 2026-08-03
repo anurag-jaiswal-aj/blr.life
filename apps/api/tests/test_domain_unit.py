@@ -52,8 +52,8 @@ class TestHousingConfigurationEnum:
 class TestMetricTypeEnum:
     def test_expected_types_exist(self) -> None:
         values = {m.value for m in MetricType}
-        assert "cafe_density" in values
-        assert "restaurant_density" in values
+        assert "cafe_accessibility" in values
+        assert "restaurant_accessibility" in values
         assert "park_accessibility" in values
         assert "healthcare_accessibility" in values
         assert "metro_distance_m" in values

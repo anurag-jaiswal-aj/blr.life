@@ -68,9 +68,8 @@
       "parent_zone": "South",
       "is_active": true,
       "centroid_wkt": "POINT(77.6482530 12.8487599)",
-      "geometry_source": "osm_polygon",
+      "geometry_source": "osm_point",
       "geometry_confidence": "medium",
-      "external_source_id": "way/287685707",
       "aliases": [
         {
           "alias": "E-City"
@@ -267,9 +266,8 @@
       "parent_zone": "South-West",
       "is_active": true,
       "centroid_wkt": "POINT(77.5290964 12.9314733)",
-      "geometry_source": "osm_polygon",
+      "geometry_source": "osm_point",
       "geometry_confidence": "medium",
-      "external_source_id": "way/1157397987",
       "aliases": [
         {
           "alias": "Rajarajeshwari Nagar"
@@ -308,9 +306,8 @@
       "parent_zone": "West",
       "is_active": true,
       "centroid_wkt": "POINT(77.5555009 13.0176937)",
-      "geometry_source": "osm_polygon",
+      "geometry_source": "osm_point",
       "geometry_confidence": "medium",
-      "external_source_id": "way/1238794971",
       "aliases": [
         {
           "alias": "Yeshwantpur"
@@ -356,9 +353,8 @@
       "parent_zone": "Central",
       "is_active": true,
       "centroid_wkt": "POINT(77.5922821 12.9546254)",
-      "geometry_source": "osm_polygon",
+      "geometry_source": "osm_point",
       "geometry_confidence": "medium",
-      "external_source_id": "way/1455412267",
       "aliases": []
     },
     {
@@ -378,9 +374,8 @@
       "parent_zone": "North",
       "is_active": true,
       "centroid_wkt": "POINT(77.5800614 13.0621474)",
-      "geometry_source": "osm_polygon",
+      "geometry_source": "osm_point",
       "geometry_confidence": "medium",
-      "external_source_id": "way/552430276",
       "aliases": []
     },
     {
@@ -433,9 +428,8 @@
       "parent_zone": "South-East",
       "is_active": true,
       "centroid_wkt": "POINT(77.6964066 12.9389650)",
-      "geometry_source": "osm_polygon",
+      "geometry_source": "osm_point",
       "geometry_confidence": "medium",
-      "external_source_id": "way/1073338551",
       "aliases": []
     },
     {
