@@ -33,3 +33,6 @@ Thumbs.db
 
 # Data
 *.osm.pbf
+
+# Editor
+/.vscode/

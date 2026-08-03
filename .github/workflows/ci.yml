@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+
+    services:
+      db:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: blrlife
+          POSTGRES_PASSWORD: blrlife_dev_password
+          POSTGRES_DB: blrlife
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U blrlife -d blrlife"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        working-directory: ./apps/api
+        run: uv sync --frozen
+
+      - name: Ruff Check
+        working-directory: ./apps/api
+        run: uv run ruff check .
+
+      - name: Ruff Format Check
+        working-directory: ./apps/api
+        run: uv run ruff format --check .
+
+      - name: Mypy Typecheck
+        working-directory: ./apps/api
+        run: uv run mypy app
+
+      - name: Pytest
+        working-directory: ./apps/api
+        run: uv run pytest
+
+  frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: ./apps/web/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./apps/web
+        run: npm ci
+
+      - name: Lint
+        working-directory: ./apps/web
+        run: npm run lint
+
+      - name: Typecheck
+        working-directory: ./apps/web
+        run: npm run typecheck
+
+      - name: Test
+        working-directory: ./apps/web
+        run: npm test -- --run
+
+      - name: Build
+        working-directory: ./apps/web
+        run: npm run build

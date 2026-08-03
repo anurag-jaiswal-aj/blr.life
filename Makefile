@@ -1,4 +1,4 @@
-.PHONY: up down logs ps migrate test lint format typecheck
+.PHONY: up down logs ps bootstrap migrate test lint format typecheck
 
 up:
 	docker compose up -d --build
@@ -11,6 +11,8 @@ logs:
 
 ps:
 	docker compose ps
+
+bootstrap: migrate ingest-real ingest-metro calculate-metrics ingest-amenities calculate-amenity-metrics ingest-rent
 
 migrate:
 	docker compose exec api alembic upgrade head

@@ -38,7 +38,7 @@ cp .env.example .env
 ### 2. Docker Compose (Recommended)
 ```bash
 make up
-make migrate
+make bootstrap
 ```
 
 ### 3. Local Development (Without Docker)
