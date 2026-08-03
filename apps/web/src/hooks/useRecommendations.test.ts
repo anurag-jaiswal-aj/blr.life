@@ -26,10 +26,10 @@ describe('useRecommendations (SUBMISSION)', () => {
     const req = {
       work_location: { lat: 12.0, lng: 77.0 },
       constraints: {},
-      preferences: { metro_access_weight: 1.0, short_commute_weight: 1.0 },
+      preferences: { metro_access_weight: 1.0, short_commute_weight: 1.0, cafe_weight: 0, restaurant_weight: 0, park_weight: 0, healthcare_weight: 0, nightlife_weight: 0 },
     };
 
-    const { result } = renderHook(() => useRecommendations(req));
+    const { result } = renderHook(() => useRecommendations(req as any));
     
     await waitFor(() => {
       expect(result.current.data).not.toBeNull();
@@ -46,7 +46,7 @@ describe('useRecommendations (SUBMISSION)', () => {
     const req = {
       work_location: { lat: 12.0, lng: 77.0 },
       constraints: {},
-      preferences: { metro_access_weight: 1.0, short_commute_weight: 1.0 },
+      preferences: { metro_access_weight: 1.0, short_commute_weight: 1.0, cafe_weight: 0, restaurant_weight: 0, park_weight: 0, healthcare_weight: 0, nightlife_weight: 0 },
     };
 
     const { result } = renderHook(() => useRecommendations(req));

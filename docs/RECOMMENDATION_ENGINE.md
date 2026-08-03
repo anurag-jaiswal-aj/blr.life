@@ -12,6 +12,7 @@ The V1 recommendation engine is deterministic and mathematical. It does not use 
 3. **Feature Representation**: Normalize metrics to a (0.0 to 1.0) scale for remaining areas:
    - *Metro Access*: `1.0` if <= 500m, decays to `0.0` at 3000m.
    - *Work Distance*: `1.0` if <= 2km, decays to `0.0` at 15km.
+   - *Amenity Density*: `min(raw_count / provisional_cap, 1.0)`. **IMPORTANT**: The current caps (Cafes: 15, Restaurants: 30, Parks: 5, Healthcare: 5, Nightlife: 10) are explicitly *PROVISIONAL* engineering mechanisms. They are NOT derived from a representative Bengaluru data distribution and MUST be empirically recalibrated once real OSM amenity data is successfully ingested.
 4. **Weighted Scoring**: Apply user preference weights to the normalized metrics. If a locality lacks a metric (or has insufficient confidence), its active weights are renormalized.
 5. **Ranking**: Sort by the final `BLR Score` (with a deterministic tie-breaker on locality slug).
 6. **Explanation Generation**: Derive human-readable pros/cons and warnings based on metric values and missing data.

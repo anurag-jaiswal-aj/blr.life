@@ -12,19 +12,19 @@ describe('useUrlState', () => {
 
   it('initializes with default state when URL is empty', () => {
     const { result } = renderHook(() => useUrlState());
-    expect(result.current.state).toEqual({ lat: null, lng: null, max_dist: 15.0, w_metro: 1.0, w_work: 1.0 });
+    expect(result.current.state).toEqual({ lat: null, lng: null, max_dist: 15.0, w_metro: 1.0, w_work: 1.0, w_cafe: 0.0, w_restaurant: 0.0, w_park: 0.0, w_healthcare: 0.0, w_nightlife: 0.0 });
   });
 
   it('parses valid query parameters correctly (URL PARSING)', () => {
-    (navigation as any).__setSearchParams('lat=12.9&lng=77.6&max_dist=10&w_metro=0.5&w_work=0.8');
+    (navigation as any).__setSearchParams('lat=12.9&lng=77.6&max_dist=10&w_metro=0.5&w_work=0.8&w_cafe=0.1&w_rest=0.2&w_park=0.3&w_health=0.4&w_night=0.5');
     const { result } = renderHook(() => useUrlState());
-    expect(result.current.state).toEqual({ lat: 12.9, lng: 77.6, max_dist: 10, w_metro: 0.5, w_work: 0.8 });
+    expect(result.current.state).toEqual({ lat: 12.9, lng: 77.6, max_dist: 10, w_metro: 0.5, w_work: 0.8, w_cafe: 0.1, w_restaurant: 0.2, w_park: 0.3, w_healthcare: 0.4, w_nightlife: 0.5 });
   });
 
   it('handles malformed and invalid URLs safely (MALFORMED URL HANDLING)', () => {
-    (navigation as any).__setSearchParams('lat=invalid&lng=NaN&max_dist=-5&w_metro=1.5&w_work=-0.1');
+    (navigation as any).__setSearchParams('lat=invalid&lng=NaN&max_dist=-5&w_metro=1.5&w_work=-0.1&w_cafe=-1&w_rest=5&w_park=invalid&w_health=NaN&w_night=2');
     const { result } = renderHook(() => useUrlState());
-    expect(result.current.state).toEqual({ lat: null, lng: null, max_dist: 15.0, w_metro: 1.0, w_work: 1.0 });
+    expect(result.current.state).toEqual({ lat: null, lng: null, max_dist: 15.0, w_metro: 1.0, w_work: 1.0, w_cafe: 0.0, w_restaurant: 0.0, w_park: 0.0, w_healthcare: 0.0, w_nightlife: 0.0 });
   });
 
   it('updates state and pushes to router (URL SERIALIZATION)', () => {
@@ -32,7 +32,7 @@ describe('useUrlState', () => {
     const { result } = renderHook(() => useUrlState());
     
     act(() => {
-      result.current.updateState({ lat: 13.0, lng: 77.5, max_dist: 5, w_metro: 0, w_work: 0 });
+      result.current.updateState({ lat: 13.0, lng: 77.5, max_dist: 5, w_metro: 0, w_work: 0, w_cafe: 1.0, w_restaurant: 1.0, w_park: 1.0, w_healthcare: 1.0, w_nightlife: 1.0 });
     });
 
     expect(pushMock).toHaveBeenCalled();
@@ -42,6 +42,11 @@ describe('useUrlState', () => {
     expect(pushUrl).toContain('max_dist=5');
     expect(pushUrl).toContain('w_metro=0');
     expect(pushUrl).toContain('w_work=0');
+    expect(pushUrl).toContain('w_cafe=1');
+    expect(pushUrl).toContain('w_rest=1');
+    expect(pushUrl).toContain('w_park=1');
+    expect(pushUrl).toContain('w_health=1');
+    expect(pushUrl).toContain('w_night=1');
   });
 
   it('does not append parameters if they match DEFAULT_STATE or are NaN', () => {
@@ -49,7 +54,7 @@ describe('useUrlState', () => {
     const { result } = renderHook(() => useUrlState());
     
     act(() => {
-      result.current.updateState({ lat: NaN, lng: NaN, max_dist: 15.0, w_metro: 1.0, w_work: 1.0 });
+      result.current.updateState({ lat: NaN, lng: NaN, max_dist: 15.0, w_metro: 1.0, w_work: 1.0, w_cafe: 0.0, w_restaurant: 0.0, w_park: 0.0, w_healthcare: 0.0, w_nightlife: 0.0 });
     });
 
     const pushUrl = pushMock.mock.calls[0][0];
@@ -77,14 +82,14 @@ describe('useUrlState', () => {
   });
 
   it('generates valid API request payload when state is populated', () => {
-    (navigation as any).__setSearchParams('lat=12.9&lng=77.6&max_dist=20&w_metro=0.9&w_work=0.2');
+    (navigation as any).__setSearchParams('lat=12.9&lng=77.6&max_dist=20&w_metro=0.9&w_work=0.2&w_cafe=1&w_rest=0.5');
     const { result } = renderHook(() => useUrlState());
     
     const req = result.current.getApiRequest();
     expect(req).toEqual({
       work_location: { lat: 12.9, lng: 77.6 },
       constraints: { max_work_distance_km: 20 },
-      preferences: { metro_access_weight: 0.9, short_commute_weight: 0.2 }
+      preferences: { metro_access_weight: 0.9, short_commute_weight: 0.2, cafe_weight: 1, restaurant_weight: 0.5, park_weight: 0, healthcare_weight: 0, nightlife_weight: 0 }
     });
   });
 });

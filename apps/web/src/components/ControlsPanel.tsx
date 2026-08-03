@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AppState } from '../hooks/useUrlState';
-import { Briefcase, Train } from 'lucide-react';
+import { Briefcase, Train, Coffee, Utensils, TreePine, Stethoscope, Moon, ChevronDown, ChevronUp } from 'lucide-react';
 import { WorkLocationInput } from './WorkLocationInput';
 
 interface ControlsPanelProps {
@@ -8,7 +8,49 @@ interface ControlsPanelProps {
   updateState: (newState: Partial<AppState>) => void;
 }
 
+const PrioritySelector = ({ 
+  value, 
+  onChange, 
+  label, 
+  icon: Icon 
+}: { 
+  value: number, 
+  onChange: (v: number) => void, 
+  label: string, 
+  icon: React.ElementType 
+}) => {
+  return (
+    <div className="flex flex-col gap-2">
+      <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+        <Icon size={16} className="text-gray-400" />
+        {label}
+      </label>
+      <div className="flex bg-gray-100 rounded-lg p-1">
+        {[
+          { label: 'Off', val: 0.0 },
+          { label: 'Nice', val: 0.5 },
+          { label: 'Must', val: 1.0 }
+        ].map(opt => (
+          <button
+            key={opt.label}
+            onClick={() => onChange(opt.val)}
+            className={`flex-1 text-xs py-1.5 rounded-md font-medium transition-colors ${
+              value === opt.val 
+                ? 'bg-white text-indigo-700 shadow-sm' 
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export function ControlsPanel({ state, updateState }: ControlsPanelProps) {
+  const [lifestyleOpen, setLifestyleOpen] = useState(false);
+
   return (
     <div className="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-gray-100 flex flex-col gap-6">
       <div>
@@ -78,6 +120,26 @@ export function ControlsPanel({ state, updateState }: ControlsPanelProps) {
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
               aria-label="Short Commute Importance Weight"
             />
+          </div>
+
+          <div className="pt-2 border-t border-gray-100">
+            <button 
+              onClick={() => setLifestyleOpen(!lifestyleOpen)}
+              className="flex items-center justify-between w-full text-left"
+            >
+              <span className="text-sm font-bold text-gray-800">Lifestyle Preferences</span>
+              {lifestyleOpen ? <ChevronUp size={18} className="text-gray-500" /> : <ChevronDown size={18} className="text-gray-500" />}
+            </button>
+            
+            {lifestyleOpen && (
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                <PrioritySelector label="Cafes" icon={Coffee} value={state.w_cafe} onChange={(v) => updateState({ w_cafe: v })} />
+                <PrioritySelector label="Dining" icon={Utensils} value={state.w_restaurant} onChange={(v) => updateState({ w_restaurant: v })} />
+                <PrioritySelector label="Parks" icon={TreePine} value={state.w_park} onChange={(v) => updateState({ w_park: v })} />
+                <PrioritySelector label="Healthcare" icon={Stethoscope} value={state.w_healthcare} onChange={(v) => updateState({ w_healthcare: v })} />
+                <PrioritySelector label="Nightlife" icon={Moon} value={state.w_nightlife} onChange={(v) => updateState({ w_nightlife: v })} />
+              </div>
+            )}
           </div>
         </div>
       )}

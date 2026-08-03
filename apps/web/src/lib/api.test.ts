@@ -17,7 +17,7 @@ describe('api (API REQUEST SERIALIZATION)', () => {
     const req = {
       work_location: { lat: 12.0, lng: 77.0 },
       constraints: { max_work_distance_km: 15 },
-      preferences: { metro_access_weight: 1.0, short_commute_weight: 1.0 },
+      preferences: { metro_access_weight: 1.0, short_commute_weight: 1.0, cafe_weight: 0, restaurant_weight: 0, park_weight: 0, healthcare_weight: 0, nightlife_weight: 0 },
     };
 
     const res = await fetchRecommendations(req);
@@ -42,7 +42,7 @@ describe('api (API REQUEST SERIALIZATION)', () => {
     const req = {
       work_location: { lat: 12.0, lng: 77.0 },
       constraints: { max_work_distance_km: 15 },
-      preferences: { metro_access_weight: 1.0, short_commute_weight: 1.0 },
+      preferences: { metro_access_weight: 1.0, short_commute_weight: 1.0, cafe_weight: 0, restaurant_weight: 0, park_weight: 0, healthcare_weight: 0, nightlife_weight: 0 },
     };
 
     await expect(fetchRecommendations(req)).rejects.toThrow('Validation Error');

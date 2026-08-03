@@ -154,3 +154,43 @@ async def test_recommend_validation_errors(async_client: AsyncClient):
     }
     response = await async_client.post("/api/v1/recommend", json=payload)
     assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_recommend_amenities(
+    async_client: AsyncClient, setup_recommendation_data, async_db_session: AsyncSession
+):
+    l1, _, _ = setup_recommendation_data
+
+    # Add cafe metric
+    m_cafe = LocalityMetric(
+        locality_id=l1.id,
+        metric_type=MetricType.CAFE_ACCESSIBILITY,
+        value=15.0,
+        calc_version="v1",
+        calculated_at=datetime.now(UTC),
+        confidence=MetricConfidence.HIGH,
+        is_current=True,
+    )
+    async_db_session.add(m_cafe)
+    await async_db_session.commit()
+
+    payload = {
+        "work_location": {"lat": 12.9716, "lng": 77.5946},
+        "preferences": {
+            "metro_access_weight": 1.0,
+            "short_commute_weight": 1.0,
+            "cafe_weight": 1.0,
+        },
+        "limit": 10,
+    }
+    response = await async_client.post("/api/v1/recommend", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+
+    recs = data["recommendations"]
+    l1_rec = next(r for r in recs if r["slug"] == "near-metro")
+
+    assert l1_rec["raw_metrics"]["cafe_accessibility"] == 15.0
+    assert l1_rec["component_scores"]["cafe"] == 1.0
+    assert "High cafe count within 1.5km (provisional)" in l1_rec["explanations"]["pros"]

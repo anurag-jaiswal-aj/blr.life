@@ -10,6 +10,11 @@ export interface RecommendationConstraints {
 export interface RecommendationPreferences {
   metro_access_weight: number;
   short_commute_weight: number;
+  cafe_weight: number;
+  restaurant_weight: number;
+  park_weight: number;
+  healthcare_weight: number;
+  nightlife_weight: number;
 }
 
 export interface RecommendationRequest {
@@ -22,11 +27,21 @@ export interface RecommendationRequest {
 export interface ComponentScores {
   metro: number | null;
   work_distance: number;
+  cafe: number | null;
+  restaurant: number | null;
+  park: number | null;
+  healthcare: number | null;
+  nightlife: number | null;
 }
 
 export interface RawMetrics {
   metro_distance_m: number | null;
   work_distance_km: number;
+  cafe_accessibility: number | null;
+  restaurant_accessibility: number | null;
+  park_accessibility: number | null;
+  healthcare_accessibility: number | null;
+  nightlife_accessibility: number | null;
 }
 
 export interface RecommendationExplanations {

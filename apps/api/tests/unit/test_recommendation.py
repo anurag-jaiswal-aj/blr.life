@@ -200,7 +200,7 @@ def test_explanation_generation_rules() -> None:
     ex_good = generate_explanations(c_good, constraints)
     assert "Strong metro access" in ex_good.pros
     assert "Close to work" in ex_good.pros
-    assert len(ex_good.warnings) == 0
+    assert len([w for w in ex_good.warnings if "metro" in w.lower() or "work" in w.lower()]) == 0
 
     ex_bad = generate_explanations(c_bad, constraints)
     assert "Limited metro access" in ex_bad.warnings
@@ -279,3 +279,121 @@ def test_hard_constraint_work_distance() -> None:
 
     assert len(results) == 1
     assert results[0].slug == "near"
+
+
+def test_amenity_scoring_and_renormalization() -> None:
+    c1 = CandidateLocality(
+        id=1,
+        slug="all-amenities",
+        name="All Amenities",
+        lat=12.0,
+        lng=77.0,
+        work_distance_km=2.0,  # 1.0
+        metro_distance_m=500.0,  # 1.0
+        metro_confidence="high",
+        cafe_count=15.0,
+        cafe_confidence="high",  # 1.0
+        restaurant_count=30.0,
+        restaurant_confidence="high",  # 1.0
+        park_count=0.0,
+        park_confidence="high",  # 0.0
+    )
+    c2 = CandidateLocality(
+        id=2,
+        slug="missing-amenity",
+        name="Missing Amenity",
+        lat=12.0,
+        lng=77.0,
+        work_distance_km=2.0,  # 1.0
+        metro_distance_m=500.0,  # 1.0
+        metro_confidence="high",
+        cafe_count=15.0,
+        cafe_confidence="high",  # 1.0
+        restaurant_count=30.0,
+        restaurant_confidence="high",  # 1.0
+        park_count=None,
+        park_confidence=None,  # Missing
+    )
+    c3 = CandidateLocality(
+        id=3,
+        slug="low-amenity",
+        name="Low Amenity",
+        lat=12.0,
+        lng=77.0,
+        work_distance_km=2.0,  # 1.0
+        metro_distance_m=500.0,  # 1.0
+        metro_confidence="high",
+        cafe_count=0.0,
+        cafe_confidence="high",  # 0.0
+        restaurant_count=0.0,
+        restaurant_confidence="high",  # 0.0
+        park_count=5.0,
+        park_confidence="high",  # 1.0
+    )
+
+    constraints = RecommendationConstraints()
+    # Weights: work=1, metro=1, cafe=1, restaurant=1, park=1
+    prefs = RecommendationPreferences(
+        metro_access_weight=1.0,
+        short_commute_weight=1.0,
+        cafe_weight=1.0,
+        restaurant_weight=1.0,
+        park_weight=1.0,
+    )
+
+    results, _ = rank_candidates([c1, c2, c3], constraints, prefs, limit=10)
+
+    # c1: (1+1+1+1+0) / 5 = 0.8 = 80.0
+    # c2: (1+1+1+1) / 4 = 1.0 = 100.0 (Park is missing, so denominator renormalizes to 4!)
+    # c3: (1+1+0+0+1) / 5 = 0.6 = 60.0
+
+    assert results[0].slug == "missing-amenity"
+    assert results[0].total_score == 100.0
+    assert results[0].component_scores.park is None
+
+    assert results[1].slug == "all-amenities"
+    assert results[1].total_score == 80.0
+    assert results[1].component_scores.park == 0.0
+
+    assert results[2].slug == "low-amenity"
+    assert results[2].total_score == 60.0
+
+
+def test_amenity_explanations() -> None:
+    c = CandidateLocality(
+        id=1,
+        slug="test",
+        name="Test",
+        lat=12.0,
+        lng=77.0,
+        work_distance_km=2.0,
+        metro_distance_m=500.0,
+        metro_confidence="high",
+        cafe_count=15.0,
+        cafe_confidence="high",  # Strong
+        restaurant_count=15.0,
+        restaurant_confidence="high",  # Moderate (15/30 = 0.5)
+        park_count=1.0,
+        park_confidence="high",  # Limited (1/5 = 0.2)
+        healthcare_count=None,
+        healthcare_confidence=None,  # Unavailable
+    )
+    constraints = RecommendationConstraints()
+    ex = generate_explanations(c, constraints)
+
+    assert "High cafe count within 1.5km (provisional)" in ex.pros
+    assert "Moderate restaurant count within 1.5km (provisional)" in ex.pros
+    assert "Low park count within 1.5km (provisional)" in ex.warnings
+    assert "Healthcare data unavailable" in ex.warnings
+
+
+def test_recommendation_preferences_backward_compatibility() -> None:
+    prefs = RecommendationPreferences(
+        metro_access_weight=1.0,
+        short_commute_weight=1.0,
+    )
+    assert prefs.cafe_weight == 0.0
+    assert prefs.restaurant_weight == 0.0
+    assert prefs.park_weight == 0.0
+    assert prefs.healthcare_weight == 0.0
+    assert prefs.nightlife_weight == 0.0

@@ -21,7 +21,7 @@ describe('RecommendationWorkspace', () => {
 
   it('renders correctly with assembled components', () => {
     vi.mocked(urlState.useUrlState).mockReturnValue({
-      state: { lat: 12.0, lng: 77.0, max_dist: 15, w_metro: 1, w_work: 1 },
+      state: { lat: 12.0, lng: 77.0, max_dist: 15, w_metro: 1, w_work: 1, w_cafe: 0, w_restaurant: 0, w_park: 0, w_healthcare: 0, w_nightlife: 0 },
       updateState: vi.fn(),
       getApiRequest: vi.fn(),
     });

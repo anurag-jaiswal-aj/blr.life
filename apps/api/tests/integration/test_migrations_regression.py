@@ -7,7 +7,6 @@ from alembic.config import Config
 from sqlalchemy import text
 
 from alembic import command
-from app.models.base import Base
 
 ALEMBIC_DIR = Path(__file__).parent.parent.parent
 ALEMBIC_INI = ALEMBIC_DIR / "alembic.ini"
@@ -20,14 +19,17 @@ def alembic_config() -> Config:
     # Ensure it uses the test database URL but synchronous (psycopg instead of asyncpg)
     url = os.environ.get(
         "DATABASE_URL",
-        "postgresql+asyncpg://blrlife:blrlife_dev_password@localhost:5432/blrlife_test"
+        "postgresql+asyncpg://blrlife:blrlife_dev_password@localhost:5432/blrlife_test",
     )
-    sync_url = url.replace("+asyncpg", "+psycopg").replace("blrlife_test", "blrlife_test_migrations")
+    sync_url = url.replace("+asyncpg", "+psycopg").replace(
+        "blrlife_test", "blrlife_test_migrations"
+    )
     config.set_main_option("sqlalchemy.url", sync_url)
-    
+
     # We must patch os.environ and settings because env.py reads settings.DATABASE_URL
     # and settings is cached in sys.modules
     from app.core.config import settings
+
     original_url = os.environ.get("DATABASE_URL")
     original_settings_url = settings.DATABASE_URL
     os.environ["DATABASE_URL"] = sync_url.replace("+psycopg", "+asyncpg")
@@ -47,9 +49,11 @@ def test_migration_0006_roundtrip_and_constraints(alembic_config: Config) -> Non
     """
     from sqlalchemy import create_engine
 
-    admin_url = alembic_config.get_main_option("sqlalchemy.url").replace("blrlife_test_migrations", "blrlife")
+    admin_url = alembic_config.get_main_option("sqlalchemy.url").replace(
+        "blrlife_test_migrations", "blrlife"
+    )
     admin_engine = create_engine(admin_url, isolation_level="AUTOCOMMIT")
-    
+
     with admin_engine.begin() as conn:
         conn.execute(text("DROP DATABASE IF EXISTS blrlife_test_migrations WITH (FORCE);"))
         conn.execute(text("CREATE DATABASE blrlife_test_migrations;"))

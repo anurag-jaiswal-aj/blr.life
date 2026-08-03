@@ -6,7 +6,7 @@ import { AppState } from '../hooks/useUrlState';
 import { describe, it, expect, vi } from 'vitest';
 
 describe('ControlsPanel (CONTROLS)', () => {
-  const defaultState: AppState = { lat: 12.97, lng: 77.59, max_dist: 15, w_metro: 1, w_work: 1 };
+  const defaultState: AppState = { lat: 12.97, lng: 77.59, max_dist: 15, w_metro: 1, w_work: 1, w_cafe: 0, w_restaurant: 0, w_park: 0, w_healthcare: 0, w_nightlife: 0 };
 
   it('renders preference controls when coordinates are present', () => {
     render(<ControlsPanel state={defaultState} updateState={vi.fn()} />);
@@ -33,5 +33,26 @@ describe('ControlsPanel (CONTROLS)', () => {
     render(<ControlsPanel state={{ ...defaultState, lat: null, lng: null }} updateState={vi.fn()} />);
     expect(screen.getByLabelText(/Latitude/i)).toBeInTheDocument();
     expect(screen.queryByLabelText(/Maximum Commute Distance/i)).not.toBeInTheDocument();
+  });
+
+  it('updates amenity priorities when lifestyle accordion is toggled and selectors clicked', () => {
+    const updateSpy = vi.fn();
+    const { getByText, getAllByText } = render(<ControlsPanel state={defaultState} updateState={updateSpy} />);
+    
+    fireEvent.click(getByText('Lifestyle Preferences'));
+    
+    const cafeLabel = getByText('Cafes').parentElement;
+    if (cafeLabel) {
+      const mustBtn = cafeLabel.querySelectorAll('button')[2];
+      fireEvent.click(mustBtn);
+      expect(updateSpy).toHaveBeenCalledWith({ w_cafe: 1.0 });
+    }
+    
+    const diningLabel = getByText('Dining').parentElement;
+    if (diningLabel) {
+      const niceBtn = diningLabel.querySelectorAll('button')[1];
+      fireEvent.click(niceBtn);
+      expect(updateSpy).toHaveBeenCalledWith({ w_restaurant: 0.5 });
+    }
   });
 });

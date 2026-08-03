@@ -10,11 +10,16 @@ from app.ingestion.amenity_pipeline import calculate_amenity_metrics, run_amenit
 from app.models.amenity import AmenityCategory, AmenityPOI
 from app.models.locality import GeometryConfidence, GeometrySource, Locality
 from app.models.observations import LocalityMetric, MetricType
-from tests.integration.test_domain_integration import TEST_ASYNC_URL, setup_test_database as _setup_test_database
+from tests.integration.test_domain_integration import (
+    TEST_ASYNC_URL,
+)
+from tests.integration.test_domain_integration import (
+    setup_test_database as base_setup_test_database,  # noqa: F401
+)
 
 
 @pytest.fixture(autouse=True)
-def _init_db(_setup_test_database):
+def _init_db(base_setup_test_database):  # noqa: F811
     """Ensure database schema is created before tests in this file."""
     pass
 

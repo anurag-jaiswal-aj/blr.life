@@ -10,7 +10,7 @@ It must be realistically shippable within approximately 21 development days usin
 ### User Stories
 - As a user, I can input my work location (using a search bar or map click) so the system knows my daily destination.
 - As a user, I can input my housing constraints (budget, BHK type) so I don't see unaffordable areas.
-- As a user, I can select lifestyle priorities (e.g., metro access, nightlife, quietness) so the ranking reflects my preferences.
+- As a user, I can select lifestyle priorities (e.g., metro access, nightlife, cafes, parks) so the ranking reflects my preferences.
 - As a user, I can see a ranked list of neighbourhoods with a "BLR Score" indicating how well they match my inputs.
 - As a user, I can click on a recommendation to see a data-driven explanation of why it was chosen (Pros/Cons).
 - As a user, I can view the recommended neighbourhoods on an interactive map.

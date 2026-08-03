@@ -19,10 +19,33 @@ class CandidateLocality:
     lat: float
     lng: float
     work_distance_km: float
-    metro_distance_m: float | None
-    metro_confidence: str | None
-    metro_extra_data: dict[str, Any] | None
-    calc_version: str | None
+    metro_distance_m: float | None = None
+    metro_confidence: str | None = None
+    metro_extra_data: dict[str, Any] | None = None
+    cafe_count: float | None = None
+    cafe_confidence: str | None = None
+    restaurant_count: float | None = None
+    restaurant_confidence: str | None = None
+    park_count: float | None = None
+    park_confidence: str | None = None
+    healthcare_count: float | None = None
+    healthcare_confidence: str | None = None
+    nightlife_count: float | None = None
+    nightlife_confidence: str | None = None
+    calc_version: str | None = None
+
+
+CAFE_CAP = 15.0
+RESTAURANT_CAP = 30.0
+PARK_CAP = 5.0
+HEALTHCARE_CAP = 5.0
+NIGHTLIFE_CAP = 10.0
+
+
+def normalize_amenity(count: float | None, confidence: str | None, cap: float) -> float | None:
+    if count is None or confidence in ["insufficient", "low", None]:
+        return None
+    return min(count, cap) / cap
 
 
 def normalize_metro_distance(distance_m: float | None, confidence: str | None) -> float | None:
@@ -80,10 +103,24 @@ def generate_explanations(
     elif candidate.work_distance_km > 15.0:
         warnings.append("Far from work location")
 
-    # Missing rent data warning if budget provided
-    # The max_rent_inr has been removed from constraints, so this block is no longer needed.
-    # However, if any unsupported constraints were present (but blocked by schema forbid),
-    # they would have failed validation.
+    # Amenity explanations
+    amenities = [
+        ("cafe", candidate.cafe_count, candidate.cafe_confidence, CAFE_CAP),
+        ("restaurant", candidate.restaurant_count, candidate.restaurant_confidence, RESTAURANT_CAP),
+        ("park", candidate.park_count, candidate.park_confidence, PARK_CAP),
+        ("healthcare", candidate.healthcare_count, candidate.healthcare_confidence, HEALTHCARE_CAP),
+        ("nightlife", candidate.nightlife_count, candidate.nightlife_confidence, NIGHTLIFE_CAP),
+    ]
+    for name, count, conf, cap in amenities:
+        norm = normalize_amenity(count, conf, cap)
+        if norm is None:
+            warnings.append(f"{name.capitalize()} data unavailable")
+        elif norm >= 0.8:
+            pros.append(f"High {name} count within 1.5km (provisional)")
+        elif norm >= 0.4:
+            pros.append(f"Moderate {name} count within 1.5km (provisional)")
+        else:
+            warnings.append(f"Low {name} count within 1.5km (provisional)")
 
     return RecommendationExplanations(pros=pros, warnings=warnings)
 
@@ -114,9 +151,26 @@ def rank_candidates(
         )
         norm_work = normalize_work_distance(candidate.work_distance_km)
 
+        norm_cafe = normalize_amenity(candidate.cafe_count, candidate.cafe_confidence, CAFE_CAP)
+        norm_restaurant = normalize_amenity(
+            candidate.restaurant_count, candidate.restaurant_confidence, RESTAURANT_CAP
+        )
+        norm_park = normalize_amenity(candidate.park_count, candidate.park_confidence, PARK_CAP)
+        norm_healthcare = normalize_amenity(
+            candidate.healthcare_count, candidate.healthcare_confidence, HEALTHCARE_CAP
+        )
+        norm_nightlife = normalize_amenity(
+            candidate.nightlife_count, candidate.nightlife_confidence, NIGHTLIFE_CAP
+        )
+
         # Weighted Score
         w_metro = preferences.metro_access_weight
         w_work = preferences.short_commute_weight
+        w_cafe = preferences.cafe_weight
+        w_restaurant = preferences.restaurant_weight
+        w_park = preferences.park_weight
+        w_healthcare = preferences.healthcare_weight
+        w_nightlife = preferences.nightlife_weight
 
         available_weight_sum = 0.0
         score_sum = 0.0
@@ -127,6 +181,26 @@ def rank_candidates(
 
         available_weight_sum += w_work
         score_sum += w_work * norm_work
+
+        if norm_cafe is not None:
+            available_weight_sum += w_cafe
+            score_sum += w_cafe * norm_cafe
+
+        if norm_restaurant is not None:
+            available_weight_sum += w_restaurant
+            score_sum += w_restaurant * norm_restaurant
+
+        if norm_park is not None:
+            available_weight_sum += w_park
+            score_sum += w_park * norm_park
+
+        if norm_healthcare is not None:
+            available_weight_sum += w_healthcare
+            score_sum += w_healthcare * norm_healthcare
+
+        if norm_nightlife is not None:
+            available_weight_sum += w_nightlife
+            score_sum += w_nightlife * norm_nightlife
 
         if available_weight_sum <= 0:
             total_score = 0.0
@@ -155,10 +229,20 @@ def rank_candidates(
                 component_scores=ComponentScores(
                     metro=round(norm_metro, 4) if norm_metro is not None else None,
                     work_distance=round(norm_work, 4),
+                    cafe=round(norm_cafe, 4) if norm_cafe is not None else None,
+                    restaurant=round(norm_restaurant, 4) if norm_restaurant is not None else None,
+                    park=round(norm_park, 4) if norm_park is not None else None,
+                    healthcare=round(norm_healthcare, 4) if norm_healthcare is not None else None,
+                    nightlife=round(norm_nightlife, 4) if norm_nightlife is not None else None,
                 ),
                 raw_metrics=RawMetrics(
                     metro_distance_m=candidate.metro_distance_m,
                     work_distance_km=round(candidate.work_distance_km, 2),
+                    cafe_accessibility=candidate.cafe_count,
+                    restaurant_accessibility=candidate.restaurant_count,
+                    park_accessibility=candidate.park_count,
+                    healthcare_accessibility=candidate.healthcare_count,
+                    nightlife_accessibility=candidate.nightlife_count,
                 ),
                 metadata=metadata,
                 explanations=explanations,

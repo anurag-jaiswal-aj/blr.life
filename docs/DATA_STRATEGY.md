@@ -33,7 +33,7 @@ V1 relies entirely on deterministic data. We must acquire, normalize, and store 
 - **Confidence**: High.
 
 ### 5. Amenities & Lifestyle Indicators (Cafes, Parks, Hospitals)
-- **Why**: To score preferences like "Nightlife", "Quietness", "Healthcare".
+- **Why**: To score preferences like "Nightlife", "Quietness", "Healthcare". *Note: Quietness is currently deferred / unsupported in the V1 implementation.*
 - **Source**: OSM POI data ingested offline (via Geofabrik extracts).
 - **Free/Open**: Yes (ODbL).
 - **Confidence**: High for quantity, medium for quality.

@@ -22,10 +22,25 @@ class RecommendationPreferences(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     metro_access_weight: float = Field(
-        1.0, ge=0.0, le=1.0, description="Importance of metro proximity"
+        default=0.0, ge=0.0, le=1.0, description="Importance of metro proximity"
     )
     short_commute_weight: float = Field(
-        1.0, ge=0.0, le=1.0, description="Importance of a short commute"
+        default=0.0, ge=0.0, le=1.0, description="Importance of a short commute"
+    )
+    cafe_weight: float = Field(
+        default=0.0, ge=0.0, le=1.0, description="Importance of cafe proximity"
+    )
+    restaurant_weight: float = Field(
+        default=0.0, ge=0.0, le=1.0, description="Importance of restaurant proximity"
+    )
+    park_weight: float = Field(
+        default=0.0, ge=0.0, le=1.0, description="Importance of park/green space proximity"
+    )
+    healthcare_weight: float = Field(
+        default=0.0, ge=0.0, le=1.0, description="Importance of healthcare proximity"
+    )
+    nightlife_weight: float = Field(
+        default=0.0, ge=0.0, le=1.0, description="Importance of nightlife proximity"
     )
 
 
@@ -45,15 +60,28 @@ class RecommendationRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_weights_sum(self) -> "RecommendationRequest":
-        total_weight = self.preferences.metro_access_weight + self.preferences.short_commute_weight
+        total_weight = (
+            self.preferences.metro_access_weight
+            + self.preferences.short_commute_weight
+            + self.preferences.cafe_weight
+            + self.preferences.restaurant_weight
+            + self.preferences.park_weight
+            + self.preferences.healthcare_weight
+            + self.preferences.nightlife_weight
+        )
         if total_weight == 0:
             raise ValueError("The sum of preference weights must be greater than 0.")
         return self
 
 
 class ComponentScores(BaseModel):
-    metro: float | None = Field(..., description="Normalized metro access score [0, 1]")
+    metro: float | None = Field(None, description="Normalized metro access score [0, 1]")
     work_distance: float = Field(..., description="Normalized work distance score [0, 1]")
+    cafe: float | None = Field(None, description="Normalized cafe score [0, 1]")
+    restaurant: float | None = Field(None, description="Normalized restaurant score [0, 1]")
+    park: float | None = Field(None, description="Normalized park score [0, 1]")
+    healthcare: float | None = Field(None, description="Normalized healthcare score [0, 1]")
+    nightlife: float | None = Field(None, description="Normalized nightlife score [0, 1]")
 
 
 class RawMetrics(BaseModel):
@@ -61,6 +89,17 @@ class RawMetrics(BaseModel):
         None, description="Actual distance to nearest metro in meters"
     )
     work_distance_km: float = Field(..., description="Actual straight-line distance to work in km")
+    cafe_accessibility: float | None = Field(None, description="Count of cafes within 1500m")
+    restaurant_accessibility: float | None = Field(
+        None, description="Count of restaurants within 1500m"
+    )
+    park_accessibility: float | None = Field(None, description="Count of parks within 1500m")
+    healthcare_accessibility: float | None = Field(
+        None, description="Count of hospitals/clinics within 1500m"
+    )
+    nightlife_accessibility: float | None = Field(
+        None, description="Count of nightlife POIs within 1500m"
+    )
 
 
 class RecommendationExplanations(BaseModel):

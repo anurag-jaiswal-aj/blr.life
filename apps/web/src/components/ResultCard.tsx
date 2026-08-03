@@ -1,6 +1,6 @@
 import React from 'react';
 import { RecommendationResult } from '../lib/api';
-import { CheckCircle2, AlertTriangle, Train, MapPin } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Train, MapPin, Coffee, Utensils, TreePine, Stethoscope, Moon } from 'lucide-react';
 
 interface ResultCardProps {
   result: RecommendationResult;
@@ -27,6 +27,23 @@ export function ResultCard({ result }: ResultCardProps) {
               <span className="text-xs text-gray-500 flex items-center gap-1">
                 <Train size={12} /> {isMetroUnavailable ? 'Unavailable' : `${result.raw_metrics.metro_distance_m}m`}
               </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 mt-1">
+              {result.raw_metrics.cafe_accessibility !== null && result.raw_metrics.cafe_accessibility !== undefined && (
+                <span className="text-[10px] text-gray-400 flex items-center gap-1"><Coffee size={10} /> {result.raw_metrics.cafe_accessibility}</span>
+              )}
+              {result.raw_metrics.restaurant_accessibility !== null && result.raw_metrics.restaurant_accessibility !== undefined && (
+                <span className="text-[10px] text-gray-400 flex items-center gap-1"><Utensils size={10} /> {result.raw_metrics.restaurant_accessibility}</span>
+              )}
+              {result.raw_metrics.park_accessibility !== null && result.raw_metrics.park_accessibility !== undefined && (
+                <span className="text-[10px] text-gray-400 flex items-center gap-1"><TreePine size={10} /> {result.raw_metrics.park_accessibility}</span>
+              )}
+              {result.raw_metrics.healthcare_accessibility !== null && result.raw_metrics.healthcare_accessibility !== undefined && (
+                <span className="text-[10px] text-gray-400 flex items-center gap-1"><Stethoscope size={10} /> {result.raw_metrics.healthcare_accessibility}</span>
+              )}
+              {result.raw_metrics.nightlife_accessibility !== null && result.raw_metrics.nightlife_accessibility !== undefined && (
+                <span className="text-[10px] text-gray-400 flex items-center gap-1"><Moon size={10} /> {result.raw_metrics.nightlife_accessibility}</span>
+              )}
             </div>
           </div>
         </div>
