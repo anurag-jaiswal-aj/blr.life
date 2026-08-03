@@ -5,12 +5,20 @@ from sqlalchemy import String, case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.locality import Locality
-from app.models.observations import LocalityMetric, MetricType
+from app.models.observations import (
+    HousingConfiguration,
+    LocalityMetric,
+    LocalityRentObservation,
+    MetricType,
+)
 from app.services.recommendation import CandidateLocality
 
 
 async def get_candidate_localities(
-    session: AsyncSession, lat: float, lng: float
+    session: AsyncSession,
+    lat: float,
+    lng: float,
+    bhk_type: HousingConfiguration | None = None,
 ) -> Sequence[CandidateLocality]:
     """
     Fetch all active localities along with their computed work distance
@@ -20,142 +28,150 @@ async def get_candidate_localities(
     # Note: ST_DistanceSphere returns meters. We divide by 1000 for km.
     work_point = f"SRID=4326;POINT({lng} {lat})"
 
-    stmt = (
-        select(
-            Locality.id,
-            Locality.slug,
-            Locality.name,
-            func.ST_Y(Locality.centroid).label("lat"),
-            func.ST_X(Locality.centroid).label("lng"),
-            (
-                func.ST_DistanceSphere(Locality.centroid, func.ST_GeomFromEWKT(work_point)) / 1000.0
-            ).label("work_distance_km"),
-            func.max(
-                case(
-                    (
-                        LocalityMetric.metric_type == MetricType.METRO_DISTANCE_M,
-                        LocalityMetric.value,
-                    ),
-                    else_=None,
-                )
-            ).label("metro_distance_m"),
-            func.max(
-                case(
-                    (
-                        LocalityMetric.metric_type == MetricType.METRO_DISTANCE_M,
-                        LocalityMetric.confidence,
-                    ),
-                    else_=None,
-                )
-            ).label("metro_confidence"),
-            func.max(
-                case(
-                    (
-                        LocalityMetric.metric_type == MetricType.METRO_DISTANCE_M,
-                        LocalityMetric.extra_data.cast(String),
-                    ),
-                    else_=None,
-                )
-            ).label("metro_extra_data_str"),
-            func.max(LocalityMetric.calc_version).label("calc_version"),
-            func.max(
-                case(
-                    (
-                        LocalityMetric.metric_type == MetricType.CAFE_ACCESSIBILITY,
-                        LocalityMetric.value,
-                    ),
-                    else_=None,
-                )
-            ).label("cafe_count"),
-            func.max(
-                case(
-                    (
-                        LocalityMetric.metric_type == MetricType.CAFE_ACCESSIBILITY,
-                        LocalityMetric.confidence,
-                    ),
-                    else_=None,
-                )
-            ).label("cafe_confidence"),
-            func.max(
-                case(
-                    (
-                        LocalityMetric.metric_type == MetricType.RESTAURANT_ACCESSIBILITY,
-                        LocalityMetric.value,
-                    ),
-                    else_=None,
-                )
-            ).label("restaurant_count"),
-            func.max(
-                case(
-                    (
-                        LocalityMetric.metric_type == MetricType.RESTAURANT_ACCESSIBILITY,
-                        LocalityMetric.confidence,
-                    ),
-                    else_=None,
-                )
-            ).label("restaurant_confidence"),
-            func.max(
-                case(
-                    (
-                        LocalityMetric.metric_type == MetricType.PARK_ACCESSIBILITY,
-                        LocalityMetric.value,
-                    ),
-                    else_=None,
-                )
-            ).label("park_count"),
-            func.max(
-                case(
-                    (
-                        LocalityMetric.metric_type == MetricType.PARK_ACCESSIBILITY,
-                        LocalityMetric.confidence,
-                    ),
-                    else_=None,
-                )
-            ).label("park_confidence"),
-            func.max(
-                case(
-                    (
-                        LocalityMetric.metric_type == MetricType.HEALTHCARE_ACCESSIBILITY,
-                        LocalityMetric.value,
-                    ),
-                    else_=None,
-                )
-            ).label("healthcare_count"),
-            func.max(
-                case(
-                    (
-                        LocalityMetric.metric_type == MetricType.HEALTHCARE_ACCESSIBILITY,
-                        LocalityMetric.confidence,
-                    ),
-                    else_=None,
-                )
-            ).label("healthcare_confidence"),
-            func.max(
-                case(
-                    (
-                        LocalityMetric.metric_type == MetricType.NIGHTLIFE_ACCESSIBILITY,
-                        LocalityMetric.value,
-                    ),
-                    else_=None,
-                )
-            ).label("nightlife_count"),
-            func.max(
-                case(
-                    (
-                        LocalityMetric.metric_type == MetricType.NIGHTLIFE_ACCESSIBILITY,
-                        LocalityMetric.confidence,
-                    ),
-                    else_=None,
-                )
-            ).label("nightlife_confidence"),
-        )
-        .outerjoin(
-            LocalityMetric,
-            (LocalityMetric.locality_id == Locality.id) & (LocalityMetric.is_current == True),  # noqa: E712
-        )
-        .where(Locality.is_active == True)  # noqa: E712
-        .group_by(Locality.id)
+    stmt = select(
+        Locality.id,
+        Locality.slug,
+        Locality.name,
+        func.ST_Y(Locality.centroid).label("lat"),
+        func.ST_X(Locality.centroid).label("lng"),
+        (
+            func.ST_DistanceSphere(Locality.centroid, func.ST_GeomFromEWKT(work_point)) / 1000.0
+        ).label("work_distance_km"),
+        func.max(
+            case(
+                (
+                    LocalityMetric.metric_type == MetricType.METRO_DISTANCE_M,
+                    LocalityMetric.value,
+                ),
+                else_=None,
+            )
+        ).label("metro_distance_m"),
+        func.max(
+            case(
+                (
+                    LocalityMetric.metric_type == MetricType.METRO_DISTANCE_M,
+                    LocalityMetric.confidence,
+                ),
+                else_=None,
+            )
+        ).label("metro_confidence"),
+        func.max(
+            case(
+                (
+                    LocalityMetric.metric_type == MetricType.METRO_DISTANCE_M,
+                    LocalityMetric.extra_data.cast(String),
+                ),
+                else_=None,
+            )
+        ).label("metro_extra_data_str"),
+        func.max(LocalityMetric.calc_version).label("calc_version"),
+        func.max(
+            case(
+                (
+                    LocalityMetric.metric_type == MetricType.CAFE_ACCESSIBILITY,
+                    LocalityMetric.value,
+                ),
+                else_=None,
+            )
+        ).label("cafe_count"),
+        func.max(
+            case(
+                (
+                    LocalityMetric.metric_type == MetricType.CAFE_ACCESSIBILITY,
+                    LocalityMetric.confidence,
+                ),
+                else_=None,
+            )
+        ).label("cafe_confidence"),
+        func.max(
+            case(
+                (
+                    LocalityMetric.metric_type == MetricType.RESTAURANT_ACCESSIBILITY,
+                    LocalityMetric.value,
+                ),
+                else_=None,
+            )
+        ).label("restaurant_count"),
+        func.max(
+            case(
+                (
+                    LocalityMetric.metric_type == MetricType.RESTAURANT_ACCESSIBILITY,
+                    LocalityMetric.confidence,
+                ),
+                else_=None,
+            )
+        ).label("restaurant_confidence"),
+        func.max(
+            case(
+                (
+                    LocalityMetric.metric_type == MetricType.PARK_ACCESSIBILITY,
+                    LocalityMetric.value,
+                ),
+                else_=None,
+            )
+        ).label("park_count"),
+        func.max(
+            case(
+                (
+                    LocalityMetric.metric_type == MetricType.PARK_ACCESSIBILITY,
+                    LocalityMetric.confidence,
+                ),
+                else_=None,
+            )
+        ).label("park_confidence"),
+        func.max(
+            case(
+                (
+                    LocalityMetric.metric_type == MetricType.HEALTHCARE_ACCESSIBILITY,
+                    LocalityMetric.value,
+                ),
+                else_=None,
+            )
+        ).label("healthcare_count"),
+        func.max(
+            case(
+                (
+                    LocalityMetric.metric_type == MetricType.HEALTHCARE_ACCESSIBILITY,
+                    LocalityMetric.confidence,
+                ),
+                else_=None,
+            )
+        ).label("healthcare_confidence"),
+        func.max(
+            case(
+                (
+                    LocalityMetric.metric_type == MetricType.NIGHTLIFE_ACCESSIBILITY,
+                    LocalityMetric.value,
+                ),
+                else_=None,
+            )
+        ).label("nightlife_count"),
+        func.max(
+            case(
+                (
+                    LocalityMetric.metric_type == MetricType.NIGHTLIFE_ACCESSIBILITY,
+                    LocalityMetric.confidence,
+                ),
+                else_=None,
+            )
+        ).label("nightlife_confidence"),
+    ).outerjoin(
+        LocalityMetric,
+        (LocalityMetric.locality_id == Locality.id) & (LocalityMetric.is_current == True),  # noqa: E712
     )
+
+    if bhk_type:
+        stmt = stmt.add_columns(
+            func.max(LocalityRentObservation.rent_min_inr).label("rent_min_inr"),
+            func.max(LocalityRentObservation.rent_max_inr).label("rent_max_inr"),
+        ).outerjoin(
+            LocalityRentObservation,
+            (LocalityRentObservation.locality_id == Locality.id)
+            & (LocalityRentObservation.housing_config == bhk_type)
+            & (LocalityRentObservation.is_current == True),  # noqa: E712
+        )
+
+    stmt = stmt.where(Locality.is_active == True).group_by(Locality.id)  # noqa: E712
 
     result = await session.execute(stmt)
     rows = result.all()
@@ -202,6 +218,8 @@ async def get_candidate_localities(
                 nightlife_confidence=(
                     row.nightlife_confidence if row.nightlife_confidence else None
                 ),
+                rent_min_inr=getattr(row, "rent_min_inr", None),
+                rent_max_inr=getattr(row, "rent_max_inr", None),
             )
         )
 

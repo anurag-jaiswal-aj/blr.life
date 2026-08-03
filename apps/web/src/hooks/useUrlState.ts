@@ -13,6 +13,8 @@ export interface AppState {
   w_park: number;
   w_healthcare: number;
   w_nightlife: number;
+  max_budget_inr: number | null;
+  bhk_type: '1rk' | '1bhk' | '2bhk' | '3bhk' | null;
 }
 
 const DEFAULT_STATE: AppState = {
@@ -26,6 +28,8 @@ const DEFAULT_STATE: AppState = {
   w_park: 0.0,
   w_healthcare: 0.0,
   w_nightlife: 0.0,
+  max_budget_inr: null,
+  bhk_type: null,
 };
 
 export function useUrlState() {
@@ -45,6 +49,9 @@ export function useUrlState() {
     const wHealthcareStr = searchParams.get('w_health');
     const wNightlifeStr = searchParams.get('w_night');
 
+    const maxBudgetStr = searchParams.get('max_budget');
+    const bhkTypeStr = searchParams.get('bhk');
+
     let lat = latStr ? parseFloat(latStr) : DEFAULT_STATE.lat;
     let lng = lngStr ? parseFloat(lngStr) : DEFAULT_STATE.lng;
     let max_dist = maxDistStr ? parseFloat(maxDistStr) : DEFAULT_STATE.max_dist;
@@ -55,6 +62,8 @@ export function useUrlState() {
     let w_park = wParkStr ? parseFloat(wParkStr) : DEFAULT_STATE.w_park;
     let w_healthcare = wHealthcareStr ? parseFloat(wHealthcareStr) : DEFAULT_STATE.w_healthcare;
     let w_nightlife = wNightlifeStr ? parseFloat(wNightlifeStr) : DEFAULT_STATE.w_nightlife;
+    let max_budget_inr = maxBudgetStr ? parseInt(maxBudgetStr, 10) : DEFAULT_STATE.max_budget_inr;
+    let bhk_type = (bhkTypeStr as '1rk' | '1bhk' | '2bhk' | '3bhk' | null) || DEFAULT_STATE.bhk_type;
 
     if (lat !== null && isNaN(lat)) lat = null;
     if (lng !== null && isNaN(lng)) lng = null;
@@ -66,8 +75,10 @@ export function useUrlState() {
     if (isNaN(w_park) || w_park < 0 || w_park > 1) w_park = DEFAULT_STATE.w_park;
     if (isNaN(w_healthcare) || w_healthcare < 0 || w_healthcare > 1) w_healthcare = DEFAULT_STATE.w_healthcare;
     if (isNaN(w_nightlife) || w_nightlife < 0 || w_nightlife > 1) w_nightlife = DEFAULT_STATE.w_nightlife;
+    if (max_budget_inr !== null && (isNaN(max_budget_inr) || max_budget_inr < 1000)) max_budget_inr = null;
+    if (bhk_type !== null && !['1rk', '1bhk', '2bhk', '3bhk'].includes(bhk_type)) bhk_type = null;
 
-    return { lat, lng, max_dist, w_metro, w_work, w_cafe, w_restaurant, w_park, w_healthcare, w_nightlife };
+    return { lat, lng, max_dist, w_metro, w_work, w_cafe, w_restaurant, w_park, w_healthcare, w_nightlife, max_budget_inr, bhk_type: bhk_type as AppState['bhk_type'] };
   }, [searchParams]);
 
   const updateState = useCallback(
@@ -85,6 +96,8 @@ export function useUrlState() {
       if (merged.w_park !== DEFAULT_STATE.w_park) params.set('w_park', merged.w_park.toString());
       if (merged.w_healthcare !== DEFAULT_STATE.w_healthcare) params.set('w_health', merged.w_healthcare.toString());
       if (merged.w_nightlife !== DEFAULT_STATE.w_nightlife) params.set('w_night', merged.w_nightlife.toString());
+      if (merged.max_budget_inr !== null && !isNaN(merged.max_budget_inr)) params.set('max_budget', merged.max_budget_inr.toString());
+      if (merged.bhk_type !== null) params.set('bhk', merged.bhk_type);
 
       const query = params.toString();
       router.push(query ? `${pathname}?${query}` : pathname);
@@ -94,9 +107,17 @@ export function useUrlState() {
 
   const getApiRequest = useCallback((): RecommendationRequest | null => {
     if (state.lat === null || state.lng === null) return null;
+
+    // Only send constraints if BOTH are present
+    const constraints: RecommendationRequest['constraints'] = { max_work_distance_km: state.max_dist };
+    if (state.max_budget_inr !== null && state.bhk_type !== null) {
+      constraints.max_budget_inr = state.max_budget_inr;
+      constraints.bhk_type = state.bhk_type;
+    }
+
     return {
       work_location: { lat: state.lat, lng: state.lng },
-      constraints: { max_work_distance_km: state.max_dist },
+      constraints,
       preferences: { 
         metro_access_weight: state.w_metro, 
         short_commute_weight: state.w_work,

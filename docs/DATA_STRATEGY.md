@@ -13,11 +13,11 @@ V1 relies entirely on deterministic data. We must acquire, normalize, and store 
 
 ### 2. Rent Estimates
 - **Why**: To filter out unaffordable areas.
-- **Source**: Manual curation of baseline bands (e.g., from market reports, open datasets, and community data). Web scraping of property portals (e.g., NoBroker, MagicBricks) is strictly prohibited as it violates their Terms of Service.
-- **Free/Open**: Yes, but requires manual effort.
-- **Confidence**: Low. Rent fluctuates significantly.
-- **Fallback**: Omit exact figures in favor of wide affordability bands for top areas.
-- **Status**: V1 will launch with a static, curated list of rent bands for the top ~50 localities.
+- **Source**: Verified curation of broad affordability bands strictly based on published market research (e.g., authoritative Anarock Q3 2024 Residential Market Reports). Web scraping of property portals and aggregator medians (NoBroker, Magicbricks) are strictly prohibited and do not remain in the dataset.
+- **Free/Open**: Yes, but requires manual curation.
+- **Confidence**: High, based strictly on published research data.
+- **Fallback**: Missing data is explicitly omitted rather than hallucinated and fails open: the locality remains eligible and affordability is reported as unknown. The affordability hard filter applies only where verified matching locality/BHK rent data exists, with the filtering boundary being `rent_min_inr <= max_budget_inr`.
+- **Status**: V1 features verified rent coverage for only 2 canonical localities (Whitefield, Electronic City). Both observations are 2BHK. Total coverage is 2 / 37 canonical localities (≈ 5.4%). Bengaluru-wide affordability coverage is explicitly NOT claimed.
 
 ### 3. Commute & Routing (Distance)
 - **Why**: To score areas based on proximity to the user's workplace.

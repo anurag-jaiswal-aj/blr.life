@@ -1,0 +1,43 @@
+{
+  "dataset_version": "1.2",
+  "created_at": "2026-08-03T19:27:00Z",
+  "methodology": "Verified public market data extracted strictly from published authoritative market research reports. Aggregator medians and listings without explicitly published reproducible methodologies are excluded.",
+  "confidence_methodology": "HIGH: Exact rent range directly published by an authoritative market report for the exact locality and BHK. MEDIUM: Range derived reproducibly from multiple preserved source observations with sufficient sample evidence. LOW: Not used.",
+  "observation_count": 2,
+  "observations": [
+    {
+      "locality_slug": "whitefield",
+      "bhk": "2bhk",
+      "rent_min_inr": 28000,
+      "rent_max_inr": 40000,
+      "confidence": "high",
+      "provenance": {
+        "publisher": "ANAROCK",
+        "source_title": "Residential Market Viewpoints Bengaluru_Q3 2024",
+        "source_url": "https://www.anarock.com/research/research-reports/Residential-Market-Viewpoints-Bengaluru-Q3-2024",
+        "published_at": null,
+        "accessed_at": "2026-08-03",
+        "source_type": "published_market_report",
+        "sample_count": null,
+        "derivation": "Direct published 2BHK monthly rent range (Avg. Quoted Rent)."
+      }
+    },
+    {
+      "locality_slug": "electronic-city",
+      "bhk": "2bhk",
+      "rent_min_inr": 19000,
+      "rent_max_inr": 29000,
+      "confidence": "high",
+      "provenance": {
+        "publisher": "ANAROCK",
+        "source_title": "Residential Market Viewpoints Bengaluru_Q3 2024",
+        "source_url": "https://www.anarock.com/research/research-reports/Residential-Market-Viewpoints-Bengaluru-Q3-2024",
+        "published_at": null,
+        "accessed_at": "2026-08-03",
+        "source_type": "published_market_report",
+        "sample_count": null,
+        "derivation": "Direct published 2BHK monthly rent range (Avg. Quoted Rent)."
+      }
+    }
+  ]
+}

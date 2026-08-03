@@ -26,6 +26,7 @@ async def recommend_localities(
         session=session,
         lat=request.work_location.lat,
         lng=request.work_location.lng,
+        bhk_type=request.constraints.bhk_type,
     )
 
     results, calc_versions = rank_candidates(

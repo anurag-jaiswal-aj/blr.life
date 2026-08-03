@@ -8,7 +8,7 @@ The V1 recommendation engine is deterministic and mathematical. It does not use 
 1. **Candidate Generation**: Fetch all active areas from the database.
 2. **Hard Constraint Filtering**:
    - `max_work_distance_km`: Filter out areas where the straight-line work distance exceeds the maximum allowed distance.
-   - Note: In V1, rent data is deferred. The schema forbids `max_rent_inr` and strictly rejects unsupported constraints with a 422 error.
+   - `max_budget_inr` & `bhk_type`: Filter out areas where the observed minimum rent for the requested BHK type strictly exceeds the user's maximum budget. If rent data is unavailable for a locality (note: only 5.4% of canonical localities currently have verified rent data), it is *not* filtered out (a warning is shown instead). Both parameters must be provided together.
 3. **Feature Representation**: Normalize metrics to a (0.0 to 1.0) scale for remaining areas:
    - *Metro Access*: `1.0` if <= 500m, decays to `0.0` at 3000m.
    - *Work Distance*: `1.0` if <= 2km, decays to `0.0` at 15km.

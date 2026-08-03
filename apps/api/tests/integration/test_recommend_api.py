@@ -128,19 +128,6 @@ async def test_recommend_hard_constraint_work_distance(
 
 
 @pytest.mark.asyncio
-async def test_unsupported_rent_constraint_rejected(
-    async_client: AsyncClient, setup_recommendation_data
-):
-    payload = {
-        "work_location": {"lat": 12.9716, "lng": 77.5946},
-        "constraints": {"max_rent_inr": 25000},
-        "limit": 10,
-    }
-    response = await async_client.post("/api/v1/recommend", json=payload)
-    assert response.status_code == 422
-
-
-@pytest.mark.asyncio
 async def test_recommend_validation_errors(async_client: AsyncClient):
     payload = {
         "work_location": {"lat": 100.0, "lng": 77.5946},  # Invalid lat
@@ -194,3 +181,68 @@ async def test_recommend_amenities(
     assert l1_rec["raw_metrics"]["cafe_accessibility"] == 59.0
     assert l1_rec["component_scores"]["cafe"] == 1.0
     assert "High cafe count within 1.5km" in l1_rec["explanations"]["pros"]
+
+
+@pytest.mark.asyncio
+async def test_recommend_affordability(
+    async_client: AsyncClient, setup_recommendation_data, async_db_session: AsyncSession
+):
+    from app.models.observations import HousingConfiguration, LocalityRentObservation
+
+    l1, l2, l3 = setup_recommendation_data
+
+    # l1 is affordable
+    r1 = LocalityRentObservation(
+        locality_id=l1.id,
+        housing_config=HousingConfiguration.BHK_1,
+        rent_min_inr=15000,
+        rent_max_inr=20000,
+        confidence=MetricConfidence.LOW,
+        is_current=True,
+    )
+    # l2 is unaffordable
+    r2 = LocalityRentObservation(
+        locality_id=l2.id,
+        housing_config=HousingConfiguration.BHK_1,
+        rent_min_inr=25000,
+        rent_max_inr=30000,
+        confidence=MetricConfidence.LOW,
+        is_current=True,
+    )
+    # l3 has no rent observation
+
+    async_db_session.add_all([r1, r2])
+    await async_db_session.commit()
+
+    payload = {
+        "work_location": {"lat": 12.9716, "lng": 77.5946},
+        "constraints": {"max_budget_inr": 20000, "bhk_type": "1bhk"},
+        "limit": 10,
+    }
+    response = await async_client.post("/api/v1/recommend", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    recs = data["recommendations"]
+
+    slugs = [r["slug"] for r in recs]
+    assert "near-metro" in slugs
+    assert "far-area" not in slugs  # Filtered out due to rent > 20000
+    assert "no-metro" in slugs  # Missing data survives
+
+    l1_rec = next(r for r in recs if r["slug"] == "near-metro")
+    assert any(
+        "rent band (from ₹15,000) overlaps your budget" in p for p in l1_rec["explanations"]["pros"]
+    )
+
+    l3_rec = next(r for r in recs if r["slug"] == "no-metro")
+    assert any("Rent data unavailable" in w for w in l3_rec["explanations"]["warnings"])
+
+    # Partial payload should throw 422
+    payload_partial = {
+        "work_location": {"lat": 12.9716, "lng": 77.5946},
+        "constraints": {
+            "max_budget_inr": 20000,
+        },
+    }
+    resp2 = await async_client.post("/api/v1/recommend", json=payload_partial)
+    assert resp2.status_code == 422

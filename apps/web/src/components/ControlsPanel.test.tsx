@@ -6,7 +6,20 @@ import { AppState } from '../hooks/useUrlState';
 import { describe, it, expect, vi } from 'vitest';
 
 describe('ControlsPanel (CONTROLS)', () => {
-  const defaultState: AppState = { lat: 12.97, lng: 77.59, max_dist: 15, w_metro: 1, w_work: 1, w_cafe: 0, w_restaurant: 0, w_park: 0, w_healthcare: 0, w_nightlife: 0 };
+  const defaultState: AppState = {
+    lat: 12.97,
+    lng: 77.59,
+    max_dist: 15,
+    max_budget_inr: null,
+    bhk_type: null,
+    w_metro: 1,
+    w_work: 1,
+    w_cafe: 0,
+    w_restaurant: 0,
+    w_park: 0,
+    w_healthcare: 0,
+    w_nightlife: 0,
+  };
 
   it('renders preference controls when coordinates are present', () => {
     render(<ControlsPanel state={defaultState} updateState={vi.fn()} />);

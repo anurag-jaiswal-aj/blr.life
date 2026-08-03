@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AppState } from '../hooks/useUrlState';
-import { Briefcase, Train, Coffee, Utensils, TreePine, Stethoscope, Moon, ChevronDown, ChevronUp } from 'lucide-react';
+import { Briefcase, Train, Coffee, Utensils, TreePine, Stethoscope, Moon, ChevronDown, ChevronUp, Home } from 'lucide-react';
 import { WorkLocationInput } from './WorkLocationInput';
 
 interface ControlsPanelProps {
@@ -120,6 +120,55 @@ export function ControlsPanel({ state, updateState }: ControlsPanelProps) {
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
               aria-label="Short Commute Importance Weight"
             />
+          </div>
+
+          <div className="pt-2 border-t border-gray-100 space-y-4">
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                <Home size={16} className="text-gray-400" />
+                Affordability Filter
+              </label>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-medium text-gray-700">Max Rent (₹)</label>
+                <input
+                  type="number"
+                  min="1000"
+                  step="1000"
+                  placeholder="e.g. 25000"
+                  value={state.max_budget_inr || ''}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    updateState({ max_budget_inr: isNaN(val) ? null : val });
+                  }}
+                  className="w-full text-sm p-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                  aria-label="Max Rent Budget"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-medium text-gray-700">Property Type</label>
+                <select
+                  value={state.bhk_type || ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    updateState({ bhk_type: val ? (val as '1rk' | '1bhk' | '2bhk' | '3bhk') : null });
+                  }}
+                  className="w-full text-sm p-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                  aria-label="Property Type"
+                >
+                  <option value="">Any</option>
+                  <option value="1rk">1 RK</option>
+                  <option value="1bhk">1 BHK</option>
+                  <option value="2bhk">2 BHK</option>
+                  <option value="3bhk">3 BHK</option>
+                </select>
+              </div>
+            </div>
+            {(state.max_budget_inr !== null && state.bhk_type === null) || (state.max_budget_inr === null && state.bhk_type !== null) ? (
+              <p className="text-xs text-amber-600">Please provide both rent budget and property type.</p>
+            ) : null}
           </div>
 
           <div className="pt-2 border-t border-gray-100">

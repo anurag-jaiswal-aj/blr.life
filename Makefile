@@ -73,3 +73,9 @@ calculate-amenity-metrics-dry-run:
 
 calculate-amenity-metrics:
 	cd apps/api && uv run python -m app.ingestion.cli calculate-amenity-metrics
+
+ingest-rent-dry-run:
+	cd apps/api && DATABASE_URL="postgresql+asyncpg://blrlife:blrlife_dev_password@localhost:5432/blrlife_test" uv run python -m app.ingestion.cli ingest-rent --file ../../data/curated/bengaluru_rent_v1.json --dry-run
+
+ingest-rent:
+	cd apps/api && uv run python -m app.ingestion.cli ingest-rent --file ../../data/curated/bengaluru_rent_v1.json

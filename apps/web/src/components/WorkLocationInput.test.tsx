@@ -7,7 +7,20 @@ import { describe, it, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 
 describe('WorkLocationInput (COORDINATE INPUT & ACCESSIBILITY)', () => {
-  const defaultState: AppState = { lat: null, lng: null, max_dist: 15, w_metro: 1, w_work: 1, w_cafe: 0, w_restaurant: 0, w_park: 0, w_healthcare: 0, w_nightlife: 0 };
+  const defaultState = {
+    lat: null,
+    lng: null,
+    max_dist: 10,
+    max_budget_inr: null,
+    bhk_type: null,
+    w_metro: 1,
+    w_work: 1,
+    w_cafe: 1,
+    w_restaurant: 1,
+    w_park: 1,
+    w_healthcare: 1,
+    w_nightlife: 1,
+  };
 
   it('renders input fields with accessible semantic labels', () => {
     render(<WorkLocationInput state={defaultState} updateState={vi.fn()} />);

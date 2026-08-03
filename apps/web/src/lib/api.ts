@@ -5,6 +5,8 @@ export interface WorkLocation {
 
 export interface RecommendationConstraints {
   max_work_distance_km?: number | null;
+  max_budget_inr?: number | null;
+  bhk_type?: '1rk' | '1bhk' | '2bhk' | '3bhk' | null;
 }
 
 export interface RecommendationPreferences {

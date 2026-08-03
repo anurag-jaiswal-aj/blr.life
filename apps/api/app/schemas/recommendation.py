@@ -2,6 +2,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from app.models.observations import HousingConfiguration
+
 
 class WorkLocation(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -16,6 +18,20 @@ class RecommendationConstraints(BaseModel):
     max_work_distance_km: float | None = Field(
         None, ge=0.1, description="Maximum acceptable distance to work in kilometers"
     )
+    max_budget_inr: int | None = Field(
+        None, ge=1000, description="Maximum monthly rent budget in INR"
+    )
+    bhk_type: HousingConfiguration | None = Field(
+        None, description="Required housing configuration"
+    )
+
+    @model_validator(mode="after")
+    def validate_housing_constraints(self) -> "RecommendationConstraints":
+        if (self.max_budget_inr is not None and self.bhk_type is None) or (
+            self.max_budget_inr is None and self.bhk_type is not None
+        ):
+            raise ValueError("Both max_budget_inr and bhk_type must be provided together.")
+        return self
 
 
 class RecommendationPreferences(BaseModel):
@@ -49,7 +65,11 @@ class RecommendationRequest(BaseModel):
 
     work_location: WorkLocation
     constraints: RecommendationConstraints = Field(
-        default_factory=lambda: RecommendationConstraints(max_work_distance_km=None)
+        default_factory=lambda: RecommendationConstraints(
+            max_work_distance_km=None,
+            max_budget_inr=None,
+            bhk_type=None,
+        )
     )
     preferences: RecommendationPreferences = Field(
         default_factory=lambda: RecommendationPreferences(

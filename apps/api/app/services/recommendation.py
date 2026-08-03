@@ -33,6 +33,8 @@ class CandidateLocality:
     nightlife_count: float | None = None
     nightlife_confidence: str | None = None
     calc_version: str | None = None
+    rent_min_inr: int | None = None
+    rent_max_inr: int | None = None
 
 
 # -----------------------------------------------------------------------------
@@ -112,6 +114,18 @@ def generate_explanations(
     elif candidate.work_distance_km > 15.0:
         warnings.append("Far from work location")
 
+    # Affordability explanations
+    if constraints.max_budget_inr is not None and constraints.bhk_type is not None:
+        if candidate.rent_min_inr is None:
+            warnings.append(
+                f"Rent data unavailable for {constraints.bhk_type}. Affordability unknown."
+            )
+        elif candidate.rent_min_inr <= constraints.max_budget_inr:
+            pros.append(
+                f"Observed {constraints.bhk_type} rent band (from "
+                f"₹{candidate.rent_min_inr:,}) overlaps your budget."
+            )
+
     # Amenity explanations
     amenities = [
         ("cafe", candidate.cafe_count, candidate.cafe_confidence, CAFE_CAP),
@@ -151,6 +165,14 @@ def rank_candidates(
         if (
             constraints.max_work_distance_km is not None
             and candidate.work_distance_km > constraints.max_work_distance_km
+        ):
+            continue
+
+        if (
+            constraints.max_budget_inr is not None
+            and constraints.bhk_type is not None
+            and candidate.rent_min_inr is not None
+            and candidate.rent_min_inr > constraints.max_budget_inr
         ):
             continue
 
