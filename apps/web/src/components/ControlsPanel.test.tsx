@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ControlsPanel } from './ControlsPanel';
@@ -44,13 +44,13 @@ describe('ControlsPanel (CONTROLS)', () => {
 
   it('renders only the coordinate inputs via WorkLocationInput when coordinates are missing', () => {
     render(<ControlsPanel state={{ ...defaultState, lat: null, lng: null }} updateState={vi.fn()} />);
-    expect(screen.getByLabelText(/Latitude/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Search for a work location/i)).toBeInTheDocument();
     expect(screen.queryByLabelText(/Maximum Commute Distance/i)).not.toBeInTheDocument();
   });
 
   it('updates amenity priorities when lifestyle accordion is toggled and selectors clicked', () => {
     const updateSpy = vi.fn();
-    const { getByText, getAllByText } = render(<ControlsPanel state={defaultState} updateState={updateSpy} />);
+    const { getByText } = render(<ControlsPanel state={defaultState} updateState={updateSpy} />);
     
     fireEvent.click(getByText('Lifestyle Preferences'));
     
