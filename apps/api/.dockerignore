@@ -9,3 +9,7 @@ __pycache__/
 tests/
 .git/
 .gitignore
+.env
+.env.*
+data/
+coverage/

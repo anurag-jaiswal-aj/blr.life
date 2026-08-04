@@ -4,3 +4,7 @@ out/
 build/
 .git/
 .gitignore
+.env
+.env.*
+tests/
+coverage/

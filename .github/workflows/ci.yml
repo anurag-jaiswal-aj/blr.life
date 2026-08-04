@@ -88,3 +88,68 @@ jobs:
       - name: Build
         working-directory: ./apps/web
         run: npm run build
+
+  container-verification:
+    runs-on: ubuntu-latest
+
+    services:
+      db:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: blrlife
+          POSTGRES_PASSWORD: blrlife_dev_password
+          POSTGRES_DB: blrlife
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U blrlife -d blrlife"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Backend Image
+        run: docker build -t blr-life-api:test ./apps/api
+
+      - name: Smoke Test Backend
+        run: |
+          docker run -d --name api-smoke-test -p 8000:8000 \
+            -e DATABASE_URL=postgresql+asyncpg://blrlife:blrlife_dev_password@localhost:5432/blrlife \
+            --network host blr-life-api:test
+          sleep 5
+          curl -f http://localhost:8000/health
+          docker stop api-smoke-test
+
+      - name: Verify Backend Tooling Exclusion
+        run: |
+          docker run --rm blr-life-api:test python -c "import pytest" 2>&1 | grep -q "ModuleNotFoundError"
+          docker run --rm blr-life-api:test python -c "import ruff" 2>&1 | grep -q "ModuleNotFoundError"
+
+      - name: Verify Backend Non-Root
+        run: |
+          USER=$(docker run --rm blr-life-api:test whoami)
+          if [ "$USER" = "root" ]; then
+            echo "Container is running as root!"
+            exit 1
+          fi
+
+      - name: Build Frontend Image
+        run: docker build -t blr-life-web:test --build-arg NEXT_PUBLIC_API_URL=http://localhost:8000 ./apps/web
+
+      - name: Smoke Test Frontend
+        run: |
+          docker run -d --name web-smoke-test -p 3000:3000 blr-life-web:test
+          sleep 5
+          curl -f http://localhost:3000/
+          docker stop web-smoke-test
+
+      - name: Verify Frontend Non-Root
+        run: |
+          USER=$(docker run --rm blr-life-web:test whoami)
+          if [ "$USER" = "root" ]; then
+            echo "Container is running as root!"
+            exit 1
+          fi
