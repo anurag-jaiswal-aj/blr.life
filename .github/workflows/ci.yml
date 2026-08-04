@@ -73,6 +73,10 @@ jobs:
         working-directory: ./apps/web
         run: npm ci
 
+      - name: Install Playwright Browsers
+        working-directory: ./apps/web
+        run: npx playwright install --with-deps chromium
+
       - name: Lint
         working-directory: ./apps/web
         run: npm run lint
@@ -88,6 +92,10 @@ jobs:
       - name: Build
         working-directory: ./apps/web
         run: npm run build
+
+      - name: Run E2E tests
+        working-directory: ./apps/web
+        run: npm run test:e2e
 
   container-verification:
     runs-on: ubuntu-latest
