@@ -1,0 +1,83 @@
+name: blr-life-prod
+
+networks:
+  blrlife_prod:
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+services:
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: blr_life_caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - blrlife_prod
+    depends_on:
+      api:
+        condition: service_healthy
+
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: blr_life_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    networks:
+      - blrlife_prod
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: blr_life_api
+    restart: always
+    env_file:
+      - .env.production
+    networks:
+      - blrlife_prod
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    container_name: blr_life_web
+    restart: always
+    env_file:
+      - .env.production
+    networks:
+      - blrlife_prod
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  postgres_prod_data:
+  caddy_data:
+  caddy_config:

@@ -114,6 +114,11 @@ jobs:
       - name: Build Backend Image
         run: docker build -t blr-life-api:test ./apps/api
 
+      - name: Validate Production Compose Syntax
+        run: |
+          cp .env.production.example .env.production
+          docker compose -f docker-compose.prod.yml config
+
       - name: Smoke Test Backend
         run: |
           docker run -d --name api-smoke-test -p 8000:8000 \

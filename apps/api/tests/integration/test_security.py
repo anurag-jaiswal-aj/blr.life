@@ -162,3 +162,113 @@ async def test_cors_on_500(monkeypatch: pytest.MonkeyPatch) -> None:
         assert response.headers.get("access-control-allow-origin") == "http://localhost:3000"
         assert "X-Request-ID" in response.headers
         assert response.headers.get("X-Content-Type-Options") == "nosniff"
+
+
+async def test_trusted_proxy_real_ip_used(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Use the default local trusted proxy IP for this test
+    caddy_ip = "127.0.0.1"
+
+    # Mock DB stuff so we can hit recommend endpoint
+    async def mock_get_candidates(*args, **kwargs):
+        return []
+
+    def mock_rank(*args, **kwargs):
+        return [], []
+
+    monkeypatch.setattr(
+        "app.api.v1.endpoints.recommend.get_candidate_localities", mock_get_candidates
+    )
+    monkeypatch.setattr("app.api.v1.endpoints.recommend.rank_candidates", mock_rank)
+
+    from app.db.session import get_db
+    from app.main import app
+
+    app.dependency_overrides[get_db] = lambda: None
+
+    payload = {
+        "work_location": {"lat": 12.9716, "lng": 77.5946},
+        "constraints": {"max_budget_inr": 30000, "bhk_type": "2bhk"},
+        "limit": 1,
+    }
+
+    # Simulate Caddy IP (within trusted subnet)
+    client_ip_1 = "192.168.1.100"
+    client_ip_2 = "192.168.1.200"
+
+    from httpx import ASGITransport
+
+    transport = ASGITransport(app=app, client=(caddy_ip, 12345))
+
+    async with AsyncClient(transport=transport, base_url="http://test") as fresh_client:
+        # Client 1 uses up its quota (10 requests)
+        for _ in range(10):
+            response = await fresh_client.post(
+                "/api/v1/recommend", json=payload, headers={"X-Forwarded-For": client_ip_1}
+            )
+            assert response.status_code == 200
+
+        # Client 1 is now rate limited
+        response = await fresh_client.post(
+            "/api/v1/recommend", json=payload, headers={"X-Forwarded-For": client_ip_1}
+        )
+        assert response.status_code == 429
+
+        # Client 2 should NOT be rate limited because the proxy header correctly bucketed client 1!
+        response = await fresh_client.post(
+            "/api/v1/recommend", json=payload, headers={"X-Forwarded-For": client_ip_2}
+        )
+        assert response.status_code == 200
+
+    app.dependency_overrides.clear()
+
+
+async def test_untrusted_proxy_spoofing_prevented(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Use an IP that is NOT in the default 127.0.0.1 trusted hosts
+    attacker_ip = "8.8.8.8"
+
+    # Mock DB stuff
+    async def mock_get_candidates(*args, **kwargs):
+        return []
+
+    def mock_rank(*args, **kwargs):
+        return [], []
+
+    monkeypatch.setattr(
+        "app.api.v1.endpoints.recommend.get_candidate_localities", mock_get_candidates
+    )
+    monkeypatch.setattr("app.api.v1.endpoints.recommend.rank_candidates", mock_rank)
+
+    from app.db.session import get_db
+    from app.main import app
+
+    app.dependency_overrides[get_db] = lambda: None
+
+    payload = {
+        "work_location": {"lat": 12.9, "lng": 77.5},
+        "constraints": {"max_budget_inr": 30000, "bhk_type": "2bhk"},
+        "limit": 1,
+    }
+
+    from httpx import ASGITransport
+
+    transport = ASGITransport(app=app, client=(attacker_ip, 12345))
+
+    async with AsyncClient(transport=transport, base_url="http://test") as fresh_client:
+        # Attacker tries to spoof 10 different IPs to avoid rate limits
+        for i in range(10):
+            fake_ip = f"10.0.0.{i}"
+            response = await fresh_client.post(
+                "/api/v1/recommend", json=payload, headers={"X-Forwarded-For": fake_ip}
+            )
+            assert response.status_code == 200
+
+        # The rate limiter should have bucketed all requests to the true peer (8.8.8.8)
+        # because the attacker is NOT in the trusted proxy subnet.
+        # Therefore, the 11th request MUST be rate limited.
+        response = await fresh_client.post(
+            "/api/v1/recommend", json=payload, headers={"X-Forwarded-For": "10.0.0.99"}
+        )
+        assert response.status_code == 429
+        assert response.json() == {"detail": "Too many requests. Please try again later."}
+
+    app.dependency_overrides.clear()

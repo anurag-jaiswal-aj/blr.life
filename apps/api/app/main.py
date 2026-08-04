@@ -5,6 +5,7 @@ from fastapi import FastAPI, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from app.api.v1.router import api_v1_router
 from app.core.config import settings
@@ -62,11 +63,18 @@ if settings.CORS_ORIGINS:
 # 1. Request ID (executes before most things to ensure logs are correlated)
 app.add_middleware(RequestIDMiddleware)
 
-# 0. Trusted Host (executes first)
+# 0. Trusted Host
 if settings.TRUSTED_HOSTS:
     app.add_middleware(
         TrustedHostMiddleware,
         allowed_hosts=settings.TRUSTED_HOSTS,
+    )
+
+# 00. Proxy Headers (Executes absolute first to establish real client IP)
+if settings.FORWARDED_ALLOW_IPS:
+    app.add_middleware(
+        ProxyHeadersMiddleware,
+        trusted_hosts=settings.FORWARDED_ALLOW_IPS,
     )
 
 app.include_router(api_v1_router, prefix="/api/v1")

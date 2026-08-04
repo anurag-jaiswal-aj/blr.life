@@ -25,6 +25,7 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]
     TRUSTED_HOSTS: list[str] = ["*"]
+    FORWARDED_ALLOW_IPS: str | list[str] = "127.0.0.1"
     RATE_LIMIT_PER_MINUTE: int = Field(default=10, ge=1)
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -63,6 +64,17 @@ class Settings(BaseSettings):
                 parsed: list[str] = json.loads(v)
                 return parsed
             return [i.strip() for i in v.split(",") if i.strip()]
+        return v
+
+    @field_validator("FORWARDED_ALLOW_IPS", mode="before")
+    @classmethod
+    def assemble_forwarded_allow_ips(cls, v: str | list[str]) -> str | list[str]:
+        if isinstance(v, str):
+            if v.startswith("[") and v.endswith("]"):
+                parsed: list[str] = json.loads(v)
+                return parsed
+            if "," in v:
+                return [i.strip() for i in v.split(",") if i.strip()]
         return v
 
 

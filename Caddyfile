@@ -1,0 +1,7 @@
+{$FRONTEND_HOST:blr.life} {
+    reverse_proxy web:3000
+}
+
+{$API_HOST:api.blr.life} {
+    reverse_proxy api:8000
+}
