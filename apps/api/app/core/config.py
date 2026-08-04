@@ -1,7 +1,7 @@
 import json
 from typing import Any
 
-from pydantic import field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -24,7 +24,8 @@ class Settings(BaseSettings):
     DATABASE_URL: str | None = None
 
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]
-
+    TRUSTED_HOSTS: list[str] = ["*"]
+    RATE_LIMIT_PER_MINUTE: int = Field(default=10, ge=1)
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -47,6 +48,16 @@ class Settings(BaseSettings):
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v: str | list[str]) -> list[str]:
+        if isinstance(v, str):
+            if v.startswith("[") and v.endswith("]"):
+                parsed: list[str] = json.loads(v)
+                return parsed
+            return [i.strip() for i in v.split(",") if i.strip()]
+        return v
+
+    @field_validator("TRUSTED_HOSTS", mode="before")
+    @classmethod
+    def assemble_trusted_hosts(cls, v: str | list[str]) -> list[str]:
         if isinstance(v, str):
             if v.startswith("[") and v.endswith("]"):
                 parsed: list[str] = json.loads(v)

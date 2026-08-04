@@ -67,6 +67,21 @@ make typecheck  # Runs mypy (backend) & tsc (frontend)
 make test       # Runs pytest (backend) & Vitest (frontend)
 ```
 
+## Configuration
+
+The application is configured via environment variables (or `.env` file).
+
+### Security & Rate Limiting
+- `CORS_ORIGINS`: JSON array or comma-separated list of allowed origins. Defaults to `["http://localhost:3000"]`.
+- `TRUSTED_HOSTS`: JSON array or comma-separated list of allowed host headers. Defaults to `["*"]`.
+- `RATE_LIMIT_PER_MINUTE`: Integer specifying the rate limit per minute for the recommendation endpoint. Defaults to `10`.
+
+**V1 Rate Limiter Limitations:**
+- The rate limiter uses a process-local in-memory store.
+- Application restarts reset the counters.
+- If multiple Uvicorn workers are used (`--workers N`), the effective rate limit is `N * RATE_LIMIT_PER_MINUTE`.
+- The limiter uses the direct peer IP (`request.client.host`). If deployed behind a reverse proxy (e.g., Nginx, Caddy, AWS ELB), all users will share the same bucket unless proxy headers are explicitly configured. Handling of trusted reverse proxies and `X-Forwarded-For` is deferred to the infrastructure/deployment work unit. Do not blindly trust `X-Forwarded-For` without configuring trusted proxy IP addresses.
+
 ## Expected Local Endpoints
 - **Frontend App**: [http://localhost:3000](http://localhost:3000)
 - **Backend API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)

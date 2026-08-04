@@ -2,11 +2,20 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Response, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
 from app.api.v1.router import api_v1_router
 from app.core.config import settings
+from app.core.errors import validation_exception_handler
 from app.core.logging import logger
+from app.core.middleware import (
+    ExceptionCatcherMiddleware,
+    RateLimitMiddleware,
+    RequestIDMiddleware,
+    SecurityHeadersMiddleware,
+)
 from app.db.session import check_database_connection
 
 
@@ -24,13 +33,40 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Exception handlers
+# Note: Unhandled Exceptions are caught by ExceptionCatcherMiddleware to ensure
+# they don't bypass outer custom middlewares.
+app.add_exception_handler(RequestValidationError, validation_exception_handler)  # type: ignore[arg-type]
+
+# Middlewares (Last added is first executed in FastAPI, so we add from inner to outer)
+
+# 5. Exception Catcher (Innermost, catches unhandled exceptions from the router)
+app.add_middleware(ExceptionCatcherMiddleware)
+
+# 4. Rate Limiting
+app.add_middleware(RateLimitMiddleware)
+
+# 3. Security Headers
+app.add_middleware(SecurityHeadersMiddleware)
+
+# 2. CORS
 if settings.CORS_ORIGINS:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.CORS_ORIGINS,
         allow_credentials=True,
-        allow_methods=["*"],
+        allow_methods=["GET", "POST", "OPTIONS"],
         allow_headers=["*"],
+    )
+
+# 1. Request ID (executes before most things to ensure logs are correlated)
+app.add_middleware(RequestIDMiddleware)
+
+# 0. Trusted Host (executes first)
+if settings.TRUSTED_HOSTS:
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=settings.TRUSTED_HOSTS,
     )
 
 app.include_router(api_v1_router, prefix="/api/v1")
