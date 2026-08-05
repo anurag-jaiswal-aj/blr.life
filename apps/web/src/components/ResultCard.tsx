@@ -4,9 +4,11 @@ import { Train, MapPin } from 'lucide-react';
 
 interface ResultCardProps {
   result: RecommendationResult;
+  selected?: boolean;
+  onSelect?: () => void;
 }
 
-export function ResultCard({ result }: ResultCardProps) {
+export function ResultCard({ result, selected = false, onSelect }: ResultCardProps) {
   const isTopMatch = result.rank === 1;
   const isMetroUnavailable = result.component_scores.metro === null;
   
@@ -14,8 +16,25 @@ export function ResultCard({ result }: ResultCardProps) {
   if (result.total_score >= 80) scoreColor = 'text-score-strong';
   else if (result.total_score >= 50) scoreColor = 'text-score-moderate';
 
+  const borderClass = selected ? 'border-brand-primary shadow-subtle' : 'border-border-default';
+  const bgClass = selected ? 'bg-brand-surface' : 'bg-surface-primary';
+  const interactiveClass = onSelect ? 'cursor-pointer hover:border-border-strong transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-1' : '';
+
   return (
-    <div className={`bg-surface-primary rounded-card border ${isTopMatch ? 'border-brand-primary shadow-subtle' : 'border-border-default'} overflow-hidden`}>
+    <div 
+      id={`rec-card-${result.locality_id}`}
+      role={onSelect ? "button" : undefined}
+      aria-pressed={onSelect ? selected : undefined}
+      tabIndex={onSelect ? 0 : undefined}
+      onClick={onSelect}
+      onKeyDown={onSelect ? (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect();
+        }
+      } : undefined}
+      className={`${bgClass} rounded-card border ${borderClass} overflow-hidden ${interactiveClass}`}
+    >
       <div className="p-4 md:p-5 flex items-start gap-4">
         
         {/* Rank */}

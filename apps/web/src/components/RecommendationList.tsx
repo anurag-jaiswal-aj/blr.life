@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ResultCard } from './ResultCard';
 import { RecommendationResponse } from '../lib/api';
 
@@ -6,9 +6,20 @@ interface RecommendationListProps {
   data: RecommendationResponse | null;
   loading: boolean;
   error: string | null;
+  selectedLocalityId?: number | null;
+  onSelect?: (id: number) => void;
 }
 
-export function RecommendationList({ data, loading, error }: RecommendationListProps) {
+export function RecommendationList({ data, loading, error, selectedLocalityId, onSelect }: RecommendationListProps) {
+  useEffect(() => {
+    if (selectedLocalityId !== null && selectedLocalityId !== undefined) {
+      const el = document.getElementById(`rec-card-${selectedLocalityId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  }, [selectedLocalityId]);
+
   if (error) {
     return (
       <div className="p-4 bg-error-bg border border-red-200 rounded-card">
@@ -54,7 +65,12 @@ export function RecommendationList({ data, loading, error }: RecommendationListP
   return (
     <div className="flex flex-col gap-4">
       {data.recommendations.map((rec) => (
-        <ResultCard key={rec.locality_id} result={rec} />
+        <ResultCard 
+          key={rec.locality_id} 
+          result={rec} 
+          selected={selectedLocalityId === rec.locality_id}
+          onSelect={onSelect ? () => onSelect(rec.locality_id) : undefined}
+        />
       ))}
       <div className="mt-2 p-3 bg-surface-secondary rounded-card text-metadata text-text-secondary text-center border border-border-subtle">
         Results powered by blr.life deterministic engine.<br/>

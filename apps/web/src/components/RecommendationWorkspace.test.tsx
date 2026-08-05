@@ -7,6 +7,8 @@ import * as urlState from '../hooks/useUrlState';
 import * as recommendations from '../hooks/useRecommendations';
 import * as isDesktopHook from '../hooks/useIsDesktop';
 
+window.HTMLElement.prototype.scrollIntoView = vi.fn();
+
 vi.mock('../hooks/useUrlState', () => ({
   useUrlState: vi.fn(),
 }));
@@ -180,5 +182,35 @@ describe('RecommendationWorkspace', () => {
 
     // Desktop ControlsPanel should be present
     expect(screen.getByLabelText(/Maximum Commute Distance/i)).toBeInTheDocument();
+  });
+  it('selects the first recommendation by default when results arrive', () => {
+    vi.mocked(isDesktopHook.useIsDesktop).mockReturnValue({ isDesktop: true, mounted: true });
+    vi.mocked(urlState.useUrlState).mockReturnValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      state: { lat: 12.9, lng: 77.6, max_dist: 5 } as any,
+      updateState: vi.fn(),
+      getApiRequest: vi.fn(),
+    });
+
+    const mockRecs = [
+      { locality_id: 101, name: 'First Rec', rank: 1, total_score: 90, component_scores: { metro: null }, raw_metrics: { work_distance_km: 1, metro_distance_m: null }, explanations: { pros: [], warnings: [] }, metadata: { coordinates: { lat: 12.9, lng: 77.6 } } },
+      { locality_id: 102, name: 'Second Rec', rank: 2, total_score: 80, component_scores: { metro: null }, raw_metrics: { work_distance_km: 2, metro_distance_m: null }, explanations: { pros: [], warnings: [] }, metadata: { coordinates: { lat: 12.8, lng: 77.5 } } }
+    ];
+
+    vi.mocked(recommendations.useRecommendations).mockReturnValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: { recommendations: mockRecs as any, provenance: { calc_versions_used: [] } },
+      loading: false,
+      error: null,
+    });
+
+    render(<RecommendationWorkspace />);
+    
+    // The first card should have aria-pressed="true"
+    const firstCard = screen.getByText('First Rec').closest('[role="button"]');
+    const secondCard = screen.getByText('Second Rec').closest('[role="button"]');
+    
+    expect(firstCard).toHaveAttribute('aria-pressed', 'true');
+    expect(secondCard).toHaveAttribute('aria-pressed', 'false');
   });
 });

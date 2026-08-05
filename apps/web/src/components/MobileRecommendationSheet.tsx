@@ -6,9 +6,11 @@ interface MobileRecommendationSheetProps {
   data: RecommendationResponse | null;
   loading: boolean;
   error: string | null;
+  selectedLocalityId?: number | null;
+  onSelect?: (id: number) => void;
 }
 
-export function MobileRecommendationSheet({ data, loading, error }: MobileRecommendationSheetProps) {
+export function MobileRecommendationSheet({ data, loading, error, selectedLocalityId, onSelect }: MobileRecommendationSheetProps) {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -35,7 +37,13 @@ export function MobileRecommendationSheet({ data, loading, error }: MobileRecomm
       </div>
 
       <div id="mobile-sheet-content" className="flex-1 overflow-y-auto px-4 pt-4 pb-safe">
-        <RecommendationList data={data} loading={loading} error={error} />
+        <RecommendationList 
+          data={data} 
+          loading={loading} 
+          error={error} 
+          selectedLocalityId={selectedLocalityId}
+          onSelect={onSelect}
+        />
       </div>
     </div>
   );

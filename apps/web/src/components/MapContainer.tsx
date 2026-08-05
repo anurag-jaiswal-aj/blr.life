@@ -9,6 +9,8 @@ interface MapContainerProps {
   workLng: number | null;
   onWorkLocationSelect: (lat: number, lng: number) => void;
   recommendations: RecommendationResult[];
+  selectedLocalityId?: number | null;
+  onRecommendationSelect?: (id: number) => void;
 }
 
 export function MapContainer({
@@ -16,6 +18,8 @@ export function MapContainer({
   workLng,
   onWorkLocationSelect,
   recommendations,
+  selectedLocalityId,
+  onRecommendationSelect,
 }: MapContainerProps) {
   const mapRef = useRef(null);
 
@@ -61,7 +65,7 @@ export function MapContainer({
 
         {/* Work Location Marker */}
         {workLat !== null && workLng !== null && (
-          <Marker longitude={workLng} latitude={workLat} anchor="bottom">
+          <Marker longitude={workLng} latitude={workLat} anchor="bottom" style={{ zIndex: 10 }}>
             <div className="flex flex-col items-center cursor-pointer group">
               <div className="bg-brand-primary text-text-inverse px-2 py-1 rounded text-[10px] font-bold shadow-elevated whitespace-nowrap mb-1 uppercase tracking-wider">
                 Work
@@ -74,18 +78,30 @@ export function MapContainer({
         {/* Recommendation Markers */}
         {recommendations.map((rec) => {
           if (!rec.metadata.coordinates) return null;
+          const isSelected = selectedLocalityId === rec.locality_id;
+          
           return (
             <Marker
               key={rec.locality_id}
               longitude={rec.metadata.coordinates.lng}
               latitude={rec.metadata.coordinates.lat}
               anchor="bottom"
+              style={{ zIndex: isSelected ? 30 : 20 }}
             >
-              <div className="relative w-8 h-8 flex items-center justify-center font-bold text-text-inverse shadow-elevated" style={{
-                background: `linear-gradient(135deg, ${rec.total_score >= 80 ? 'var(--color-score-strong)' : rec.total_score >= 50 ? 'var(--color-score-moderate)' : 'var(--color-score-weak)'}, ${rec.total_score >= 80 ? 'var(--color-success-text)' : rec.total_score >= 50 ? 'var(--color-warning-text)' : 'var(--color-error-text)'})`,
-                borderRadius: '50% 50% 50% 0',
-                transform: 'rotate(-45deg)',
-              }}>
+              <div 
+                className={`relative w-8 h-8 flex items-center justify-center font-bold text-text-inverse shadow-elevated cursor-pointer hover:scale-110 transition-transform ${isSelected ? 'scale-110' : ''}`} 
+                style={{
+                  background: isSelected
+                    ? 'var(--color-marker-selected)'
+                    : `linear-gradient(135deg, ${rec.total_score >= 80 ? 'var(--color-score-strong)' : rec.total_score >= 50 ? 'var(--color-score-moderate)' : 'var(--color-score-weak)'}, ${rec.total_score >= 80 ? 'var(--color-success-text)' : rec.total_score >= 50 ? 'var(--color-warning-text)' : 'var(--color-error-text)'})`,
+                  borderRadius: '50% 50% 50% 0',
+                  transform: 'rotate(-45deg)',
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onRecommendationSelect) onRecommendationSelect(rec.locality_id);
+                }}
+              >
                 <span style={{ transform: 'rotate(45deg)' }} className="text-body leading-none">
                   {rec.rank}
                 </span>

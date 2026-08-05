@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUrlState } from '../hooks/useUrlState';
 import { useRecommendations } from '../hooks/useRecommendations';
 import { useIsDesktop } from '../hooks/useIsDesktop';
@@ -16,6 +16,26 @@ export function RecommendationWorkspace() {
   const request = getApiRequest();
   const { data, loading, error } = useRecommendations(request);
   const { isDesktop, mounted } = useIsDesktop();
+  const [selectedLocalityId, setSelectedLocalityId] = useState<number | null>(null);
+
+  // Reconcile selection state when recommendations change
+  useEffect(() => {
+    if (!data?.recommendations) return;
+    
+    if (data.recommendations.length === 0) {
+      if (selectedLocalityId !== null) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setSelectedLocalityId(null);
+      }
+      return;
+    }
+
+    const stillExists = data.recommendations.some(r => r.locality_id === selectedLocalityId);
+    if (!stillExists) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSelectedLocalityId(data.recommendations[0].locality_id);
+    }
+  }, [data?.recommendations, selectedLocalityId]);
 
   const handleWorkLocationSelect = (lat: number, lng: number) => {
     updateState({ lat, lng });
@@ -80,7 +100,15 @@ export function RecommendationWorkspace() {
               <div className="hidden lg:flex w-full lg:w-[420px] flex-col gap-3 shrink-0 h-[600px] lg:h-auto z-10 bg-surface-app">
                 <h3 className="text-card-title font-semibold text-text-primary">Recommended neighbourhoods</h3>
                 <div className="flex-1 overflow-y-auto">
-                  {(!mounted || isDesktop) && <RecommendationList data={data} loading={loading} error={error} />}
+                  {(!mounted || isDesktop) && (
+                    <RecommendationList 
+                      data={data} 
+                      loading={loading} 
+                      error={error} 
+                      selectedLocalityId={selectedLocalityId}
+                      onSelect={setSelectedLocalityId}
+                    />
+                  )}
                 </div>
               </div>
 
@@ -91,13 +119,21 @@ export function RecommendationWorkspace() {
                   workLng={state.lng}
                   onWorkLocationSelect={handleWorkLocationSelect}
                   recommendations={data?.recommendations || []}
+                  selectedLocalityId={selectedLocalityId}
+                  onRecommendationSelect={setSelectedLocalityId}
                 />
               </div>
               
               {/* MOBILE Recommendation Sheet */}
               <div className="lg:hidden">
                 {mounted && !isDesktop && (
-                  <MobileRecommendationSheet data={data} loading={loading} error={error} />
+                  <MobileRecommendationSheet 
+                    data={data} 
+                    loading={loading} 
+                    error={error}
+                    selectedLocalityId={selectedLocalityId}
+                    onSelect={setSelectedLocalityId}
+                  />
                 )}
               </div>
 
