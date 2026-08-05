@@ -1,0 +1,52 @@
+name: Database Backup (Neon)
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # Daily at 2 AM UTC
+  workflow_dispatch: # Allow manual triggers
+
+jobs:
+  backup:
+    name: Backup PostgreSQL Database
+    runs-on: ubuntu-latest
+    
+    # Ensure this workflow only has the permissions it needs
+    permissions:
+      contents: read
+      
+    steps:
+      - name: Install PostgreSQL 16 Client
+        run: |
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-16
+
+      - name: Create Database Dump
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "Error: DATABASE_URL secret is missing."
+            exit 1
+          fi
+          
+          echo "Starting pg_dump..."
+          
+          # -Fc: Custom format (compressed by default, required for pg_restore)
+          # -Z 9: Maximum compression
+          # -v: Verbose (logs progress, not data)
+          if pg_dump -Fc -Z 9 -v "$DATABASE_URL" -f "blrlife_backup_$(date +%Y%m%d).dump"; then
+            echo "Backup completed successfully."
+          else
+            echo "Error: pg_dump failed."
+            exit 1
+          fi
+
+      - name: Upload Backup Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: blrlife-db-backup-${{ github.run_id }}
+          path: blrlife_backup_*.dump
+          retention-days: 90
+          if-no-files-found: error

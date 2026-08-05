@@ -110,9 +110,9 @@ export async function GET(request: NextRequest) {
       headers: {
         // Nominatim policy requires a valid identifying User-Agent.
         // This is set server-side (Next.js API route) where we can control it.
-        'User-Agent': 'blr.life/1.0 (https://github.com/blr-life/blr.life)',
+        'User-Agent': process.env.NOMINATIM_USER_AGENT || 'blr.life/1.0-dev (local development)',
         // Referer is also accepted as an identifier per Nominatim policy.
-        'Referer': 'https://blr.life',
+        'Referer': process.env.NEXT_PUBLIC_API_URL?.includes('localhost') ? 'http://localhost:3000' : 'https://blr.life',
       },
     });
 

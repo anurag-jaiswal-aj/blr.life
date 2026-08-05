@@ -50,7 +50,24 @@ describe('Geocode API Route', () => {
     expect(url.searchParams.get('countrycodes')).toBe('in');
     
     const headers = fetchSpy.mock.calls[0][1]?.headers as Record<string, string>;
-    expect(headers['User-Agent']).toContain('blr.life');
+    expect(headers['User-Agent']).toContain('blr.life/1.0-dev');
+  });
+
+  it('uses configurable User-Agent from environment', async () => {
+    const originalEnv = process.env.NOMINATIM_USER_AGENT;
+    process.env.NOMINATIM_USER_AGENT = 'custom-test-agent/1.0 (contact@example.com)';
+    
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => []
+    } as Response);
+
+    await GET(createMockRequest('/api/geocode?q=agent_test'));
+    
+    const headers = fetchSpy.mock.calls[0][1]?.headers as Record<string, string>;
+    expect(headers['User-Agent']).toBe('custom-test-agent/1.0 (contact@example.com)');
+    
+    process.env.NOMINATIM_USER_AGENT = originalEnv;
   });
 
   it('avoids upstream fetch on cache hit', async () => {

@@ -6,12 +6,13 @@ interface RecommendationListProps {
   data: RecommendationResponse | null;
   loading: boolean;
   error: string | null;
+  isColdStarting?: boolean;
   selectedLocalityId?: number | null;
   onSelect?: (id: number) => void;
   onRetry?: () => void;
 }
 
-export function RecommendationList({ data, loading, error, selectedLocalityId, onSelect, onRetry }: RecommendationListProps) {
+export function RecommendationList({ data, loading, error, isColdStarting, selectedLocalityId, onSelect, onRetry }: RecommendationListProps) {
   useEffect(() => {
     if (selectedLocalityId !== null && selectedLocalityId !== undefined) {
       const el = document.getElementById(`rec-card-${selectedLocalityId}`);
@@ -43,6 +44,11 @@ export function RecommendationList({ data, loading, error, selectedLocalityId, o
   if (loading) {
     return (
       <div className="space-y-4">
+        {isColdStarting && (
+          <div className="p-4 bg-brand-light/30 border border-brand-light rounded-card text-center mb-2 animate-pulse-slow">
+            <p className="text-body font-medium text-brand-primary">Starting the recommendation service &mdash; this can take a little longer after inactivity.</p>
+          </div>
+        )}
         {[1, 2, 3].map((i) => (
           <div key={i} className="animate-pulse bg-surface-primary rounded-card shadow-subtle border border-border-default p-4 md:p-5 flex flex-col justify-between">
             <div className="flex gap-4 mb-4">

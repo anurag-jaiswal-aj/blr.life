@@ -15,7 +15,7 @@ import { ShareButton } from '../components/ShareButton';
 export function RecommendationWorkspace() {
   const { state, updateState, getApiRequest } = useUrlState();
   const request = getApiRequest();
-  const { data, loading, error, isValidating, retry } = useRecommendations(request);
+  const { data, loading, error, isValidating, isColdStarting, retry } = useRecommendations(request);
   const { isDesktop, mounted } = useIsDesktop();
   const [selectedLocalityId, setSelectedLocalityId] = useState<number | null>(null);
 
@@ -33,7 +33,7 @@ export function RecommendationWorkspace() {
 
     const stillExists = data.recommendations.some(r => r.locality_id === selectedLocalityId);
     if (!stillExists) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setSelectedLocalityId(data.recommendations[0].locality_id);
     }
   }, [data?.recommendations, selectedLocalityId]);
@@ -120,7 +120,8 @@ export function RecommendationWorkspace() {
                     <RecommendationList 
                       data={data} 
                       loading={loading} 
-                      error={error} 
+                      error={error}
+                      isColdStarting={isColdStarting}
                       selectedLocalityId={selectedLocalityId}
                       onSelect={setSelectedLocalityId}
                       onRetry={retry}
@@ -149,6 +150,7 @@ export function RecommendationWorkspace() {
                     loading={loading} 
                     error={error}
                     isValidating={isValidating}
+                    isColdStarting={isColdStarting}
                     selectedLocalityId={selectedLocalityId}
                     onSelect={setSelectedLocalityId}
                     onRetry={retry}

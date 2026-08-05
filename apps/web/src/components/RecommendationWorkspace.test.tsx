@@ -53,6 +53,7 @@ describe('RecommendationWorkspace', () => {
       loading: false,
       error: null,
       isValidating: false,
+      isColdStarting: false,
       retry: vi.fn(),
     });
 
@@ -93,6 +94,7 @@ describe('RecommendationWorkspace', () => {
       loading: false,
       error: null,
       isValidating: false,
+      isColdStarting: false,
       retry: vi.fn(),
     });
 
@@ -134,6 +136,7 @@ describe('RecommendationWorkspace', () => {
       loading: false,
       error: null,
       isValidating: false,
+      isColdStarting: false,
       retry: vi.fn(),
     });
 
@@ -179,6 +182,7 @@ describe('RecommendationWorkspace', () => {
       loading: false,
       error: null,
       isValidating: false,
+      isColdStarting: false,
       retry: vi.fn(),
     });
 
@@ -211,6 +215,7 @@ describe('RecommendationWorkspace', () => {
       loading: false,
       error: null,
       isValidating: false,
+      isColdStarting: false,
       retry: vi.fn(),
     });
 

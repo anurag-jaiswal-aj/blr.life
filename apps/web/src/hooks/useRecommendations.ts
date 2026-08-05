@@ -8,6 +8,8 @@ export function useRecommendations(request: RecommendationRequest | null | undef
   const [isValidating, setIsValidating] = useState(false);
   const [fetchTrigger, setFetchTrigger] = useState(0);
 
+  const [isColdStarting, setIsColdStarting] = useState(false);
+
   const requestHash = useMemo(() => request ? JSON.stringify(request) : null, [request]);
 
   const retry = useCallback(() => setFetchTrigger(t => t + 1), []);
@@ -26,6 +28,7 @@ export function useRecommendations(request: RecommendationRequest | null | undef
       setError(null);
       setLoading(false);
       setIsValidating(false);
+      setIsColdStarting(false);
       return;
     }
 
@@ -37,28 +40,40 @@ export function useRecommendations(request: RecommendationRequest | null | undef
       setLoading(true);
     }
     setError(null);
+    setIsColdStarting(false);
+
+    const coldStartTimer = setTimeout(() => {
+      if (active) {
+        setIsColdStarting(true);
+      }
+    }, 5000);
 
     fetchRecommendations(currentRequest)
       .then((res) => {
         if (active) {
+          clearTimeout(coldStartTimer);
           setData(res);
           setLoading(false);
           setIsValidating(false);
+          setIsColdStarting(false);
         }
       })
       .catch((err) => {
         if (active) {
+          clearTimeout(coldStartTimer);
           setError(err.message || 'Unknown error occurred');
           setLoading(false);
           setIsValidating(false);
+          setIsColdStarting(false);
         }
       });
 
     return () => {
       active = false;
+      clearTimeout(coldStartTimer);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requestHash, fetchTrigger]);
 
-  return { data, loading, error, isValidating, retry };
+  return { data, loading, error, isValidating, isColdStarting, retry };
 }

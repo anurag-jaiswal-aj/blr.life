@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor, act } from '@testing-library/react';
 import { useRecommendations } from './useRecommendations';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as api from '../lib/api';
@@ -57,5 +57,52 @@ describe('useRecommendations (SUBMISSION)', () => {
 
     expect(api.fetchRecommendations).toHaveBeenCalledWith(req);
     expect(result.current.data).toBeNull();
+  });
+
+  it('sets isColdStarting to true if request takes longer than 5 seconds', async () => {
+    vi.useFakeTimers();
+    let resolveApi: (val: any) => void;
+    const promise = new Promise((resolve) => {
+      resolveApi = resolve;
+    });
+    vi.mocked(api.fetchRecommendations).mockReturnValueOnce(promise as any);
+
+    const req = {
+      work_location: { lat: 12.0, lng: 77.0 },
+      constraints: {},
+      preferences: { metro_access_weight: 1.0, short_commute_weight: 1.0, cafe_weight: 0, restaurant_weight: 0, park_weight: 0, healthcare_weight: 0, nightlife_weight: 0 },
+    };
+
+    const { result } = renderHook(() => useRecommendations(req));
+    
+    expect(result.current.loading).toBe(true);
+    expect(result.current.isColdStarting).toBe(false);
+
+    // Fast-forward 4.9 seconds (should not be cold starting yet)
+    act(() => {
+      vi.advanceTimersByTime(4900);
+    });
+    expect(result.current.isColdStarting).toBe(false);
+
+    // Fast-forward past 5 seconds
+    act(() => {
+      vi.advanceTimersByTime(150);
+    });
+    expect(result.current.isColdStarting).toBe(true);
+
+    // Resolve the API call
+    act(() => {
+      resolveApi!({ recommendations: [], provenance: { calc_versions_used: [] } });
+    });
+    
+    // Flush microtasks
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(result.current.loading).toBe(false);
+    expect(result.current.isColdStarting).toBe(false);
+
+    vi.useRealTimers();
   });
 });

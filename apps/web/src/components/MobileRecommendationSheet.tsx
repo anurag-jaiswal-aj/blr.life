@@ -7,12 +7,13 @@ interface MobileRecommendationSheetProps {
   loading: boolean;
   error: string | null;
   isValidating?: boolean;
+  isColdStarting?: boolean;
   selectedLocalityId?: number | null;
   onSelect?: (id: number) => void;
   onRetry?: () => void;
 }
 
-export function MobileRecommendationSheet({ data, loading, error, isValidating, selectedLocalityId, onSelect, onRetry }: MobileRecommendationSheetProps) {
+export function MobileRecommendationSheet({ data, loading, error, isValidating, isColdStarting, selectedLocalityId, onSelect, onRetry }: MobileRecommendationSheetProps) {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -51,6 +52,7 @@ export function MobileRecommendationSheet({ data, loading, error, isValidating, 
           data={data} 
           loading={loading} 
           error={error} 
+          isColdStarting={isColdStarting}
           selectedLocalityId={selectedLocalityId}
           onSelect={onSelect}
           onRetry={onRetry}
