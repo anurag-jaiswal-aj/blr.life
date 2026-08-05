@@ -1,74 +1,85 @@
 import React from 'react';
 import { RecommendationResult } from '../lib/api';
-import { CheckCircle2, AlertTriangle, Train, MapPin, Coffee, Utensils, TreePine, Stethoscope, Moon } from 'lucide-react';
+import { Train, MapPin } from 'lucide-react';
 
 interface ResultCardProps {
   result: RecommendationResult;
 }
 
 export function ResultCard({ result }: ResultCardProps) {
+  const isTopMatch = result.rank === 1;
   const isMetroUnavailable = result.component_scores.metro === null;
-  const scoreColor = result.total_score > 80 ? 'text-green-600' : result.total_score > 50 ? 'text-yellow-600' : 'text-orange-600';
-  const scoreBg = result.total_score > 80 ? 'bg-green-50' : result.total_score > 50 ? 'bg-yellow-50' : 'bg-orange-50';
+  
+  let scoreColor = 'text-score-weak';
+  if (result.total_score >= 80) scoreColor = 'text-score-strong';
+  else if (result.total_score >= 50) scoreColor = 'text-score-moderate';
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all hover:shadow-md">
-      <div className="p-4 flex items-start justify-between border-b border-gray-50">
-        <div className="flex items-center gap-3">
-          <div className={`w-8 h-8 rounded-full ${scoreBg} ${scoreColor} font-bold flex items-center justify-center text-sm`}>
-            {result.rank}
-          </div>
-          <div>
-            <h3 className="font-bold text-gray-900">{result.name}</h3>
-            <div className="flex items-center gap-3 mt-1">
-              <span className="text-xs text-gray-500 flex items-center gap-1">
-                <MapPin size={12} /> {result.raw_metrics.work_distance_km} km
-              </span>
-              <span className="text-xs text-gray-500 flex items-center gap-1">
-                <Train size={12} /> {isMetroUnavailable ? 'Unavailable' : `${result.raw_metrics.metro_distance_m}m`}
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center gap-3 mt-1">
-              {result.raw_metrics.cafe_accessibility !== null && result.raw_metrics.cafe_accessibility !== undefined && (
-                <span className="text-[10px] text-gray-400 flex items-center gap-1"><Coffee size={10} /> {result.raw_metrics.cafe_accessibility}</span>
-              )}
-              {result.raw_metrics.restaurant_accessibility !== null && result.raw_metrics.restaurant_accessibility !== undefined && (
-                <span className="text-[10px] text-gray-400 flex items-center gap-1"><Utensils size={10} /> {result.raw_metrics.restaurant_accessibility}</span>
-              )}
-              {result.raw_metrics.park_accessibility !== null && result.raw_metrics.park_accessibility !== undefined && (
-                <span className="text-[10px] text-gray-400 flex items-center gap-1"><TreePine size={10} /> {result.raw_metrics.park_accessibility}</span>
-              )}
-              {result.raw_metrics.healthcare_accessibility !== null && result.raw_metrics.healthcare_accessibility !== undefined && (
-                <span className="text-[10px] text-gray-400 flex items-center gap-1"><Stethoscope size={10} /> {result.raw_metrics.healthcare_accessibility}</span>
-              )}
-              {result.raw_metrics.nightlife_accessibility !== null && result.raw_metrics.nightlife_accessibility !== undefined && (
-                <span className="text-[10px] text-gray-400 flex items-center gap-1"><Moon size={10} /> {result.raw_metrics.nightlife_accessibility}</span>
-              )}
-            </div>
+    <div className={`bg-surface-primary rounded-card border ${isTopMatch ? 'border-brand-primary shadow-subtle' : 'border-border-default'} overflow-hidden`}>
+      <div className="p-4 md:p-5 flex items-start gap-4">
+        
+        {/* Rank */}
+        <div className="flex flex-col items-center min-w-[3rem]">
+          <span className="text-label font-bold text-text-muted uppercase tracking-wider mb-1">
+            Rank
+          </span>
+          <div className={`text-heading font-black ${isTopMatch ? 'text-brand-primary' : 'text-text-primary'}`}>
+            #{result.rank}
           </div>
         </div>
-        <div className="text-right">
-          <div className={`text-2xl font-black ${scoreColor}`}>
+        
+        {/* Details */}
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            <h3 className="text-card-title font-bold text-text-primary truncate">
+              {result.name}
+            </h3>
+            {isTopMatch && (
+              <span className="bg-brand-surface text-brand-primary text-metadata font-bold px-2 py-0.5 rounded-sm uppercase tracking-wide border border-border-default whitespace-nowrap">
+                Best Match
+              </span>
+            )}
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-label text-text-secondary">
+            <span className="flex items-center gap-1.5 whitespace-nowrap">
+              <MapPin size={14} className="text-text-muted" /> 
+              {result.raw_metrics.work_distance_km} km
+            </span>
+            <span className="flex items-center gap-1.5 whitespace-nowrap">
+              <Train size={14} className="text-text-muted" /> 
+              {isMetroUnavailable ? 'Unavailable' : `${result.raw_metrics.metro_distance_m}m`}
+            </span>
+          </div>
+        </div>
+
+        {/* Score */}
+        <div className="text-right pl-4 border-l border-border-subtle flex flex-col items-end">
+          <div className={`text-2xl md:text-3xl font-black ${scoreColor} leading-none`}>
             {result.total_score}
           </div>
-          <div className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">BLR Score</div>
+          <div className="text-metadata font-bold text-text-muted uppercase tracking-wider mt-1">
+            Fit
+          </div>
         </div>
       </div>
 
-      <div className="p-4 bg-gray-50/50 space-y-2">
-        {result.explanations.pros.map((pro, i) => (
-          <div key={i} className="flex items-start gap-2">
-            <CheckCircle2 size={16} className="text-green-500 shrink-0 mt-0.5" />
-            <span className="text-sm text-gray-700">{pro}</span>
-          </div>
-        ))}
-        {result.explanations.warnings.map((warning, i) => (
-          <div key={i} className="flex items-start gap-2">
-            <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
-            <span className="text-sm text-gray-700">{warning}</span>
-          </div>
-        ))}
-      </div>
+      {(result.explanations.pros.length > 0 || result.explanations.warnings.length > 0) && (
+        <div className="px-4 md:px-5 py-3 bg-surface-secondary border-t border-border-default space-y-1.5">
+          {result.explanations.pros.slice(0, 2).map((pro, i) => (
+            <div key={`pro-${i}`} className="flex items-start gap-2">
+              <span className="text-success-text shrink-0 font-bold text-[10px] mt-[3px]">✓</span>
+              <span className="text-label text-text-primary leading-tight">{pro}</span>
+            </div>
+          ))}
+          {result.explanations.warnings.slice(0, 1).map((warning, i) => (
+            <div key={`warn-${i}`} className="flex items-start gap-2">
+              <span className="text-text-muted shrink-0 font-bold text-[12px] mt-px">–</span>
+              <span className="text-label text-text-secondary leading-tight">{warning}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

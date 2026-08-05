@@ -81,12 +81,12 @@ export function MapContainer({
               latitude={rec.metadata.coordinates.lat}
               anchor="bottom"
             >
-              <div className="relative w-8 h-8 flex items-center justify-center font-bold text-white shadow-lg cursor-pointer transition-transform hover:scale-110" style={{
-                background: `linear-gradient(135deg, ${rec.total_score > 80 ? '#22c55e' : rec.total_score > 50 ? '#eab308' : '#f97316'}, ${rec.total_score > 80 ? '#15803d' : rec.total_score > 50 ? '#a16207' : '#c2410c'})`,
+              <div className="relative w-8 h-8 flex items-center justify-center font-bold text-text-inverse shadow-elevated cursor-pointer transition-transform hover:scale-110" style={{
+                background: `linear-gradient(135deg, ${rec.total_score >= 80 ? 'var(--color-score-strong)' : rec.total_score >= 50 ? 'var(--color-score-moderate)' : 'var(--color-score-weak)'}, ${rec.total_score >= 80 ? 'var(--color-success-text)' : rec.total_score >= 50 ? 'var(--color-warning-text)' : 'var(--color-error-text)'})`,
                 borderRadius: '50% 50% 50% 0',
                 transform: 'rotate(-45deg)',
               }}>
-                <span style={{ transform: 'rotate(45deg)' }} className="text-sm">
+                <span style={{ transform: 'rotate(45deg)' }} className="text-body leading-none">
                   {rec.rank}
                 </span>
               </div>
