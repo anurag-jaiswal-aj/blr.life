@@ -8,9 +8,10 @@ import { searchPlaces, GeocodingResult } from '../lib/geocoding';
 interface WorkLocationInputProps {
   state: AppState;
   updateState: (newState: Partial<AppState>) => void;
+  compact?: boolean;
 }
 
-export function WorkLocationInput({ state, updateState }: WorkLocationInputProps) {
+export function WorkLocationInput({ state, updateState, compact = false }: WorkLocationInputProps) {
   // --- Search state ---
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<GeocodingResult[]>([]);
@@ -199,19 +200,21 @@ export function WorkLocationInput({ state, updateState }: WorkLocationInputProps
   const hasLocation = state.lat !== null && state.lng !== null;
 
   return (
-    <div className="p-4 md:p-6 bg-surface-primary border-2 border-brand-primary rounded-card flex flex-col gap-4 shadow-elevated" ref={containerRef}>
+    <div className={compact ? "w-full flex flex-col gap-2" : "p-4 md:p-6 bg-surface-primary border-2 border-brand-primary rounded-card flex flex-col gap-4 shadow-elevated"} ref={containerRef}>
       {/* Header */}
-      <div className="flex items-start gap-3">
-        <MapPin className="text-brand-primary shrink-0 mt-0.5" size={24} />
-        <div>
-          <p className="text-body font-bold text-text-primary">Where do you work?</p>
-          <p className="text-label text-text-secondary mt-1">Search for a place, or click the map.</p>
+      {!compact && (
+        <div className="flex items-start gap-3">
+          <MapPin className="text-brand-primary shrink-0 mt-0.5" size={24} />
+          <div>
+            <p className="text-body font-bold text-text-primary">Where do you work?</p>
+            <p className="text-label text-text-secondary mt-1">Search for a place, or click the map.</p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Selected location badge */}
       {hasLocation && selectedName && (
-        <div className="flex items-center justify-between gap-2 bg-surface-app border border-border-strong rounded-control px-3 py-2.5">
+        <div className={`flex items-center justify-between gap-2 bg-surface-app border border-border-strong rounded-control px-3 ${compact ? 'py-1.5' : 'py-2.5'}`}>
           <div className="flex items-center gap-2 min-w-0">
             <MapPin size={16} className="text-text-secondary shrink-0" />
             <span className="text-body text-text-primary font-medium truncate" title={selectedName}>
@@ -230,7 +233,7 @@ export function WorkLocationInput({ state, updateState }: WorkLocationInputProps
 
       {/* Map-click-only location indicator (no name known) */}
       {hasLocation && !selectedName && (
-        <div className="flex items-center gap-2 bg-surface-app border border-border-strong rounded-control px-3 py-2.5">
+        <div className={`flex items-center gap-2 bg-surface-app border border-border-strong rounded-control px-3 ${compact ? 'py-1.5' : 'py-2.5'}`}>
           <MapPin size={16} className="text-text-secondary shrink-0" />
           <span className="text-body text-text-primary font-medium">
             Location set ({state.lat?.toFixed(4)}, {state.lng?.toFixed(4)})
@@ -239,99 +242,103 @@ export function WorkLocationInput({ state, updateState }: WorkLocationInputProps
       )}
 
       {/* Search input with combobox role */}
-      <div className="relative">
-        <div className="relative flex items-center">
-          <label htmlFor={searchInputId} className="sr-only">Search for a work location</label>
-          {searchLoading ? (
-            <Loader2 size={18} className="absolute left-3 text-text-muted animate-spin pointer-events-none" />
-          ) : (
-            <Search size={18} className="absolute left-3 text-text-muted pointer-events-none" />
-          )}
-          <input
-            ref={searchInputRef}
-            id={searchInputId}
-            role="combobox"
-            aria-expanded={showResults && results.length > 0}
-            aria-controls={listboxId}
-            aria-autocomplete="list"
-            aria-activedescendant={highlightedIndex >= 0 ? `geocode-result-${highlightedIndex}` : undefined}
-            type="text"
-            className="flex-1 bg-surface-primary border border-border-strong rounded-l-control pl-10 pr-3 py-2.5 text-body outline-none focus:ring-2 focus:ring-brand-primary min-w-0"
-            placeholder="e.g. Koramangala, Manyata Tech Park…"
-            value={query}
-            onChange={handleQueryChange}
-            onKeyDown={handleSearchKeyDown}
-            autoComplete="off"
-            spellCheck={false}
-          />
-          <button
-            type="button"
-            onClick={handleSearchSubmit}
-            disabled={searchLoading || query.trim().length < 2}
-            className="bg-brand-primary hover:bg-brand-hover text-text-inverse px-4 py-2.5 text-body font-bold rounded-r-control focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-brand-primary"
-          >
-            Search
-          </button>
-        </div>
-
-        {/* Dropdown results */}
-        {showResults && results.length > 0 && (
-          <ul
-            id={listboxId}
-            role="listbox"
-            aria-label="Location suggestions"
-            className="absolute z-50 mt-1 w-full bg-surface-primary border border-border-default rounded-card shadow-floating max-h-56 overflow-y-auto"
-          >
-            {results.map((result, index) => (
-              <li
-                key={result.place_id}
-                id={`geocode-result-${index}`}
-                role="option"
-                aria-selected={highlightedIndex === index}
-                className={`px-4 py-3 cursor-pointer text-body border-b border-border-subtle last:border-b-0 ${
-                  highlightedIndex === index
-                    ? 'bg-surface-secondary text-brand-primary'
-                    : 'text-text-primary hover:bg-surface-app'
-                }`}
-                onMouseEnter={() => setHighlightedIndex(index)}
-                onMouseDown={(e) => {
-                  // Use mousedown instead of click so it fires before onBlur
-                  e.preventDefault();
-                  handleSelectResult(result);
-                }}
-              >
-                <div className="font-semibold truncate">{result.name}</div>
-                <div className="text-label text-text-muted truncate mt-0.5">{result.display_name}</div>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {/* No results state */}
-        {showResults && results.length === 0 && !searchLoading && !searchError && query.trim().length >= 2 && (
-          <div className="absolute z-50 mt-1 w-full bg-surface-primary border border-border-default rounded-card shadow-floating px-4 py-4 text-body text-text-secondary">
-            No locations found. Try a different name.
+      {(!compact || !hasLocation) && (
+        <div className="relative">
+          <div className="relative flex items-center">
+            <label htmlFor={searchInputId} className="sr-only">Search for a work location</label>
+            {searchLoading ? (
+              <Loader2 size={18} className="absolute left-3 text-text-muted animate-spin pointer-events-none" />
+            ) : (
+              <Search size={18} className="absolute left-3 text-text-muted pointer-events-none" />
+            )}
+            <input
+              ref={searchInputRef}
+              id={searchInputId}
+              role="combobox"
+              aria-expanded={showResults && results.length > 0}
+              aria-controls={listboxId}
+              aria-autocomplete="list"
+              aria-activedescendant={highlightedIndex >= 0 ? `geocode-result-${highlightedIndex}` : undefined}
+              type="text"
+              className={`flex-1 bg-surface-primary border border-border-strong rounded-l-control pl-10 pr-3 ${compact ? 'py-1.5 text-label' : 'py-2.5 text-body'} outline-none focus:ring-2 focus:ring-brand-primary min-w-0`}
+              placeholder={compact ? "Search location..." : "e.g. Koramangala, Manyata Tech Park…"}
+              value={query}
+              onChange={handleQueryChange}
+              onKeyDown={handleSearchKeyDown}
+              autoComplete="off"
+              spellCheck={false}
+            />
+            <button
+              type="button"
+              onClick={handleSearchSubmit}
+              disabled={searchLoading || query.trim().length < 2}
+              className={`bg-brand-primary hover:bg-brand-hover text-text-inverse px-4 ${compact ? 'py-1.5 text-label' : 'py-2.5 text-body'} font-bold rounded-r-control focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-brand-primary`}
+            >
+              Search
+            </button>
           </div>
-        )}
-      </div>
+
+          {/* Dropdown results */}
+          {showResults && results.length > 0 && (
+            <ul
+              id={listboxId}
+              role="listbox"
+              aria-label="Location suggestions"
+              className="absolute z-50 mt-1 w-full bg-surface-primary border border-border-default rounded-card shadow-floating max-h-56 overflow-y-auto"
+            >
+              {results.map((result, index) => (
+                <li
+                  key={result.place_id}
+                  id={`geocode-result-${index}`}
+                  role="option"
+                  aria-selected={highlightedIndex === index}
+                  className={`px-4 py-3 cursor-pointer text-body border-b border-border-subtle last:border-b-0 ${
+                    highlightedIndex === index
+                      ? 'bg-surface-secondary text-brand-primary'
+                      : 'text-text-primary hover:bg-surface-app'
+                  }`}
+                  onMouseEnter={() => setHighlightedIndex(index)}
+                  onMouseDown={(e) => {
+                    // Use mousedown instead of click so it fires before onBlur
+                    e.preventDefault();
+                    handleSelectResult(result);
+                  }}
+                >
+                  <div className="font-semibold truncate">{result.name}</div>
+                  <div className="text-label text-text-muted truncate mt-0.5">{result.display_name}</div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {/* No results state */}
+          {showResults && results.length === 0 && !searchLoading && !searchError && query.trim().length >= 2 && (
+            <div className="absolute z-50 mt-1 w-full bg-surface-primary border border-border-default rounded-card shadow-floating px-4 py-4 text-body text-text-secondary">
+              No locations found. Try a different name.
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Search error */}
       {searchError && (
-        <p className="text-label text-error-text bg-error-bg p-2 rounded-md border border-red-200" role="alert">{searchError}</p>
+        <p className={`text-label text-error-text bg-error-bg p-2 rounded-md border border-red-200 ${compact ? 'text-xs py-1 px-2' : ''}`} role="alert">{searchError}</p>
       )}
 
       {/* Manual coordinate toggle */}
-      <button
-        onClick={() => setShowManual(prev => !prev)}
-        className="flex items-center gap-1.5 text-label text-text-secondary hover:text-text-primary self-start transition-colors focus-visible:rounded-sm"
-        aria-expanded={showManual}
-      >
-        {showManual ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        Enter coordinates manually
-      </button>
+      {!compact && (
+        <button
+          onClick={() => setShowManual(prev => !prev)}
+          className="flex items-center gap-1.5 text-label text-text-secondary hover:text-text-primary self-start transition-colors focus-visible:rounded-sm"
+          aria-expanded={showManual}
+        >
+          {showManual ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          Enter coordinates manually
+        </button>
+      )}
 
       {/* Manual coordinate inputs (collapsible, existing behaviour preserved) */}
-      {showManual && (
+      {showManual && !compact && (
         <div className="flex flex-col gap-2">
           <div className="flex gap-4 w-full">
             <div className="flex-1">
@@ -372,26 +379,28 @@ export function WorkLocationInput({ state, updateState }: WorkLocationInputProps
       )}
 
       {/* OSM attribution (required by Nominatim policy / ODbL) */}
-      <p className="text-metadata text-text-muted mt-1">
-        Search powered by{' '}
-        <a
-          href="https://nominatim.openstreetmap.org"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline hover:text-text-primary focus-visible:rounded-sm"
-        >
-          Nominatim
-        </a>
-        {' '}·{' '}
-        <a
-          href="https://www.openstreetmap.org/copyright"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline hover:text-text-primary focus-visible:rounded-sm"
-        >
-          © OpenStreetMap contributors
-        </a>
-      </p>
+      {!compact && (
+        <p className="text-metadata text-text-muted mt-1">
+          Search powered by{' '}
+          <a
+            href="https://nominatim.openstreetmap.org"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-text-primary focus-visible:rounded-sm"
+          >
+            Nominatim
+          </a>
+          {' '}·{' '}
+          <a
+            href="https://www.openstreetmap.org/copyright"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-text-primary focus-visible:rounded-sm"
+          >
+            © OpenStreetMap contributors
+          </a>
+        </p>
+      )}
     </div>
   );
 }
