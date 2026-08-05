@@ -26,7 +26,7 @@ export function MapContainer({
   };
 
   return (
-    <div className="w-full h-full relative">
+    <div className="w-full h-full relative bg-surface-secondary">
       <Map
         ref={mapRef}
         initialViewState={{
@@ -62,11 +62,11 @@ export function MapContainer({
         {/* Work Location Marker */}
         {workLat !== null && workLng !== null && (
           <Marker longitude={workLng} latitude={workLat} anchor="bottom">
-            <div className="relative">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" fill="#3b82f6" stroke="white" strokeWidth="2" />
-                <circle cx="12" cy="10" r="3" fill="white" />
-              </svg>
+            <div className="flex flex-col items-center cursor-pointer group">
+              <div className="bg-brand-primary text-text-inverse px-2 py-1 rounded text-[10px] font-bold shadow-elevated whitespace-nowrap mb-1 uppercase tracking-wider">
+                Work
+              </div>
+              <div className="w-4 h-4 bg-brand-primary rounded-full border-2 border-surface-primary shadow-subtle relative z-10"></div>
             </div>
           </Marker>
         )}
@@ -81,7 +81,7 @@ export function MapContainer({
               latitude={rec.metadata.coordinates.lat}
               anchor="bottom"
             >
-              <div className="relative w-8 h-8 flex items-center justify-center font-bold text-text-inverse shadow-elevated cursor-pointer transition-transform hover:scale-110" style={{
+              <div className="relative w-8 h-8 flex items-center justify-center font-bold text-text-inverse shadow-elevated" style={{
                 background: `linear-gradient(135deg, ${rec.total_score >= 80 ? 'var(--color-score-strong)' : rec.total_score >= 50 ? 'var(--color-score-moderate)' : 'var(--color-score-weak)'}, ${rec.total_score >= 80 ? 'var(--color-success-text)' : rec.total_score >= 50 ? 'var(--color-warning-text)' : 'var(--color-error-text)'})`,
                 borderRadius: '50% 50% 50% 0',
                 transform: 'rotate(-45deg)',
