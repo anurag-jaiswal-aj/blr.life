@@ -105,10 +105,13 @@ export function useUrlState() {
     [state, pathname, router]
   );
 
-  const getApiRequest = useCallback((): RecommendationRequest | null => {
+  const getApiRequest = useCallback((): RecommendationRequest | null | undefined => {
     if (state.lat === null || state.lng === null) return null;
 
-    // Only send constraints if BOTH are present
+    const isBudgetIncomplete = (state.max_budget_inr !== null && state.bhk_type === null) || 
+                               (state.max_budget_inr === null && state.bhk_type !== null);
+    if (isBudgetIncomplete) return undefined;
+
     const constraints: RecommendationRequest['constraints'] = { max_work_distance_km: state.max_dist };
     if (state.max_budget_inr !== null && state.bhk_type !== null) {
       constraints.max_budget_inr = state.max_budget_inr;

@@ -6,11 +6,13 @@ interface MobileRecommendationSheetProps {
   data: RecommendationResponse | null;
   loading: boolean;
   error: string | null;
+  isValidating?: boolean;
   selectedLocalityId?: number | null;
   onSelect?: (id: number) => void;
+  onRetry?: () => void;
 }
 
-export function MobileRecommendationSheet({ data, loading, error, selectedLocalityId, onSelect }: MobileRecommendationSheetProps) {
+export function MobileRecommendationSheet({ data, loading, error, isValidating, selectedLocalityId, onSelect, onRetry }: MobileRecommendationSheetProps) {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -30,7 +32,15 @@ export function MobileRecommendationSheet({ data, loading, error, selectedLocali
       </button>
       
       <div className="px-5 pb-3 shrink-0 flex justify-between items-center border-b border-border-default/50">
-        <h3 className="text-card-title font-semibold text-text-primary">Recommended</h3>
+        <div className="flex items-center gap-3">
+          <h3 className="text-card-title font-semibold text-text-primary">Recommended</h3>
+          {isValidating && (
+            <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider flex items-center gap-1.5 bg-surface-secondary px-2 py-0.5 rounded-sm border border-border-default">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse"></span>
+              Updating
+            </span>
+          )}
+        </div>
         <span className="text-label text-brand-primary font-bold bg-brand-primary/10 px-2 py-0.5 rounded-full">
           {data?.recommendations?.length || 0} results
         </span>
@@ -43,6 +53,7 @@ export function MobileRecommendationSheet({ data, loading, error, selectedLocali
           error={error} 
           selectedLocalityId={selectedLocalityId}
           onSelect={onSelect}
+          onRetry={onRetry}
         />
       </div>
     </div>

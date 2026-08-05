@@ -52,6 +52,8 @@ describe('RecommendationWorkspace', () => {
       data: { recommendations: [], provenance: { calc_versions_used: [] } },
       loading: false,
       error: null,
+      isValidating: false,
+      retry: vi.fn(),
     });
 
     render(<RecommendationWorkspace />);
@@ -90,6 +92,8 @@ describe('RecommendationWorkspace', () => {
       data: null,
       loading: false,
       error: null,
+      isValidating: false,
+      retry: vi.fn(),
     });
 
     render(<RecommendationWorkspace />);
@@ -129,6 +133,8 @@ describe('RecommendationWorkspace', () => {
       data: { recommendations: [], provenance: { calc_versions_used: [] } },
       loading: false,
       error: null,
+      isValidating: false,
+      retry: vi.fn(),
     });
 
     render(<RecommendationWorkspace />);
@@ -172,6 +178,8 @@ describe('RecommendationWorkspace', () => {
       data: { recommendations: [], provenance: { calc_versions_used: [] } },
       loading: false,
       error: null,
+      isValidating: false,
+      retry: vi.fn(),
     });
 
     render(<RecommendationWorkspace />);
@@ -202,6 +210,8 @@ describe('RecommendationWorkspace', () => {
       data: { recommendations: mockRecs as any, provenance: { calc_versions_used: [] } },
       loading: false,
       error: null,
+      isValidating: false,
+      retry: vi.fn(),
     });
 
     render(<RecommendationWorkspace />);

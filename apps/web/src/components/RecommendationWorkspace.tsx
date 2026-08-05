@@ -10,11 +10,12 @@ import { RecommendationList } from '../components/RecommendationList';
 import { WorkLocationInput } from '../components/WorkLocationInput';
 import { MobileRecommendationSheet } from '../components/MobileRecommendationSheet';
 import { MobileControlsDisclosure } from '../components/MobileControlsDisclosure';
+import { ShareButton } from '../components/ShareButton';
 
 export function RecommendationWorkspace() {
   const { state, updateState, getApiRequest } = useUrlState();
   const request = getApiRequest();
-  const { data, loading, error } = useRecommendations(request);
+  const { data, loading, error, isValidating, retry } = useRecommendations(request);
   const { isDesktop, mounted } = useIsDesktop();
   const [selectedLocalityId, setSelectedLocalityId] = useState<number | null>(null);
 
@@ -47,8 +48,15 @@ export function RecommendationWorkspace() {
     <div className={`flex flex-col bg-surface-app text-text-primary font-sans ${hasLocation ? 'h-[100dvh] overflow-hidden lg:h-auto lg:min-h-screen' : 'min-h-screen'}`}>
       {/* HEADER */}
       <header className="flex items-center justify-between px-4 md:px-8 py-4 bg-surface-primary border-b border-border-default sticky top-0 z-50 shrink-0">
-        <div className="text-wordmark font-bold text-brand-primary tracking-tight">blr.life</div>
-        <div className="text-label font-medium text-text-muted uppercase tracking-widest hidden sm:block">Bengaluru neighbourhoods</div>
+        <div className="flex items-center gap-4">
+          <div className="text-wordmark font-bold text-brand-primary tracking-tight">blr.life</div>
+          <div className="text-label font-medium text-text-muted uppercase tracking-widest hidden sm:block">Bengaluru neighbourhoods</div>
+        </div>
+        {hasLocation && (
+          <div className="flex items-center">
+            <ShareButton />
+          </div>
+        )}
       </header>
 
       {/* MAIN CONTENT AREA */}
@@ -98,7 +106,15 @@ export function RecommendationWorkspace() {
               
               {/* DESKTOP Recommendation List */}
               <div className="hidden lg:flex w-full lg:w-[420px] flex-col gap-3 shrink-0 h-[600px] lg:h-auto z-10 bg-surface-app">
-                <h3 className="text-card-title font-semibold text-text-primary">Recommended neighbourhoods</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-card-title font-semibold text-text-primary">Recommended neighbourhoods</h3>
+                  {isValidating && (
+                    <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider flex items-center gap-1.5 bg-surface-secondary px-2 py-0.5 rounded-sm border border-border-default">
+                      <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse"></span>
+                      Updating
+                    </span>
+                  )}
+                </div>
                 <div className="flex-1 overflow-y-auto">
                   {(!mounted || isDesktop) && (
                     <RecommendationList 
@@ -107,6 +123,7 @@ export function RecommendationWorkspace() {
                       error={error} 
                       selectedLocalityId={selectedLocalityId}
                       onSelect={setSelectedLocalityId}
+                      onRetry={retry}
                     />
                   )}
                 </div>
@@ -131,8 +148,10 @@ export function RecommendationWorkspace() {
                     data={data} 
                     loading={loading} 
                     error={error}
+                    isValidating={isValidating}
                     selectedLocalityId={selectedLocalityId}
                     onSelect={setSelectedLocalityId}
+                    onRetry={retry}
                   />
                 )}
               </div>

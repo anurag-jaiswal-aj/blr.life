@@ -129,5 +129,29 @@ test.describe('V1 Critical User Journey', () => {
       // Verify the map marker for rank 2 scales up
       const secondMarker = page.locator('.maplibregl-marker div', { hasText: /^2$/ });
       await expect(secondMarker).toHaveClass(/scale-110/);
+
+      // Step 13: Verify Shareable URL
+      await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+      const shareButton = page.getByRole('button', { name: /Share results/i });
+      await shareButton.click();
+      
+      // Verify confirmation text
+      await expect(shareButton).toHaveText(/Copied/i);
+      
+      const clipboardText = await page.evaluate<string>('navigator.clipboard.readText()');
+      expect(clipboardText).toContain('max_budget=25000');
+      expect(clipboardText).toContain('bhk=1bhk');
+      expect(clipboardText).toContain('lat=12.9352');
+      
+      // Step 14: Navigate/open using that URL and verify state restoration
+      await page.goto(clipboardText);
+      await expect(page).toHaveURL(clipboardText);
+      
+      // The state should be restored
+      const restoredMaxRent = page.getByRole('spinbutton', { name: /Max Rent Budget/i });
+      await expect(restoredMaxRent).toHaveValue('25000');
+      
+      const restoredPropertyType = page.getByRole('combobox', { name: /Property Type/i });
+      await expect(restoredPropertyType).toHaveValue('1bhk');
     });
   });

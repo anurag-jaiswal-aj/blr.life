@@ -8,9 +8,10 @@ interface RecommendationListProps {
   error: string | null;
   selectedLocalityId?: number | null;
   onSelect?: (id: number) => void;
+  onRetry?: () => void;
 }
 
-export function RecommendationList({ data, loading, error, selectedLocalityId, onSelect }: RecommendationListProps) {
+export function RecommendationList({ data, loading, error, selectedLocalityId, onSelect, onRetry }: RecommendationListProps) {
   useEffect(() => {
     if (selectedLocalityId !== null && selectedLocalityId !== undefined) {
       const el = document.getElementById(`rec-card-${selectedLocalityId}`);
@@ -22,9 +23,19 @@ export function RecommendationList({ data, loading, error, selectedLocalityId, o
 
   if (error) {
     return (
-      <div className="p-4 bg-error-bg border border-red-200 rounded-card">
-        <p className="text-body font-bold text-error-text">Error fetching recommendations</p>
-        <p className="text-label text-error-text mt-1 opacity-90">{error}</p>
+      <div className="p-4 bg-error-bg border border-red-200 rounded-card flex flex-col items-start gap-3">
+        <div>
+          <p className="text-body font-bold text-error-text">Error fetching recommendations</p>
+          <p className="text-label text-error-text mt-1 opacity-90">{error}</p>
+        </div>
+        {onRetry && (
+          <button 
+            onClick={onRetry}
+            className="px-4 py-1.5 bg-surface-primary border border-border-strong rounded-control text-label font-bold text-text-primary hover:bg-surface-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-1 transition-colors"
+          >
+            Retry
+          </button>
+        )}
       </div>
     );
   }

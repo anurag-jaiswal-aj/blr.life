@@ -169,6 +169,7 @@ export function WorkLocationInput({ state, updateState, compact = false }: WorkL
     setQuery('');
     setResults([]);
     setShowResults(false);
+    updateState({ lat: null, lng: null });
     setTimeout(() => searchInputRef.current?.focus(), 0);
   };
 

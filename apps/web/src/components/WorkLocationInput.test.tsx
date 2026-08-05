@@ -153,6 +153,41 @@ describe('WorkLocationInput', () => {
       expect(screen.queryByText('Test Name')).not.toBeInTheDocument();
       expect(searchSpy).toHaveBeenCalledTimes(1); // No new request
     });
+
+    it('clears selected location and resets state on clear button click', async () => {
+      const updateSpy = vi.fn();
+      
+      // Need to use the component's internal state mechanism or provide selectedName via a mock
+      // Actually, if lat/lng are present but selectedName is null, it shows "Location set (12.9700, 77.5900)"
+      // Let's mock a search and selection to get the selectedName set, then clear it.
+      const mockResults = [
+        { place_id: 1, lat: 12.9716, lng: 77.5946, display_name: 'Bangalore, India', name: 'Bangalore' }
+      ];
+      vi.spyOn(geocodingModule, 'searchPlaces').mockResolvedValue(mockResults);
+      
+      const { rerender } = render(<WorkLocationInput state={defaultState} updateState={updateSpy} />);
+      
+      const searchInput = screen.getByRole('combobox');
+      await userEvent.type(searchInput, 'bangalore{enter}');
+      
+      await waitFor(() => {
+        expect(screen.getByText('Bangalore, India')).toBeInTheDocument();
+      });
+      
+      const option = screen.getByText('Bangalore, India');
+      fireEvent.mouseDown(option);
+      
+      expect(updateSpy).toHaveBeenCalledWith({ lat: 12.9716, lng: 77.5946 });
+
+      // Rerender with new state to simulate parent update
+      rerender(<WorkLocationInput state={{ ...defaultState, lat: 12.9716, lng: 77.5946 }} updateState={updateSpy} />);
+
+      // Now clear button should be visible
+      const clearBtn = screen.getByRole('button', { name: /Clear selected location/i });
+      await userEvent.click(clearBtn);
+
+      expect(updateSpy).toHaveBeenCalledWith({ lat: null, lng: null });
+    });
   });
 
   describe('Manual Coordinate Input', () => {

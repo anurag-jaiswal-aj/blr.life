@@ -92,4 +92,38 @@ describe('useUrlState', () => {
       preferences: { metro_access_weight: 0.9, short_commute_weight: 0.2, cafe_weight: 1, restaurant_weight: 0.5, park_weight: 0, healthcare_weight: 0, nightlife_weight: 0 }
     });
   });
+
+  it('restores state from shareable URL with complete housing constraints', () => {
+    (navigation as any).__setSearchParams('lat=12.9&lng=77.6&max_dist=20&max_budget=30000&bhk=2bhk');
+    const { result } = renderHook(() => useUrlState());
+    
+    expect(result.current.state.max_budget_inr).toBe(30000);
+    expect(result.current.state.bhk_type).toBe('2bhk');
+    
+    const req = result.current.getApiRequest();
+    expect(req?.constraints.max_budget_inr).toBe(30000);
+    expect(req?.constraints.bhk_type).toBe('2bhk');
+  });
+
+  it('returns undefined API request when housing constraints are incomplete (budget only)', () => {
+    (navigation as any).__setSearchParams('lat=12.9&lng=77.6&max_budget=30000');
+    const { result } = renderHook(() => useUrlState());
+    
+    expect(result.current.state.max_budget_inr).toBe(30000);
+    expect(result.current.state.bhk_type).toBeNull();
+    
+    const req = result.current.getApiRequest();
+    expect(req).toBeUndefined(); // preserves previous state
+  });
+
+  it('returns undefined API request when housing constraints are incomplete (bhk only)', () => {
+    (navigation as any).__setSearchParams('lat=12.9&lng=77.6&bhk=1bhk');
+    const { result } = renderHook(() => useUrlState());
+    
+    expect(result.current.state.max_budget_inr).toBeNull();
+    expect(result.current.state.bhk_type).toBe('1bhk');
+    
+    const req = result.current.getApiRequest();
+    expect(req).toBeUndefined(); // preserves previous state
+  });
 });
