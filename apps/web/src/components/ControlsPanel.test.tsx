@@ -42,11 +42,7 @@ describe('ControlsPanel (CONTROLS)', () => {
     expect(updateSpy).toHaveBeenCalledWith({ w_work: 0.8 });
   });
 
-  it('renders only the coordinate inputs via WorkLocationInput when coordinates are missing', () => {
-    render(<ControlsPanel state={{ ...defaultState, lat: null, lng: null }} updateState={vi.fn()} />);
-    expect(screen.getByLabelText(/Search for a work location/i)).toBeInTheDocument();
-    expect(screen.queryByLabelText(/Maximum Commute Distance/i)).not.toBeInTheDocument();
-  });
+  // WorkLocationInput is now rendered in RecommendationWorkspace
 
   it('updates amenity priorities when lifestyle accordion is toggled and selectors clicked', () => {
     const updateSpy = vi.fn();

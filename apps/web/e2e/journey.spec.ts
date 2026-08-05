@@ -113,6 +113,9 @@ test.describe('V1 Critical User Journey', () => {
     await maxRentInput.fill('25000');
     // Blur to ensure the update State fires (it triggers on onChange though, but blur is safe)
     await maxRentInput.blur();
+    
+    // Wait for the URL to update before triggering the next state change to avoid race conditions in useUrlState
+    await page.waitForURL(/max_budget=25000/);
 
     const propertyTypeSelect = page.getByRole('combobox', { name: /Property Type/i });
     await propertyTypeSelect.selectOption('1bhk');

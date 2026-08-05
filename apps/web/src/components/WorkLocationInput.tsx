@@ -199,40 +199,40 @@ export function WorkLocationInput({ state, updateState }: WorkLocationInputProps
   const hasLocation = state.lat !== null && state.lng !== null;
 
   return (
-    <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl flex flex-col gap-3" ref={containerRef}>
+    <div className="p-4 md:p-6 bg-surface-primary border-2 border-brand-primary rounded-card flex flex-col gap-4 shadow-elevated" ref={containerRef}>
       {/* Header */}
       <div className="flex items-start gap-3">
-        <MapPin className="text-blue-500 shrink-0 mt-0.5" size={20} />
+        <MapPin className="text-brand-primary shrink-0 mt-0.5" size={24} />
         <div>
-          <p className="text-sm font-semibold text-blue-900">Where do you work?</p>
-          <p className="text-xs text-blue-700 mt-1">Search for a place, or click the map.</p>
+          <p className="text-body font-bold text-text-primary">Where do you work?</p>
+          <p className="text-label text-text-secondary mt-1">Search for a place, or click the map.</p>
         </div>
       </div>
 
       {/* Selected location badge */}
       {hasLocation && selectedName && (
-        <div className="flex items-center justify-between gap-2 bg-blue-100 border border-blue-200 rounded-lg px-3 py-2">
+        <div className="flex items-center justify-between gap-2 bg-surface-app border border-border-strong rounded-control px-3 py-2.5">
           <div className="flex items-center gap-2 min-w-0">
-            <MapPin size={14} className="text-blue-600 shrink-0" />
-            <span className="text-xs text-blue-800 font-medium truncate" title={selectedName}>
+            <MapPin size={16} className="text-text-secondary shrink-0" />
+            <span className="text-body text-text-primary font-medium truncate" title={selectedName}>
               {selectedName}
             </span>
           </div>
           <button
             onClick={handleClearSelection}
             aria-label="Clear selected location"
-            className="text-blue-400 hover:text-blue-700 shrink-0"
+            className="text-text-muted hover:text-text-primary shrink-0 transition-colors focus-visible:rounded-sm"
           >
-            <X size={14} />
+            <X size={16} />
           </button>
         </div>
       )}
 
       {/* Map-click-only location indicator (no name known) */}
       {hasLocation && !selectedName && (
-        <div className="flex items-center gap-2 bg-blue-100 border border-blue-200 rounded-lg px-3 py-2">
-          <MapPin size={14} className="text-blue-600 shrink-0" />
-          <span className="text-xs text-blue-800 font-medium">
+        <div className="flex items-center gap-2 bg-surface-app border border-border-strong rounded-control px-3 py-2.5">
+          <MapPin size={16} className="text-text-secondary shrink-0" />
+          <span className="text-body text-text-primary font-medium">
             Location set ({state.lat?.toFixed(4)}, {state.lng?.toFixed(4)})
           </span>
         </div>
@@ -243,9 +243,9 @@ export function WorkLocationInput({ state, updateState }: WorkLocationInputProps
         <div className="relative flex items-center">
           <label htmlFor={searchInputId} className="sr-only">Search for a work location</label>
           {searchLoading ? (
-            <Loader2 size={16} className="absolute left-2.5 text-blue-400 animate-spin pointer-events-none" />
+            <Loader2 size={18} className="absolute left-3 text-text-muted animate-spin pointer-events-none" />
           ) : (
-            <Search size={16} className="absolute left-2.5 text-blue-400 pointer-events-none" />
+            <Search size={18} className="absolute left-3 text-text-muted pointer-events-none" />
           )}
           <input
             ref={searchInputRef}
@@ -256,7 +256,7 @@ export function WorkLocationInput({ state, updateState }: WorkLocationInputProps
             aria-autocomplete="list"
             aria-activedescendant={highlightedIndex >= 0 ? `geocode-result-${highlightedIndex}` : undefined}
             type="text"
-            className="flex-1 bg-white border border-blue-200 rounded-l-lg pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 min-w-0"
+            className="flex-1 bg-surface-primary border border-border-strong rounded-l-control pl-10 pr-3 py-2.5 text-body outline-none focus:ring-2 focus:ring-brand-primary min-w-0"
             placeholder="e.g. Koramangala, Manyata Tech Park…"
             value={query}
             onChange={handleQueryChange}
@@ -268,7 +268,7 @@ export function WorkLocationInput({ state, updateState }: WorkLocationInputProps
             type="button"
             onClick={handleSearchSubmit}
             disabled={searchLoading || query.trim().length < 2}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 text-sm font-medium rounded-r-lg border border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="bg-brand-primary hover:bg-brand-hover text-text-inverse px-4 py-2.5 text-body font-bold rounded-r-control focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-brand-primary"
           >
             Search
           </button>
@@ -280,7 +280,7 @@ export function WorkLocationInput({ state, updateState }: WorkLocationInputProps
             id={listboxId}
             role="listbox"
             aria-label="Location suggestions"
-            className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-y-auto"
+            className="absolute z-50 mt-1 w-full bg-surface-primary border border-border-default rounded-card shadow-floating max-h-56 overflow-y-auto"
           >
             {results.map((result, index) => (
               <li
@@ -288,10 +288,10 @@ export function WorkLocationInput({ state, updateState }: WorkLocationInputProps
                 id={`geocode-result-${index}`}
                 role="option"
                 aria-selected={highlightedIndex === index}
-                className={`px-3 py-2.5 cursor-pointer text-sm border-b border-gray-50 last:border-b-0 ${
+                className={`px-4 py-3 cursor-pointer text-body border-b border-border-subtle last:border-b-0 ${
                   highlightedIndex === index
-                    ? 'bg-blue-50 text-blue-900'
-                    : 'text-gray-800 hover:bg-gray-50'
+                    ? 'bg-surface-secondary text-brand-primary'
+                    : 'text-text-primary hover:bg-surface-app'
                 }`}
                 onMouseEnter={() => setHighlightedIndex(index)}
                 onMouseDown={(e) => {
@@ -300,8 +300,8 @@ export function WorkLocationInput({ state, updateState }: WorkLocationInputProps
                   handleSelectResult(result);
                 }}
               >
-                <div className="font-medium truncate">{result.name}</div>
-                <div className="text-xs text-gray-400 truncate mt-0.5">{result.display_name}</div>
+                <div className="font-semibold truncate">{result.name}</div>
+                <div className="text-label text-text-muted truncate mt-0.5">{result.display_name}</div>
               </li>
             ))}
           </ul>
@@ -309,7 +309,7 @@ export function WorkLocationInput({ state, updateState }: WorkLocationInputProps
 
         {/* No results state */}
         {showResults && results.length === 0 && !searchLoading && !searchError && query.trim().length >= 2 && (
-          <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-3 text-sm text-gray-500">
+          <div className="absolute z-50 mt-1 w-full bg-surface-primary border border-border-default rounded-card shadow-floating px-4 py-4 text-body text-text-secondary">
             No locations found. Try a different name.
           </div>
         )}
@@ -317,32 +317,32 @@ export function WorkLocationInput({ state, updateState }: WorkLocationInputProps
 
       {/* Search error */}
       {searchError && (
-        <p className="text-xs text-red-600" role="alert">{searchError}</p>
+        <p className="text-label text-error-text bg-error-bg p-2 rounded-md border border-red-200" role="alert">{searchError}</p>
       )}
 
       {/* Manual coordinate toggle */}
       <button
         onClick={() => setShowManual(prev => !prev)}
-        className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 self-start"
+        className="flex items-center gap-1.5 text-label text-text-secondary hover:text-text-primary self-start transition-colors focus-visible:rounded-sm"
         aria-expanded={showManual}
       >
-        {showManual ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+        {showManual ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         Enter coordinates manually
       </button>
 
       {/* Manual coordinate inputs (collapsible, existing behaviour preserved) */}
       {showManual && (
         <div className="flex flex-col gap-2">
-          <div className="flex gap-2 w-full">
+          <div className="flex gap-4 w-full">
             <div className="flex-1">
-              <label htmlFor="latitude-input" className="block text-xs font-medium text-blue-900 mb-1">
+              <label htmlFor="latitude-input" className="block text-label font-medium text-text-secondary mb-1">
                 Latitude
               </label>
               <input
                 id="latitude-input"
                 type="number"
                 step="any"
-                className="w-full bg-white border border-blue-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-surface-primary border border-border-default rounded-control px-2.5 py-2 text-body outline-none focus:ring-2 focus:ring-brand-primary"
                 value={latInput}
                 onChange={(e) => setLatInput(e.target.value)}
                 onBlur={() => handleCoordUpdate(latInput, lngInput)}
@@ -351,14 +351,14 @@ export function WorkLocationInput({ state, updateState }: WorkLocationInputProps
               />
             </div>
             <div className="flex-1">
-              <label htmlFor="longitude-input" className="block text-xs font-medium text-blue-900 mb-1">
+              <label htmlFor="longitude-input" className="block text-label font-medium text-text-secondary mb-1">
                 Longitude
               </label>
               <input
                 id="longitude-input"
                 type="number"
                 step="any"
-                className="w-full bg-white border border-blue-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-surface-primary border border-border-default rounded-control px-2.5 py-2 text-body outline-none focus:ring-2 focus:ring-brand-primary"
                 value={lngInput}
                 onChange={(e) => setLngInput(e.target.value)}
                 onBlur={() => handleCoordUpdate(latInput, lngInput)}
@@ -367,18 +367,18 @@ export function WorkLocationInput({ state, updateState }: WorkLocationInputProps
               />
             </div>
           </div>
-          {coordError && <p className="text-xs text-red-600" role="alert">{coordError}</p>}
+          {coordError && <p className="text-label text-error-text bg-error-bg p-2 rounded-md border border-red-200" role="alert">{coordError}</p>}
         </div>
       )}
 
       {/* OSM attribution (required by Nominatim policy / ODbL) */}
-      <p className="text-[10px] text-blue-500/70 mt-1">
+      <p className="text-metadata text-text-muted mt-1">
         Search powered by{' '}
         <a
           href="https://nominatim.openstreetmap.org"
           target="_blank"
           rel="noopener noreferrer"
-          className="underline hover:text-blue-600"
+          className="underline hover:text-text-primary focus-visible:rounded-sm"
         >
           Nominatim
         </a>
@@ -387,7 +387,7 @@ export function WorkLocationInput({ state, updateState }: WorkLocationInputProps
           href="https://www.openstreetmap.org/copyright"
           target="_blank"
           rel="noopener noreferrer"
-          className="underline hover:text-blue-600"
+          className="underline hover:text-text-primary focus-visible:rounded-sm"
         >
           © OpenStreetMap contributors
         </a>
