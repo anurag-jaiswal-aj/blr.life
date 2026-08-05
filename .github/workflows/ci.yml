@@ -124,7 +124,12 @@ jobs:
 
       - name: Validate Production Compose Syntax
         run: |
-          cp .env.production.example .env.production
+          cat > .env.production <<'EOF'
+          POSTGRES_USER=blrlife
+          POSTGRES_PASSWORD=blrlife_ci_password
+          POSTGRES_DB=blrlife
+          NEXT_PUBLIC_API_URL=http://localhost:8000
+          EOF
           docker compose -f docker-compose.prod.yml config
 
       - name: Smoke Test Backend
