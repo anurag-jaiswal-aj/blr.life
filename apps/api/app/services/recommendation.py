@@ -240,6 +240,7 @@ def rank_candidates(
             metadata["nearest_metro_station"] = {
                 "name": candidate.metro_extra_data.get("nearest_station_name"),
                 "slug": candidate.metro_extra_data.get("nearest_station_slug"),
+                "line": candidate.metro_extra_data.get("nearest_station_line"),
             }
 
         if candidate.calc_version:

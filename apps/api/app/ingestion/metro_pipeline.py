@@ -81,6 +81,8 @@ async def run_metro_ingestion(
                 .where(
                     (MetroStation.name != station.name)
                     | (MetroStation.osm_id != station.osm_id)
+                    | (MetroStation.is_operational != station.is_operational)
+                    | (MetroStation.line != station.line)
                     | (
                         func.ST_Equals(
                             MetroStation.geometry, func.ST_GeomFromEWKT(f"SRID=4326;{point_wkt}")
@@ -91,6 +93,8 @@ async def run_metro_ingestion(
                 .values(
                     name=station.name,
                     osm_id=station.osm_id,
+                    is_operational=station.is_operational,
+                    line=station.line,
                     geometry=func.ST_GeomFromEWKT(f"SRID=4326;{point_wkt}"),
                     snapshot_id=snapshot.id,
                     is_active=True,
@@ -107,6 +111,8 @@ async def run_metro_ingestion(
                 name=station.name,
                 slug=station.slug,
                 osm_id=station.osm_id,
+                is_operational=station.is_operational,
+                line=station.line,
                 geometry=func.ST_GeomFromEWKT(f"SRID=4326;{point_wkt}"),
                 snapshot_id=snapshot.id,
                 is_active=True,
@@ -181,12 +187,14 @@ async def calculate_metro_metrics(
             select(
                 MetroStation.slug,
                 MetroStation.name,
+                MetroStation.line,
                 func.ST_Distance(
                     func.ST_Transform(loc.centroid, 4326).cast(Geography()),
                     func.ST_Transform(MetroStation.geometry, 4326).cast(Geography()),
                 ).label("distance"),
             )
             .where(MetroStation.is_active.is_(True))
+            .where(MetroStation.is_operational.is_(True))
             .order_by("distance")
             .limit(1)
         )
@@ -195,8 +203,12 @@ async def calculate_metro_metrics(
         if not result:
             continue
 
-        nearest_slug, nearest_name, distance_m = result
-        extra_data = {"nearest_station_slug": nearest_slug, "nearest_station_name": nearest_name}
+        nearest_slug, nearest_name, nearest_line, distance_m = result
+        extra_data = {
+            "nearest_station_slug": nearest_slug,
+            "nearest_station_name": nearest_name,
+            "nearest_station_line": nearest_line,
+        }
 
         # Check existing metric
         existing_stmt = select(LocalityMetric).where(

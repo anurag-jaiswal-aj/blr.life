@@ -58,6 +58,18 @@ export function NeighbourhoodDetail({ recommendation }: NeighbourhoodDetailProps
     : '—';
 
   const nearestStation = r.metadata.nearest_metro_station?.name;
+  const nearestStationLine = r.metadata.nearest_metro_station?.line;
+
+  const getLineColor = (line?: string) => {
+    switch (line?.toLowerCase()) {
+      case 'purple': return 'bg-purple-500';
+      case 'green': return 'bg-green-500';
+      case 'yellow': return 'bg-yellow-500';
+      case 'pink': return 'bg-pink-500';
+      case 'blue': return 'bg-blue-500';
+      default: return 'bg-gray-400';
+    }
+  };
 
   return (
     <div className="h-full flex flex-col overflow-y-auto">
@@ -69,8 +81,8 @@ export function NeighbourhoodDetail({ recommendation }: NeighbourhoodDetailProps
               {r.name}
             </h2>
             {nearestStation && (
-              <p className="text-[11px] text-text-muted mt-1">
-                Nearest metro: {nearestStation}
+              <p className="text-[11px] text-text-muted mt-1 flex items-center gap-1.5">
+                Nearest metro: <span className={`w-2 h-2 rounded-full ${getLineColor(nearestStationLine)}`} /> {nearestStation}
               </p>
             )}
           </div>

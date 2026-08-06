@@ -42,6 +42,18 @@ class MetroStation(Base):
     # Original OSM identifier (e.g., node/12345)
     osm_id: Mapped[str] = mapped_column(String(50), nullable=False)
 
+    # Whether the station is operational (vs under construction)
+    is_operational: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default="true",
+        index=True,
+    )
+
+    # Metro line color, e.g., 'purple', 'green', 'yellow'
+    line: Mapped[str | None] = mapped_column(String(50), nullable=True)
+
     # Geographic coordinates of the station center
     geometry: Mapped[str] = mapped_column(
         Geometry("POINT", srid=4326, spatial_index=True),

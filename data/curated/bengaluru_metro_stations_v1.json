@@ -9,455 +9,585 @@
       "slug": "manjunathanagara",
       "osm_id": "node/1576973980",
       "latitude": 13.0500898,
-      "longitude": 77.4944461
+      "longitude": 77.4944461,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Whitefield (Kadugodi)",
       "slug": "whitefield-kadugodi",
       "osm_id": "node/5760197744",
       "latitude": 12.9957428,
-      "longitude": 77.7579489
+      "longitude": 77.7579489,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Hopefarm Channasandra",
       "slug": "hopefarm-channasandra",
       "osm_id": "node/5760197745",
       "latitude": 12.9873426,
-      "longitude": 77.7538033
+      "longitude": 77.7538033,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Pattandur Agrahara",
       "slug": "pattandur-agrahara",
       "osm_id": "node/5760197749",
       "latitude": 12.9876393,
-      "longitude": 77.7377718
+      "longitude": 77.7377718,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Sri Sathya Sai Hospital",
       "slug": "sri-sathya-sai-hospital",
       "osm_id": "node/5760197751",
       "latitude": 12.9811949,
-      "longitude": 77.7275361
+      "longitude": 77.7275361,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Nallurahalli",
       "slug": "nallurahalli",
       "osm_id": "node/5760197754",
       "latitude": 12.9766408,
-      "longitude": 77.7248845
+      "longitude": 77.7248845,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Kundalahalli",
       "slug": "kundalahalli",
       "osm_id": "node/5760197755",
       "latitude": 12.977594,
-      "longitude": 77.7155586
+      "longitude": 77.7155586,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Seetharampalya",
       "slug": "seetharampalya",
       "osm_id": "node/5760197757",
       "latitude": 12.9808558,
-      "longitude": 77.7087854
+      "longitude": 77.7087854,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Hoodi",
       "slug": "hoodi",
       "osm_id": "node/5760197761",
       "latitude": 12.9888029,
-      "longitude": 77.711326
+      "longitude": 77.711326,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Garudacharpalya",
       "slug": "garudacharpalya",
       "osm_id": "node/5760197762",
       "latitude": 12.9934505,
-      "longitude": 77.7036768
+      "longitude": 77.7036768,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Singayyanapalya",
       "slug": "singayyanapalya",
       "osm_id": "node/5760197764",
       "latitude": 12.9965445,
-      "longitude": 77.6927176
+      "longitude": 77.6927176,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Krishnarajapura",
       "slug": "krishnarajapura",
       "osm_id": "node/5760197765",
       "latitude": 12.9999024,
-      "longitude": 77.6776703
+      "longitude": 77.6776703,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Benniganahalli",
       "slug": "benniganahalli",
       "osm_id": "node/5760197766",
       "latitude": 12.9965158,
-      "longitude": 77.6684619
+      "longitude": 77.6684619,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Dasarahalli",
       "slug": "dasarahalli",
       "osm_id": "node/5960788724",
       "latitude": 13.0432607,
-      "longitude": 77.5125535
+      "longitude": 77.5125535,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Jalahalli",
       "slug": "jalahalli",
       "osm_id": "node/5960788725",
       "latitude": 13.0394104,
-      "longitude": 77.5197351
+      "longitude": 77.5197351,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Srirampura",
       "slug": "srirampura",
       "osm_id": "node/5960788726",
       "latitude": 12.9965253,
-      "longitude": 77.5631963
+      "longitude": 77.5631963,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Baiyappanahalli",
       "slug": "baiyappanahalli",
       "osm_id": "node/6400857549",
       "latitude": 12.9907594,
-      "longitude": 77.6523612
+      "longitude": 77.6523612,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Swami Vivekananda Road",
       "slug": "swami-vivekananda-road",
       "osm_id": "node/6400857550",
       "latitude": 12.9859306,
-      "longitude": 77.644897
+      "longitude": 77.644897,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Indiranagar",
       "slug": "indiranagar",
       "osm_id": "node/6400857551",
       "latitude": 12.9783325,
-      "longitude": 77.6386612
+      "longitude": 77.6386612,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Halasuru",
       "slug": "halasuru",
       "osm_id": "node/6400857552",
       "latitude": 12.9764992,
-      "longitude": 77.626686
+      "longitude": 77.626686,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Trinity",
       "slug": "trinity",
       "osm_id": "node/6400857553",
       "latitude": 12.9730218,
-      "longitude": 77.6170205
+      "longitude": 77.6170205,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Mahatma Gandhi Road",
       "slug": "mahatma-gandhi-road",
       "osm_id": "node/6400857554",
       "latitude": 12.9755264,
-      "longitude": 77.6067902
+      "longitude": 77.6067902,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Cubbon Park",
       "slug": "cubbon-park",
       "osm_id": "node/6400857555",
       "latitude": 12.9809575,
-      "longitude": 77.5975756
+      "longitude": 77.5975756,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Dr. B. R. Ambedkar Station, Vidhana Soudha",
       "slug": "dr-b-r-ambedkar-station-vidhana-soudha",
       "osm_id": "node/6400857556",
       "latitude": 12.9787419,
-      "longitude": 77.5916385
+      "longitude": 77.5916385,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Sir M. Visvesvaraya Stn., Central College",
       "slug": "sir-m-visvesvaraya-stn-central-college",
       "osm_id": "node/6400857557",
       "latitude": 12.9745197,
-      "longitude": 77.58422
+      "longitude": 77.58422,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Nadaprabhu Kempegowda Station, Majestic",
       "slug": "nadaprabhu-kempegowda-station-majestic",
       "osm_id": "node/6400857558",
       "latitude": 12.9757079,
-      "longitude": 77.5728757
+      "longitude": 77.5728757,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Krantivira Sangolli Rayanna Railway Station",
       "slug": "krantivira-sangolli-rayanna-railway-station",
       "osm_id": "node/6400857559",
       "latitude": 12.9758768,
-      "longitude": 77.5653767
+      "longitude": 77.5653767,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Magadi Road",
       "slug": "magadi-road",
       "osm_id": "node/6400857560",
       "latitude": 12.975632,
-      "longitude": 77.5553523
+      "longitude": 77.5553523,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Sri Balagangadharanatha Swamiji Station, Hosahalli",
       "slug": "sri-balagangadharanatha-swamiji-station-hosahalli",
       "osm_id": "node/6400857561",
       "latitude": 12.9742933,
-      "longitude": 77.5456215
+      "longitude": 77.5456215,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Vijayanagar",
       "slug": "vijayanagar",
       "osm_id": "node/6400857562",
       "latitude": 12.9709559,
-      "longitude": 77.5374044
+      "longitude": 77.5374044,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Attiguppe",
       "slug": "attiguppe",
       "osm_id": "node/6400857563",
       "latitude": 12.9618931,
-      "longitude": 77.5335788
+      "longitude": 77.5335788,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Deepanjali Nagar",
       "slug": "deepanjali-nagar",
       "osm_id": "node/6400857564",
       "latitude": 12.9520578,
-      "longitude": 77.5370122
+      "longitude": 77.5370122,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Mysore Road",
       "slug": "mysore-road",
       "osm_id": "node/6400857565",
       "latitude": 12.9467183,
-      "longitude": 77.5301588
+      "longitude": 77.5301588,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Mantri Square Sampige Road",
       "slug": "mantri-square-sampige-road",
       "osm_id": "node/6410706688",
       "latitude": 12.9904629,
-      "longitude": 77.5707293
+      "longitude": 77.5707293,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Mahakavi Kuvempu Road",
       "slug": "mahakavi-kuvempu-road",
       "osm_id": "node/6410706689",
       "latitude": 12.9985297,
-      "longitude": 77.5568986
+      "longitude": 77.5568986,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Rajajinagar",
       "slug": "rajajinagar",
       "osm_id": "node/6410706690",
       "latitude": 13.0005247,
-      "longitude": 77.5496568
+      "longitude": 77.5496568,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Mahalakshmi",
       "slug": "mahalakshmi",
       "osm_id": "node/6410706691",
       "latitude": 13.0080475,
-      "longitude": 77.5488066
+      "longitude": 77.5488066,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Sandal Soap Factory",
       "slug": "sandal-soap-factory",
       "osm_id": "node/6410706692",
       "latitude": 13.0146544,
-      "longitude": 77.5539839
+      "longitude": 77.5539839,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Peenya",
       "slug": "peenya",
       "osm_id": "node/6410706695",
       "latitude": 13.0330189,
-      "longitude": 77.533201
+      "longitude": 77.533201,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Peenya Industry",
       "slug": "peenya-industry",
       "osm_id": "node/6410706696",
       "latitude": 13.0363176,
-      "longitude": 77.5254924
+      "longitude": 77.5254924,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Yelachenahalli",
       "slug": "yelachenahalli",
       "osm_id": "node/6432710292",
       "latitude": 12.8960498,
-      "longitude": 77.5701194
+      "longitude": 77.5701194,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Jaya Prakash Nagar",
       "slug": "jaya-prakash-nagar",
       "osm_id": "node/6432710293",
       "latitude": 12.9074747,
-      "longitude": 77.5731279
+      "longitude": 77.5731279,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Banashankari",
       "slug": "banashankari",
       "osm_id": "node/6432710294",
       "latitude": 12.9152208,
-      "longitude": 77.573598
+      "longitude": 77.573598,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Rashtreeya Vidyalaya Road",
       "slug": "rashtreeya-vidyalaya-road",
       "osm_id": "node/6432710295",
       "latitude": 12.9215807,
-      "longitude": 77.5802015
+      "longitude": 77.5802015,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Jayanagar",
       "slug": "jayanagar",
       "osm_id": "node/6432710296",
       "latitude": 12.9295069,
-      "longitude": 77.5801439
+      "longitude": 77.5801439,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "South End Circle",
       "slug": "south-end-circle",
       "osm_id": "node/6432710297",
       "latitude": 12.9382573,
-      "longitude": 77.5800556
+      "longitude": 77.5800556,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Lalbagh",
       "slug": "lalbagh",
       "osm_id": "node/6432710298",
       "latitude": 12.9465265,
-      "longitude": 77.580016
+      "longitude": 77.580016,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "National College",
       "slug": "national-college",
       "osm_id": "node/6432710299",
       "latitude": 12.9505266,
-      "longitude": 77.5736898
+      "longitude": 77.5736898,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Krishna Rajendra Market",
       "slug": "krishna-rajendra-market",
       "osm_id": "node/6432710300",
       "latitude": 12.9608788,
-      "longitude": 77.5746578
+      "longitude": 77.5746578,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Chickpete",
       "slug": "chickpete",
       "osm_id": "node/6432710301",
       "latitude": 12.9668974,
-      "longitude": 77.5745566
+      "longitude": 77.5745566,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Jnanabharathi",
       "slug": "jnanabharathi",
       "osm_id": "node/9049846515",
       "latitude": 12.9354357,
-      "longitude": 77.5124063
+      "longitude": 77.5124063,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Pantharapalya - Nayandahalli",
       "slug": "pantharapalya-nayandahalli",
       "osm_id": "node/9050797592",
       "latitude": 12.9416715,
-      "longitude": 77.5251166
+      "longitude": 77.5251166,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Kengeri Bus Terminal",
       "slug": "kengeri-bus-terminal",
       "osm_id": "node/9051395755",
       "latitude": 12.914689,
-      "longitude": 77.4878557
+      "longitude": 77.4878557,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Kengeri",
       "slug": "kengeri",
       "osm_id": "node/9051405243",
       "latitude": 12.9079105,
-      "longitude": 77.4765784
+      "longitude": 77.4765784,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Rajarajeshwari Nagar",
       "slug": "rajarajeshwari-nagar",
       "osm_id": "node/9051410519",
       "latitude": 12.9365996,
-      "longitude": 77.5196788
+      "longitude": 77.5196788,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Pattanagere",
       "slug": "pattanagere",
       "osm_id": "node/9051417969",
       "latitude": 12.9242505,
-      "longitude": 77.4983509
+      "longitude": 77.4983509,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Silk Institute",
       "slug": "silk-institute",
       "osm_id": "node/9919651773",
       "latitude": 12.8617298,
-      "longitude": 77.5299545
+      "longitude": 77.5299545,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Thalaghattapura",
       "slug": "thalaghattapura",
       "osm_id": "node/9919651774",
       "latitude": 12.8714097,
-      "longitude": 77.5383958
+      "longitude": 77.5383958,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Vajarahalli",
       "slug": "vajarahalli",
       "osm_id": "node/9919651775",
       "latitude": 12.8774369,
-      "longitude": 77.5447414
+      "longitude": 77.5447414,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Doddakallasandra",
       "slug": "doddakallasandra",
       "osm_id": "node/9919651776",
       "latitude": 12.8846435,
-      "longitude": 77.5527546
+      "longitude": 77.5527546,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Konanakunte Cross",
       "slug": "konanakunte-cross",
       "osm_id": "node/9919651777",
       "latitude": 12.8889671,
-      "longitude": 77.5626665
+      "longitude": 77.5626665,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Nagasandra",
       "slug": "nagasandra",
       "osm_id": "node/11941173068",
       "latitude": 13.0479536,
-      "longitude": 77.5001422
+      "longitude": 77.5001422,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Yeshwantpur",
       "slug": "yeshwantpur",
       "osm_id": "node/11941186869",
       "latitude": 13.0232678,
-      "longitude": 77.5498751
+      "longitude": 77.5498751,
+      "is_operational": true,
+      "line": "green"
     },
     {
       "name": "Kadugodi Tree Park",
       "slug": "kadugodi-tree-park",
       "osm_id": "node/11941186870",
       "latitude": 12.9856503,
-      "longitude": 77.7470121
+      "longitude": 77.7470121,
+      "is_operational": true,
+      "line": "purple"
     },
     {
       "name": "Goraguntepalya",
       "slug": "goraguntepalya",
       "osm_id": "way/1353733806",
       "latitude": 13.0283319,
-      "longitude": 77.5408483
+      "longitude": 77.5408483,
+      "is_operational": true,
+      "line": "green"
     }
   ]
 }

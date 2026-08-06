@@ -7,6 +7,8 @@ class IngestMetroStation(BaseModel):
     osm_id: str = Field(description="Original OSM ID (e.g. node/12345)")
     latitude: float = Field(..., ge=12.5, le=13.5)
     longitude: float = Field(..., ge=77.0, le=78.0)
+    is_operational: bool = True
+    line: str | None = None
 
 
 class IngestMetroPayload(BaseModel):
