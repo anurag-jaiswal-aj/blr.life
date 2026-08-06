@@ -56,7 +56,7 @@ export function ResultCard({ result, selected = false, onSelect, onHover }: Resu
           
           <div className="flex items-center gap-2 mt-1 text-[13px] text-text-secondary">
             <span className="flex items-center whitespace-nowrap tabular-nums">
-              {result.raw_metrics.work_distance_km} km commute
+              {result.raw_metrics.work_distance_km} km away
             </span>
             <span className="text-border-strong">•</span>
             <span className="flex items-center whitespace-nowrap tabular-nums">

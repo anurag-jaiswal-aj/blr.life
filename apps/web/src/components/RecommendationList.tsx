@@ -75,7 +75,7 @@ export function RecommendationList({ data, loading, error, isColdStarting, selec
     return (
       <div className="p-6 bg-surface-primary text-center py-10">
         <p className="text-sm font-bold text-text-primary">No localities found</p>
-        <p className="text-xs text-text-secondary mt-1">Adjust your workplace or commute distance.</p>
+        <p className="text-xs text-text-secondary mt-1">Adjust your workplace or maximum distance.</p>
       </div>
     );
   }

@@ -203,40 +203,35 @@ def rank_candidates(
         w_healthcare = preferences.healthcare_weight
         w_nightlife = preferences.nightlife_weight
 
-        available_weight_sum = 0.0
+        total_selected_weights = (
+            w_metro + w_work + w_cafe + w_restaurant + w_park + w_healthcare + w_nightlife
+        )
         score_sum = 0.0
 
         if norm_metro is not None:
-            available_weight_sum += w_metro
             score_sum += w_metro * norm_metro
 
-        available_weight_sum += w_work
         score_sum += w_work * norm_work
 
         if norm_cafe is not None:
-            available_weight_sum += w_cafe
             score_sum += w_cafe * norm_cafe
 
         if norm_restaurant is not None:
-            available_weight_sum += w_restaurant
             score_sum += w_restaurant * norm_restaurant
 
         if norm_park is not None:
-            available_weight_sum += w_park
             score_sum += w_park * norm_park
 
         if norm_healthcare is not None:
-            available_weight_sum += w_healthcare
             score_sum += w_healthcare * norm_healthcare
 
         if norm_nightlife is not None:
-            available_weight_sum += w_nightlife
             score_sum += w_nightlife * norm_nightlife
 
-        if available_weight_sum <= 0:
+        if total_selected_weights <= 0:
             total_score = 0.0
         else:
-            total_score = (score_sum / available_weight_sum) * 100.0
+            total_score = (score_sum / total_selected_weights) * 100.0
 
         explanations = generate_explanations(candidate, constraints)
 

@@ -62,9 +62,16 @@ export function ControlsPanel({ state, updateState }: ControlsPanelProps) {
         <WorkLocationInput state={state} updateState={updateState} />
       </div>
 
-      <div className="w-full h-px bg-border-subtle" aria-hidden="true"></div>
-      <div className="flex flex-col gap-4">
-        <h3 className="text-xs font-bold text-text-secondary uppercase tracking-wider">Budget & Home</h3>
+      {/* 
+        DORMANT: Budget & Home Section 
+        Temporarily hidden (Phase 1 Integrity Pass) due to insufficient rent data.
+        Reactivation Gate: Require 70% active localities to have <90 day fresh rent observations.
+      */}
+      {false && (
+        <>
+          <div className="w-full h-px bg-border-subtle" aria-hidden="true"></div>
+          <div className="flex flex-col gap-4">
+            <h3 className="text-xs font-bold text-text-secondary uppercase tracking-wider">Budget & Home</h3>
             
             <div className="flex flex-col gap-4">
               {/* Rent */}
@@ -118,6 +125,8 @@ export function ControlsPanel({ state, updateState }: ControlsPanelProps) {
               </p>
             )}
           </div>
+        </>
+      )}
 
       <div className="w-full h-px bg-border-subtle" aria-hidden="true"></div>
 
@@ -128,7 +137,7 @@ export function ControlsPanel({ state, updateState }: ControlsPanelProps) {
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
             <div className="flex justify-between items-center">
-              <label htmlFor="max_dist" className="text-sm font-medium text-text-primary">Maximum Commute Distance</label>
+              <label htmlFor="max_dist" className="text-sm font-medium text-text-primary">Maximum Distance</label>
               <span className="text-sm font-bold text-brand-primary tabular-nums">{state.max_dist} km</span>
             </div>
             <input 
@@ -140,13 +149,13 @@ export function ControlsPanel({ state, updateState }: ControlsPanelProps) {
               value={state.max_dist}
               onChange={(e) => updateState({ max_dist: parseFloat(e.target.value) })}
               className="w-full h-1 bg-border-default rounded-full appearance-none accent-brand-primary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50" 
-              aria-label="Maximum Commute Distance"
+              aria-label="Maximum Distance"
             />
           </div>
 
           <div className="flex flex-col gap-2">
             <div className="flex justify-between items-center">
-              <label htmlFor="w_work" className="text-sm font-medium text-text-primary">Short Commute</label>
+              <label htmlFor="w_work" className="text-sm font-medium text-text-primary">Near Work</label>
               <span className="text-sm font-bold text-brand-primary tabular-nums">{Math.round(state.w_work * 100)}%</span>
             </div>
             <input 
@@ -158,7 +167,7 @@ export function ControlsPanel({ state, updateState }: ControlsPanelProps) {
               value={state.w_work}
               onChange={(e) => updateState({ w_work: parseFloat(e.target.value) })}
               className="w-full h-1 bg-border-default rounded-full appearance-none accent-brand-primary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50" 
-              aria-label="Short Commute Importance Weight"
+              aria-label="Near Work Importance Weight"
             />
           </div>
 

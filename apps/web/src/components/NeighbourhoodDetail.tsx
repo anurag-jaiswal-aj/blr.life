@@ -79,7 +79,7 @@ export function NeighbourhoodDetail({ recommendation }: NeighbourhoodDetailProps
               {Math.round(r.total_score)}
             </div>
             <div className="text-[10px] font-bold text-text-muted uppercase tracking-wider mt-1">
-              Score
+              Match Score
             </div>
           </div>
         </div>
@@ -91,7 +91,7 @@ export function NeighbourhoodDetail({ recommendation }: NeighbourhoodDetailProps
           WHY IT RANKED #{r.rank}
         </h3>
         <div className="flex flex-col">
-          <FactorRow label="Commute" rawValue={`${rm.work_distance_km} km`} normalisedScore={cs.work_distance} isWeighted />
+          <FactorRow label="Work Proximity" rawValue={`${rm.work_distance_km} km`} normalisedScore={cs.work_distance} isWeighted />
           <FactorRow label="Metro" rawValue={metroLabel} normalisedScore={cs.metro} isWeighted={cs.metro !== null} />
         </div>
       </div>

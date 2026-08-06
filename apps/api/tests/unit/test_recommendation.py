@@ -109,19 +109,19 @@ def test_score_calculation_weights() -> None:
     results, _ = rank_candidates([c1, c2, c3, c4, c5], constraints, prefs_equal, limit=10)
 
     # c1: (1*1 + 1*1) / 2 = 100
-    # c4: (1*1) / 1 = 100
     # c3: (1*1 + 1*0) / 2 = 50
+    # c4: (1*1 + 1*0) / 2 = 50
     # c2: (1*0 + 1*0) / 2 = 0
-    # c5: (1*0) / 1 = 0
+    # c5: (1*0 + 1*0) / 2 = 0
 
     # Sort order (score DESC, slug ASC)
     assert results[0].slug == "hsr-layout"
     assert results[0].total_score == 100.0
-    assert results[1].slug == "missing-metro"
-    assert results[1].total_score == 100.0
-    assert results[1].component_scores.metro is None
-    assert results[2].slug == "indiranagar"
+    assert results[1].slug == "indiranagar"
+    assert results[1].total_score == 50.0
+    assert results[2].slug == "missing-metro"
     assert results[2].total_score == 50.0
+    assert results[2].component_scores.metro is None
     assert results[3].slug == "bellandur"
     assert results[3].total_score == 0.0
     assert results[4].slug == "insufficient-metro"
@@ -344,16 +344,16 @@ def test_amenity_scoring_and_renormalization() -> None:
     results, _ = rank_candidates([c1, c2, c3], constraints, prefs, limit=10)
 
     # c1: (1+1+1+1+0) / 5 = 0.8 = 80.0
-    # c2: (1+1+1+1) / 4 = 1.0 = 100.0 (Park is missing, so denominator renormalizes to 4!)
+    # c2: (1+1+1+1+0) / 5 = 0.8 = 80.0 (Park is missing, contributes 0)
     # c3: (1+1+0+0+1) / 5 = 0.6 = 60.0
 
-    assert results[0].slug == "missing-amenity"
-    assert results[0].total_score == 100.0
-    assert results[0].component_scores.park is None
+    assert results[0].slug == "all-amenities"
+    assert results[0].total_score == 80.0
+    assert results[0].component_scores.park == 0.0
 
-    assert results[1].slug == "all-amenities"
+    assert results[1].slug == "missing-amenity"
     assert results[1].total_score == 80.0
-    assert results[1].component_scores.park == 0.0
+    assert results[1].component_scores.park is None
 
     assert results[2].slug == "low-amenity"
     assert results[2].total_score == 60.0

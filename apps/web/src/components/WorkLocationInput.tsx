@@ -209,7 +209,7 @@ export function WorkLocationInput({ state, updateState, compact = false }: WorkL
       {!compact && (
         <div className="flex flex-col gap-1.5 mb-4 mt-1">
           <h1 className="text-[24px] lg:text-[26px] font-extrabold text-text-primary tracking-tight leading-tight">Where should you live in Bengaluru?</h1>
-          <p className="text-[15px] font-medium text-text-secondary leading-snug">Find neighbourhoods around your workplace, ranked by commute and what matters to you.</p>
+          <p className="text-[15px] font-medium text-text-secondary leading-snug">Find neighbourhoods around your workplace, ranked by distance to work and what matters to you.</p>
         </div>
       )}
 

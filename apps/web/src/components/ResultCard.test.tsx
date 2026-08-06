@@ -24,7 +24,7 @@ describe('ResultCard', () => {
     render(<ResultCard result={mockResult} />);
     
     expect(screen.getByText('HSR Layout')).toBeInTheDocument();
-    expect(screen.getByText(/2.5 km commute/i)).toBeInTheDocument();
+    expect(screen.getByText(/2.5 km away/i)).toBeInTheDocument();
     expect(screen.getByText(/— metro/i)).toBeInTheDocument();
   });
 
