@@ -63,6 +63,7 @@ export interface RecommendationResult {
     nearest_metro_station?: {
       name: string;
       slug: string;
+      line?: string;
     };
     coordinates?: {
       lat: number;

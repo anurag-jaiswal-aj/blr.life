@@ -5,17 +5,17 @@ Revises: '0006'
 Create Date: 2026-08-06 11:47:19.718617
 
 """
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = '60753185ce9f'
-down_revision: Union[str, None] = '0006'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = '0006'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -24,10 +24,20 @@ def upgrade() -> None:
     op.drop_index(op.f('ix_amenity_poi_osm_id'), table_name='amenity_poi')
     op.create_index(op.f('ix_amenity_poi_osm_id'), 'amenity_poi', ['osm_id'], unique=True)
     op.create_index(op.f('ix_amenity_poi_geometry'), 'amenity_poi', ['geometry'], unique=False)
-    op.add_column('metro_station', sa.Column('is_operational', sa.Boolean(), server_default='true', nullable=False))
+    op.add_column(
+        'metro_station',
+        sa.Column('is_operational', sa.Boolean(), server_default='true', nullable=False)
+    )
     op.add_column('metro_station', sa.Column('line', sa.String(length=50), nullable=True))
-    op.create_index(op.f('ix_metro_station_geometry'), 'metro_station', ['geometry'], unique=False)
-    op.create_index(op.f('ix_metro_station_is_operational'), 'metro_station', ['is_operational'], unique=False)
+    op.create_index(
+        op.f('ix_metro_station_geometry'), 'metro_station', ['geometry'], unique=False
+    )
+    op.create_index(
+        op.f('ix_metro_station_is_operational'),
+        'metro_station',
+        ['is_operational'],
+        unique=False
+    )
     # ### end Alembic commands ###
 
 
@@ -40,5 +50,10 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_amenity_poi_geometry'), table_name='amenity_poi')
     op.drop_index(op.f('ix_amenity_poi_osm_id'), table_name='amenity_poi')
     op.create_index(op.f('ix_amenity_poi_osm_id'), 'amenity_poi', ['osm_id'], unique=False)
-    op.create_unique_constraint(op.f('uq_amenity_poi_osm_id'), 'amenity_poi', ['osm_id'], postgresql_nulls_not_distinct=False)
+    op.create_unique_constraint(
+        op.f('uq_amenity_poi_osm_id'),
+        'amenity_poi',
+        ['osm_id'],
+        postgresql_nulls_not_distinct=False
+    )
     # ### end Alembic commands ###
