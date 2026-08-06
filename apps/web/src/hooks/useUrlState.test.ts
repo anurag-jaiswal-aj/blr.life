@@ -12,19 +12,19 @@ describe('useUrlState', () => {
 
   it('initializes with default state when URL is empty', () => {
     const { result } = renderHook(() => useUrlState());
-    expect(result.current.state).toEqual({ lat: null, lng: null, max_dist: 15.0, w_metro: 1.0, w_work: 1.0, w_cafe: 0.0, w_restaurant: 0.0, w_park: 0.0, w_healthcare: 0.0, w_nightlife: 0.0, max_budget_inr: null, bhk_type: null });
+    expect(result.current.state).toEqual({ lat: null, lng: null, max_dist: 15.0, w_metro: 1.0, w_work: 1.0, w_cafe: 0.0, w_restaurant: 0.0, w_park: 0.0, w_healthcare: 0.0, w_nightlife: 0.0, max_budget_inr: null, bhk_type: null, loc: null });
   });
 
   it('parses valid query parameters correctly (URL PARSING)', () => {
     (navigation as any).__setSearchParams('lat=12.9&lng=77.6&max_dist=10&w_metro=0.5&w_work=0.8&w_cafe=0.1&w_rest=0.2&w_park=0.3&w_health=0.4&w_night=0.5');
     const { result } = renderHook(() => useUrlState());
-    expect(result.current.state).toEqual({ lat: 12.9, lng: 77.6, max_dist: 10.0, w_metro: 0.5, w_work: 0.8, w_cafe: 0.1, w_restaurant: 0.2, w_park: 0.3, w_healthcare: 0.4, w_nightlife: 0.5, max_budget_inr: null, bhk_type: null });
+    expect(result.current.state).toEqual({ lat: 12.9, lng: 77.6, max_dist: 10.0, w_metro: 0.5, w_work: 0.8, w_cafe: 0.1, w_restaurant: 0.2, w_park: 0.3, w_healthcare: 0.4, w_nightlife: 0.5, max_budget_inr: null, bhk_type: null, loc: null });
   });
 
   it('handles malformed and invalid URLs safely (MALFORMED URL HANDLING)', () => {
     (navigation as any).__setSearchParams('lat=invalid&lng=NaN&max_dist=-5&w_metro=1.5&w_work=-0.1&w_cafe=-1&w_rest=5&w_park=invalid&w_health=NaN&w_night=2');
     const { result } = renderHook(() => useUrlState());
-    expect(result.current.state).toEqual({ lat: null, lng: null, max_dist: 15.0, w_metro: 1.0, w_work: 1.0, w_cafe: 0.0, w_restaurant: 0.0, w_park: 0.0, w_healthcare: 0.0, w_nightlife: 0.0, max_budget_inr: null, bhk_type: null });
+    expect(result.current.state).toEqual({ lat: null, lng: null, max_dist: 15.0, w_metro: 1.0, w_work: 1.0, w_cafe: 0.0, w_restaurant: 0.0, w_park: 0.0, w_healthcare: 0.0, w_nightlife: 0.0, max_budget_inr: null, bhk_type: null, loc: null });
   });
 
   it('updates state and pushes to router (URL SERIALIZATION)', () => {

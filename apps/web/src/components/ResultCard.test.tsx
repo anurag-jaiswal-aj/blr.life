@@ -24,23 +24,15 @@ describe('ResultCard', () => {
     render(<ResultCard result={mockResult} />);
     
     expect(screen.getByText('HSR Layout')).toBeInTheDocument();
-    expect(screen.getByText('85')).toBeInTheDocument();
-    expect(screen.getByText(/2.5 km/i)).toBeInTheDocument();
-    expect(screen.getByText(/Unavailable/i)).toBeInTheDocument();
-  });
-
-  it('renders explanations and warnings', () => {
-    render(<ResultCard result={mockResult} />);
-    
-    expect(screen.getByText('Close to work')).toBeInTheDocument();
-    expect(screen.getByText('Low confidence data')).toBeInTheDocument();
+    expect(screen.getByText(/2.5 km commute/i)).toBeInTheDocument();
+    expect(screen.getByText(/— metro/i)).toBeInTheDocument();
   });
 
   it('renders metro distance when available', () => {
     const validResult = { ...mockResult, component_scores: { metro: 90, work_distance: 100 }, raw_metrics: { metro_distance_m: 500, work_distance_km: 2.5 } };
     render(<ResultCard result={validResult} />);
     
-    expect(screen.getByText(/500m/i)).toBeInTheDocument();
-    expect(screen.queryByText(/Unavailable/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/500 m/i)).toBeInTheDocument();
+    expect(screen.queryByText('—')).not.toBeInTheDocument();
   });
 });

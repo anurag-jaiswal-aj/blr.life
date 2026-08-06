@@ -120,7 +120,10 @@ export function WorkLocationInput({ state, updateState, compact = false }: WorkL
       return;
     }
 
-    setSelectedName(result.display_name);
+    const segments = result.display_name.split(',').map(s => s.trim());
+    const shortName = segments.slice(0, 2).join(', ');
+
+    setSelectedName(shortName);
     setQuery('');
     setResults([]);
     setShowResults(false);
@@ -128,7 +131,7 @@ export function WorkLocationInput({ state, updateState, compact = false }: WorkL
     setSearchError(null);
 
     // Feed into the SAME state as map click and manual coord entry
-    updateState({ lat: result.lat, lng: result.lng });
+    updateState({ lat: result.lat, lng: result.lng, loc: shortName });
   };
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -169,7 +172,7 @@ export function WorkLocationInput({ state, updateState, compact = false }: WorkL
     setQuery('');
     setResults([]);
     setShowResults(false);
-    updateState({ lat: null, lng: null });
+    updateState({ lat: null, lng: null, loc: undefined });
     setTimeout(() => searchInputRef.current?.focus(), 0);
   };
 
@@ -201,25 +204,22 @@ export function WorkLocationInput({ state, updateState, compact = false }: WorkL
   const hasLocation = state.lat !== null && state.lng !== null;
 
   return (
-    <div className={compact ? "w-full flex flex-col gap-2" : "p-4 md:p-6 bg-surface-primary border-2 border-brand-primary rounded-card flex flex-col gap-4 shadow-elevated"} ref={containerRef}>
+    <div className="w-full flex flex-col gap-3 relative" ref={containerRef}>
       {/* Header */}
       {!compact && (
-        <div className="flex items-start gap-3">
-          <MapPin className="text-brand-primary shrink-0 mt-0.5" size={24} />
-          <div>
-            <p className="text-body font-bold text-text-primary">Where do you work?</p>
-            <p className="text-label text-text-secondary mt-1">Search for a place, or click the map.</p>
-          </div>
+        <div className="flex flex-col gap-1.5 mb-4 mt-1">
+          <h1 className="text-[24px] lg:text-[26px] font-extrabold text-text-primary tracking-tight leading-tight">Where should you live in Bengaluru?</h1>
+          <p className="text-[15px] font-medium text-text-secondary leading-snug">Find neighbourhoods around your workplace, ranked by commute and what matters to you.</p>
         </div>
       )}
 
       {/* Selected location badge */}
-      {hasLocation && selectedName && (
+      {hasLocation && state.loc && (
         <div className={`flex items-center justify-between gap-2 bg-surface-app border border-border-strong rounded-control px-3 ${compact ? 'py-1.5' : 'py-2.5'}`}>
           <div className="flex items-center gap-2 min-w-0">
             <MapPin size={16} className="text-text-secondary shrink-0" />
-            <span className="text-body text-text-primary font-medium truncate" title={selectedName}>
-              {selectedName}
+            <span className="text-body text-text-primary font-medium truncate" title={state.loc}>
+              {state.loc}
             </span>
           </div>
           <button
@@ -233,12 +233,21 @@ export function WorkLocationInput({ state, updateState, compact = false }: WorkL
       )}
 
       {/* Map-click-only location indicator (no name known) */}
-      {hasLocation && !selectedName && (
-        <div className={`flex items-center gap-2 bg-surface-app border border-border-strong rounded-control px-3 ${compact ? 'py-1.5' : 'py-2.5'}`}>
-          <MapPin size={16} className="text-text-secondary shrink-0" />
-          <span className="text-body text-text-primary font-medium">
-            Location set ({state.lat?.toFixed(4)}, {state.lng?.toFixed(4)})
-          </span>
+      {hasLocation && !state.loc && (
+        <div className={`flex items-center justify-between gap-2 bg-surface-app border border-border-strong rounded-control px-3 ${compact ? 'py-1.5' : 'py-2.5'}`}>
+          <div className="flex items-center gap-2 min-w-0">
+            <MapPin size={16} className="text-text-secondary shrink-0" />
+            <span className="text-body text-text-primary font-medium">
+              Custom Location ({state.lat?.toFixed(4)}, {state.lng?.toFixed(4)})
+            </span>
+          </div>
+          <button
+            onClick={handleClearSelection}
+            aria-label="Clear selected location"
+            className="text-text-muted hover:text-text-primary shrink-0 transition-colors focus-visible:rounded-sm"
+          >
+            <X size={16} />
+          </button>
         </div>
       )}
 
@@ -261,7 +270,7 @@ export function WorkLocationInput({ state, updateState, compact = false }: WorkL
               aria-autocomplete="list"
               aria-activedescendant={highlightedIndex >= 0 ? `geocode-result-${highlightedIndex}` : undefined}
               type="text"
-              className={`flex-1 bg-surface-primary border border-border-strong rounded-l-control pl-10 pr-3 ${compact ? 'py-1.5 text-label' : 'py-2.5 text-body'} outline-none focus:ring-2 focus:ring-brand-primary min-w-0`}
+              className={`flex-1 bg-surface-primary border-2 border-border-strong rounded-l-md pl-10 pr-3 ${compact ? 'py-1.5 text-label' : 'py-3 text-[15px]'} outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary focus:ring-offset-1 min-w-0 placeholder:text-text-secondary transition-all`}
               placeholder={compact ? "Search location..." : "e.g. Koramangala, Manyata Tech Park…"}
               value={query}
               onChange={handleQueryChange}
@@ -273,11 +282,22 @@ export function WorkLocationInput({ state, updateState, compact = false }: WorkL
               type="button"
               onClick={handleSearchSubmit}
               disabled={searchLoading || query.trim().length < 2}
-              className={`bg-brand-primary hover:bg-brand-hover text-text-inverse px-4 ${compact ? 'py-1.5 text-label' : 'py-2.5 text-body'} font-bold rounded-r-control focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-brand-primary`}
+              className={`px-6 ${compact ? 'py-1.5 text-label' : 'py-3 text-[15px]'} font-bold rounded-r-md focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-1 transition-all ${
+                searchLoading || query.trim().length < 2
+                  ? 'bg-surface-secondary text-text-muted border-2 border-border-strong cursor-not-allowed'
+                  : 'bg-brand-primary hover:bg-brand-hover text-text-inverse border-2 border-brand-primary cursor-pointer'
+              }`}
             >
-              Search
+              {searchLoading ? 'Searching...' : 'Search'}
             </button>
           </div>
+
+          {/* Workflow reassurance */}
+          {!compact && (
+            <p className="mt-2 text-[12px] text-text-secondary leading-relaxed">
+              Start with your workplace. You can tune metro access and lifestyle priorities after we find nearby neighbourhoods.
+            </p>
+          )}
 
           {/* Dropdown results */}
           {showResults && results.length > 0 && (
@@ -323,24 +343,24 @@ export function WorkLocationInput({ state, updateState, compact = false }: WorkL
 
       {/* Search error */}
       {searchError && (
-        <p className={`text-label text-error-text bg-error-bg p-2 rounded-md border border-red-200 ${compact ? 'text-xs py-1 px-2' : ''}`} role="alert">{searchError}</p>
+        <p className={`text-label text-error-text bg-error-bg p-2 rounded-md ${compact ? 'text-xs py-1 px-2' : ''}`} role="alert">{searchError}</p>
       )}
 
-      {/* Manual coordinate toggle */}
+      {/* Manual coordinate toggle (Demoted to subtle tertiary link) */}
       {!compact && (
-        <button
-          onClick={() => setShowManual(prev => !prev)}
-          className="flex items-center gap-1.5 text-label text-text-secondary hover:text-text-primary self-start transition-colors focus-visible:rounded-sm"
-          aria-expanded={showManual}
-        >
-          {showManual ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          Enter coordinates manually
-        </button>
+        <div className="mt-2 flex justify-start">
+          <button
+            onClick={() => setShowManual(!showManual)}
+            className="text-[11px] font-medium text-text-muted hover:text-text-primary transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary rounded-sm"
+          >
+            Enter coordinates manually
+          </button>
+        </div>
       )}
 
-      {/* Manual coordinate inputs (collapsible, existing behaviour preserved) */}
-      {showManual && !compact && (
-        <div className="flex flex-col gap-2">
+      {/* Manual Input Form */}
+      {!compact && showManual && (
+        <div className="mt-1 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="flex gap-4 w-full">
             <div className="flex-1">
               <label htmlFor="latitude-input" className="block text-label font-medium text-text-secondary mb-1">
@@ -350,7 +370,7 @@ export function WorkLocationInput({ state, updateState, compact = false }: WorkL
                 id="latitude-input"
                 type="number"
                 step="any"
-                className="w-full bg-surface-primary border border-border-default rounded-control px-2.5 py-2 text-body outline-none focus:ring-2 focus:ring-brand-primary"
+                className="w-full bg-surface-primary border border-border-subtle rounded-control px-2.5 py-2 text-body outline-none focus:ring-2 focus:ring-brand-primary"
                 value={latInput}
                 onChange={(e) => setLatInput(e.target.value)}
                 onBlur={() => handleCoordUpdate(latInput, lngInput)}
@@ -379,29 +399,6 @@ export function WorkLocationInput({ state, updateState, compact = false }: WorkL
         </div>
       )}
 
-      {/* OSM attribution (required by Nominatim policy / ODbL) */}
-      {!compact && (
-        <p className="text-metadata text-text-muted mt-1">
-          Search powered by{' '}
-          <a
-            href="https://nominatim.openstreetmap.org"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-text-primary focus-visible:rounded-sm"
-          >
-            Nominatim
-          </a>
-          {' '}·{' '}
-          <a
-            href="https://www.openstreetmap.org/copyright"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-text-primary focus-visible:rounded-sm"
-          >
-            © OpenStreetMap contributors
-          </a>
-        </p>
-      )}
     </div>
   );
 }

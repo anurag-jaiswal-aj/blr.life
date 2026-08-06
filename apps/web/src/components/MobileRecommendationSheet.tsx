@@ -10,10 +10,11 @@ interface MobileRecommendationSheetProps {
   isColdStarting?: boolean;
   selectedLocalityId?: number | null;
   onSelect?: (id: number) => void;
+  onHover?: (id: number | null) => void;
   onRetry?: () => void;
 }
 
-export function MobileRecommendationSheet({ data, loading, error, isValidating, isColdStarting, selectedLocalityId, onSelect, onRetry }: MobileRecommendationSheetProps) {
+export function MobileRecommendationSheet({ data, loading, error, isValidating, isColdStarting, selectedLocalityId, onSelect, onHover, onRetry }: MobileRecommendationSheetProps) {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -36,7 +37,7 @@ export function MobileRecommendationSheet({ data, loading, error, isValidating, 
         <div className="flex items-center gap-3">
           <h3 className="text-card-title font-semibold text-text-primary">Recommended</h3>
           {isValidating && (
-            <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider flex items-center gap-1.5 bg-surface-secondary px-2 py-0.5 rounded-sm border border-border-default">
+            <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider flex items-center gap-1.5 bg-surface-secondary px-2 py-0.5 rounded-sm border border-border-default">
               <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse"></span>
               Updating
             </span>
@@ -55,6 +56,7 @@ export function MobileRecommendationSheet({ data, loading, error, isValidating, 
           isColdStarting={isColdStarting}
           selectedLocalityId={selectedLocalityId}
           onSelect={onSelect}
+          onHover={onHover}
           onRetry={onRetry}
         />
       </div>

@@ -83,7 +83,7 @@ describe('WorkLocationInput', () => {
       const option = screen.getByText('Koramangala, Bangalore, India');
       fireEvent.mouseDown(option); // Component uses mousedown
       
-      expect(updateSpy).toHaveBeenCalledWith({ lat: 12.9352, lng: 77.6245 });
+      expect(updateSpy).toHaveBeenCalledWith({ lat: 12.9352, lng: 77.6245, loc: 'Koramangala, Bangalore' });
     });
 
     it('displays search results and allows selection via Enter key', async () => {
@@ -105,7 +105,7 @@ describe('WorkLocationInput', () => {
       const option = screen.getByText('Bangalore, India');
       fireEvent.mouseDown(option);
       
-      expect(updateSpy).toHaveBeenCalledWith({ lat: 12.9716, lng: 77.5946 });
+      expect(updateSpy).toHaveBeenCalledWith({ lat: 12.9716, lng: 77.5946, loc: 'Bangalore, India' });
     });
 
     it('shows error state when search fails', async () => {
@@ -177,7 +177,7 @@ describe('WorkLocationInput', () => {
       const option = screen.getByText('Bangalore, India');
       fireEvent.mouseDown(option);
       
-      expect(updateSpy).toHaveBeenCalledWith({ lat: 12.9716, lng: 77.5946 });
+      expect(updateSpy).toHaveBeenCalledWith({ lat: 12.9716, lng: 77.5946, loc: 'Bangalore, India' });
 
       // Rerender with new state to simulate parent update
       rerender(<WorkLocationInput state={{ ...defaultState, lat: 12.9716, lng: 77.5946 }} updateState={updateSpy} />);

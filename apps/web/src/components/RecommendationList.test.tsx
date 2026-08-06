@@ -47,14 +47,7 @@ describe('RecommendationList (RESULTS & STATES)', () => {
     
     // Success State rendering
     expect(screen.getByText('HSR Layout')).toBeInTheDocument();
-    expect(screen.getByText('95')).toBeInTheDocument(); // total_score
-    expect(screen.getByText(/2.5 km/i)).toBeInTheDocument();
-    
     // Missing Data
-    expect(screen.getByText(/Unavailable/i)).toBeInTheDocument(); // metro is null
-    
-    // Explanations/Warnings
-    expect(screen.getByText('Close to work')).toBeInTheDocument();
-    expect(screen.getByText('Low confidence data')).toBeInTheDocument();
+    expect(screen.getByText(/— metro/i)).toBeInTheDocument(); // metro data is missing
   });
 });

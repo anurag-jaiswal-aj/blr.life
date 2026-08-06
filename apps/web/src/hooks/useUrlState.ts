@@ -15,6 +15,7 @@ export interface AppState {
   w_nightlife: number;
   max_budget_inr: number | null;
   bhk_type: '1rk' | '1bhk' | '2bhk' | '3bhk' | null;
+  loc?: string | null;
 }
 
 const DEFAULT_STATE: AppState = {
@@ -30,6 +31,7 @@ const DEFAULT_STATE: AppState = {
   w_nightlife: 0.0,
   max_budget_inr: null,
   bhk_type: null,
+  loc: null,
 };
 
 export function useUrlState() {
@@ -40,6 +42,7 @@ export function useUrlState() {
   const state = useMemo<AppState>(() => {
     const latStr = searchParams.get('lat');
     const lngStr = searchParams.get('lng');
+    const locStr = searchParams.get('loc');
     const maxDistStr = searchParams.get('max_dist');
     const wMetroStr = searchParams.get('w_metro');
     const wWorkStr = searchParams.get('w_work');
@@ -54,6 +57,7 @@ export function useUrlState() {
 
     let lat = latStr ? parseFloat(latStr) : DEFAULT_STATE.lat;
     let lng = lngStr ? parseFloat(lngStr) : DEFAULT_STATE.lng;
+    const loc = locStr ? decodeURIComponent(locStr) : DEFAULT_STATE.loc;
     let max_dist = maxDistStr ? parseFloat(maxDistStr) : DEFAULT_STATE.max_dist;
     let w_metro = wMetroStr ? parseFloat(wMetroStr) : DEFAULT_STATE.w_metro;
     let w_work = wWorkStr ? parseFloat(wWorkStr) : DEFAULT_STATE.w_work;
@@ -78,7 +82,7 @@ export function useUrlState() {
     if (max_budget_inr !== null && (isNaN(max_budget_inr) || max_budget_inr < 1000)) max_budget_inr = null;
     if (bhk_type !== null && !['1rk', '1bhk', '2bhk', '3bhk'].includes(bhk_type)) bhk_type = null;
 
-    return { lat, lng, max_dist, w_metro, w_work, w_cafe, w_restaurant, w_park, w_healthcare, w_nightlife, max_budget_inr, bhk_type: bhk_type as AppState['bhk_type'] };
+    return { lat, lng, max_dist, w_metro, w_work, w_cafe, w_restaurant, w_park, w_healthcare, w_nightlife, max_budget_inr, bhk_type: bhk_type as AppState['bhk_type'], loc };
   }, [searchParams]);
 
   const updateState = useCallback(
@@ -88,6 +92,7 @@ export function useUrlState() {
 
       if (merged.lat !== null && !isNaN(merged.lat)) params.set('lat', merged.lat.toString());
       if (merged.lng !== null && !isNaN(merged.lng)) params.set('lng', merged.lng.toString());
+      if (merged.loc != null) params.set('loc', encodeURIComponent(merged.loc));
       if (merged.max_dist !== DEFAULT_STATE.max_dist) params.set('max_dist', merged.max_dist.toString());
       if (merged.w_metro !== DEFAULT_STATE.w_metro) params.set('w_metro', merged.w_metro.toString());
       if (merged.w_work !== DEFAULT_STATE.w_work) params.set('w_work', merged.w_work.toString());
