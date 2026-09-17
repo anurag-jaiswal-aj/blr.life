@@ -16,12 +16,26 @@ ALEMBIC_INI = ALEMBIC_DIR / "alembic.ini"
 def alembic_config() -> Config:
     config = Config(str(ALEMBIC_INI))
     config.set_main_option("script_location", str(ALEMBIC_DIR / "alembic"))
+    from sqlalchemy.engine.url import make_url
+
     from app.core.config import settings
 
-    url = settings.DATABASE_URL or "postgresql+asyncpg://blrlife:blrlife_dev_password@localhost:5432/blrlife_test"
-    sync_url = url.replace("+asyncpg", "+psycopg").replace(
-        "blrlife_test", "blrlife_test_migrations"
+    url = (
+        settings.DATABASE_URL
+        or "postgresql+asyncpg://blrlife:blrlife_dev_password@localhost:5432/blrlife_test"
     )
+    url_obj = make_url(url)
+
+    if url_obj.drivername == "postgresql+asyncpg":
+        url_obj = url_obj.set(drivername="postgresql+psycopg")
+        if "ssl" in url_obj.query:
+            query = dict(url_obj.query)
+            query["sslmode"] = query.pop("ssl")
+            url_obj = url_obj.set(query=query)
+
+    # Swap database name to the migrations test database
+    url_obj = url_obj.set(database="blrlife_test_migrations")
+    sync_url = url_obj.render_as_string(hide_password=False)
     config.set_main_option("sqlalchemy.url", sync_url)
 
     # We must patch os.environ and settings because env.py reads settings.DATABASE_URL

@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from logging.config import fileConfig
 
 from sqlalchemy import create_engine, pool
+from sqlalchemy.engine.url import make_url
 
 import app.models  # noqa: F401 — registers all models on Base.metadata
 from alembic import context
@@ -74,7 +75,16 @@ def include_name(name, type_, parent_names):
 
 
 _db_url: str = settings.DATABASE_URL or config.get_main_option("sqlalchemy.url", "")
-_sync_url = _db_url.replace("postgresql+asyncpg://", "postgresql+psycopg://")
+
+url_obj = make_url(_db_url)
+if url_obj.drivername == "postgresql+asyncpg":
+    url_obj = url_obj.set(drivername="postgresql+psycopg")
+    if "ssl" in url_obj.query:
+        query = dict(url_obj.query)
+        query["sslmode"] = query.pop("ssl")
+        url_obj = url_obj.set(query=query)
+
+_sync_url = url_obj.render_as_string(hide_password=False)
 config.set_main_option("sqlalchemy.url", _sync_url)
 
 

@@ -37,12 +37,21 @@ class Settings(BaseSettings):
     @classmethod
     def assemble_db_connection(cls, v: str | None, info: Any) -> str:
         if isinstance(v, str) and v.strip():
-            v = v.strip()
-            if v.startswith("postgres://"):
-                return v.replace("postgres://", "postgresql+asyncpg://", 1)
-            if v.startswith("postgresql://"):
-                return v.replace("postgresql://", "postgresql+asyncpg://", 1)
-            return v
+            from sqlalchemy.engine.url import make_url
+
+            url = make_url(v.strip())
+
+            # 1. Normalize dialect for asyncpg
+            if url.drivername in ("postgres", "postgresql"):
+                url = url.set(drivername="postgresql+asyncpg")
+
+            # 2. Normalize sslmode -> ssl for asyncpg
+            if url.drivername == "postgresql+asyncpg" and "sslmode" in url.query:
+                query = dict(url.query)
+                query["ssl"] = query.pop("sslmode")
+                url = url.set(query=query)
+
+            return url.render_as_string(hide_password=False)
         values = info.data
         user = values.get("POSTGRES_USER")
         password = values.get("POSTGRES_PASSWORD")
