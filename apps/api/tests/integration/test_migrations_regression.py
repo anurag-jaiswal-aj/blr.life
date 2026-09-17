@@ -16,11 +16,9 @@ ALEMBIC_INI = ALEMBIC_DIR / "alembic.ini"
 def alembic_config() -> Config:
     config = Config(str(ALEMBIC_INI))
     config.set_main_option("script_location", str(ALEMBIC_DIR / "alembic"))
-    # Ensure it uses the test database URL but synchronous (psycopg instead of asyncpg)
-    url = os.environ.get(
-        "DATABASE_URL",
-        "postgresql+asyncpg://blrlife:blrlife_dev_password@localhost:5432/blrlife_test",
-    )
+    from app.core.config import settings
+
+    url = settings.DATABASE_URL or "postgresql+asyncpg://blrlife:blrlife_dev_password@localhost:5432/blrlife_test"
     sync_url = url.replace("+asyncpg", "+psycopg").replace(
         "blrlife_test", "blrlife_test_migrations"
     )
