@@ -5,12 +5,15 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from app.core.config import settings
 from app.core.logging import logger
+from app.db.url import normalize_asyncpg_url
 
 if settings.DATABASE_URL is None:
     raise ValueError("DATABASE_URL is not set")
 
+asyncpg_url = normalize_asyncpg_url(settings.DATABASE_URL)
+
 engine = create_async_engine(
-    settings.DATABASE_URL,
+    asyncpg_url,
     echo=False,
     future=True,
     pool_pre_ping=True,

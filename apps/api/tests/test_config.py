@@ -20,18 +20,57 @@ def test_cors_origins_parsing() -> None:
 
 
 def test_database_url_parsing() -> None:
-    # 1. postgresql://... with sslmode=require
-    s1 = Settings(DATABASE_URL="postgresql://user:pass@host/db?sslmode=require")
-    assert s1.DATABASE_URL == "postgresql+asyncpg://user:pass@host/db?ssl=require"
+    from app.db.url import normalize_asyncpg_url, normalize_psycopg_url
 
-    # 2. postgres://... with sslmode=require and other params
-    s2 = Settings(DATABASE_URL="postgres://user:pass@host/db?sslmode=require&foo=bar")
-    assert s2.DATABASE_URL == "postgresql+asyncpg://user:pass@host/db?foo=bar&ssl=require"
+    # --- Runtime / asyncpg tests ---
+    # a. postgresql://...?sslmode=require&channel_binding=require ->
+    #    postgresql+asyncpg://...?ssl=require with channel_binding absent
+    url_a = normalize_asyncpg_url(
+        "postgresql://user:pass@host/db?sslmode=require&channel_binding=require"
+    )
+    assert url_a == "postgresql+asyncpg://user:pass@host/db?ssl=require"
 
-    # 3. already-normalized postgresql+asyncpg://...
-    s3 = Settings(DATABASE_URL="postgresql+asyncpg://user:pass@host/db?ssl=require")
-    assert s3.DATABASE_URL == "postgresql+asyncpg://user:pass@host/db?ssl=require"
+    # b. postgres://...?sslmode=require&channel_binding=require behaves the same
+    url_b = normalize_asyncpg_url(
+        "postgres://user:pass@host/db?sslmode=require&channel_binding=require"
+    )
+    assert url_b == "postgresql+asyncpg://user:pass@host/db?ssl=require"
 
-    # 4. preservation of unrelated query parameters
-    s4 = Settings(DATABASE_URL="postgresql://user:pass@host/db?foo=bar")
-    assert s4.DATABASE_URL == "postgresql+asyncpg://user:pass@host/db?foo=bar"
+    # c. already-normalized postgresql+asyncpg://...?ssl=require remains valid
+    url_c = normalize_asyncpg_url("postgresql+asyncpg://user:pass@host/db?ssl=require")
+    assert url_c == "postgresql+asyncpg://user:pass@host/db?ssl=require"
+
+    # d & e. unrelated query parameters and credentials are preserved
+    url_de = normalize_asyncpg_url(
+        "postgresql://user:pass@host/db?foo=bar&sslmode=require&channel_binding=require"
+    )
+    assert url_de == "postgresql+asyncpg://user:pass@host/db?foo=bar&ssl=require"
+
+    # --- Migration / psycopg tests ---
+    # f. postgresql://...?sslmode=require&channel_binding=require -> postgresql+psycopg://...?sslmode=require&channel_binding=require
+    url_f = normalize_psycopg_url(
+        "postgresql://user:pass@host/db?sslmode=require&channel_binding=require"
+    )
+    assert url_f in (
+        "postgresql+psycopg://user:pass@host/db?sslmode=require&channel_binding=require",
+        "postgresql+psycopg://user:pass@host/db?channel_binding=require&sslmode=require",
+    )
+
+    # g. postgres:// behaves the same
+    url_g = normalize_psycopg_url(
+        "postgres://user:pass@host/db?sslmode=require&channel_binding=require"
+    )
+    assert url_g in (
+        "postgresql+psycopg://user:pass@host/db?sslmode=require&channel_binding=require",
+        "postgresql+psycopg://user:pass@host/db?channel_binding=require&sslmode=require",
+    )
+
+    # h. postgresql+asyncpg://...?ssl=require&channel_binding=require -> postgresql+psycopg://...?sslmode=require&channel_binding=require
+    url_h = normalize_psycopg_url(
+        "postgresql+asyncpg://user:pass@host/db?ssl=require&channel_binding=require"
+    )
+    assert url_h == "postgresql+psycopg://user:pass@host/db?channel_binding=require&sslmode=require"
+
+    # i. unrelated query parameters are preserved
+    url_i = normalize_psycopg_url("postgresql://user:pass@host/db?foo=bar")
+    assert url_i == "postgresql+psycopg://user:pass@host/db?foo=bar"
