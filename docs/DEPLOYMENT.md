@@ -68,6 +68,7 @@ Bootstrap the V1 data into Neon:
 4. Add Environment Variables:
    - `NEXT_PUBLIC_API_URL` = `https://api.blr.life` (or the Render `.onrender.com` URL)
    - `NOMINATIM_USER_AGENT` = `blr.life/1.0 (contact@your-email.com)`
+   - `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` = (Your Mapbox public token, required for map rendering)
 
 ## 8. Nominatim Identification Configuration
 OpenStreetMap policy requires a valid `User-Agent`.

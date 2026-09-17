@@ -62,6 +62,21 @@ export function MapContainer({
     }
   };
 
+  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+
+  if (!mapboxToken) {
+    return (
+      <div className="w-full h-full relative bg-surface-secondary flex items-center justify-center p-6 text-center">
+        <div className="bg-surface-primary border border-border-default p-4 rounded-md shadow-sm max-w-sm">
+          <p className="text-brand-primary font-bold mb-1">Map Configuration Missing</p>
+          <p className="text-[13px] text-text-secondary">
+            NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN is required to render the map.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-full relative bg-surface-secondary">
       {isPreSearch && (
@@ -82,18 +97,20 @@ export function MapContainer({
         mapStyle={{
           version: 8,
           sources: {
-            osm: {
+            mapbox: {
               type: 'raster',
-              tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-              tileSize: 256,
-              attribution: '© OpenStreetMap contributors',
+              tiles: [
+                `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/512/{z}/{x}/{y}?access_token=${mapboxToken}`
+              ],
+              tileSize: 512,
+              attribution: '© <a href="https://www.mapbox.com/about/maps/" target="_blank">Mapbox</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/" target="_blank">Improve this map</a></strong>',
             },
           },
           layers: [
             {
-              id: 'osm',
+              id: 'mapbox',
               type: 'raster',
-              source: 'osm',
+              source: 'mapbox',
               minzoom: 0,
               maxzoom: 19,
             },

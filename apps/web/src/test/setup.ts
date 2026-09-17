@@ -3,6 +3,9 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
+// Mock Mapbox Token for tests so MapContainer renders correctly
+process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN = 'test-token-for-vitest';
+
 // Mock Next.js navigation
 vi.mock('next/navigation', () => {
   const pushMock = vi.fn();
