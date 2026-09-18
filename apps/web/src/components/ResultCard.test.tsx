@@ -59,7 +59,7 @@ describe('ResultCard', () => {
     const unknownResult = { ...mockResult, affordability: { status: 'unknown', rent_min_inr: null, rent_max_inr: null, confidence: null } };
     render(<ResultCard result={unknownResult} />);
     expect(screen.getByText(/Rent unavailable/i)).toBeInTheDocument();
-    expect(screen.getByText(/Affordability cannot be verified/i)).toBeInTheDocument();
+    expect(screen.getByText(/We only show verified rent data/i)).toBeInTheDocument();
   });
 
   it('renders LOW confidence as estimate', () => {

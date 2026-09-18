@@ -116,7 +116,7 @@ export function ResultCard({
                 )}
               {result.affordability.status === "unknown" && (
                 <span className="text-[12px] text-text-muted">
-                  Affordability cannot be verified.
+                  We only show verified rent data.
                 </span>
               )}
             </div>
