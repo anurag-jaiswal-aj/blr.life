@@ -1,3 +1,5 @@
+from .test_domain_integration import setup_test_database
+
 import json
 import os
 
