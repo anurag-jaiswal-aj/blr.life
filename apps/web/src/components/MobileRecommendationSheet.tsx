@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { RecommendationList } from './RecommendationList';
+import { NeighbourhoodDetail } from './NeighbourhoodDetail';
 import { RecommendationResponse } from '../lib/api';
+import { ArrowLeft } from 'lucide-react';
 
 interface MobileRecommendationSheetProps {
   data: RecommendationResponse | null;
@@ -16,6 +18,20 @@ interface MobileRecommendationSheetProps {
 
 export function MobileRecommendationSheet({ data, loading, error, isValidating, isColdStarting, selectedLocalityId, onSelect, onHover, onRetry }: MobileRecommendationSheetProps) {
   const [expanded, setExpanded] = useState(false);
+  const [view, setView] = useState<'list' | 'detail'>('list');
+
+  const handleSelect = (id: number) => {
+    if (onSelect) onSelect(id);
+    setView('detail');
+    setExpanded(true); // Expand sheet when viewing details
+  };
+
+  const handleBack = () => {
+    setView('list');
+  };
+
+  const selectedRecommendation = data?.recommendations?.find(r => r.locality_id === selectedLocalityId) ?? null;
+  const showDetail = view === 'detail' && selectedRecommendation;
 
   return (
     <div 
@@ -33,33 +49,53 @@ export function MobileRecommendationSheet({ data, loading, error, isValidating, 
         <div className="w-12 h-1.5 bg-border-default hover:bg-text-muted transition-colors rounded-full" />
       </button>
       
-      <div className="px-5 pb-3 shrink-0 flex justify-between items-center border-b border-border-default/50">
-        <div className="flex items-center gap-3">
-          <h3 className="text-card-title font-semibold text-text-primary">Recommended</h3>
-          {isValidating && (
-            <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider flex items-center gap-1.5 bg-surface-secondary px-2 py-0.5 rounded-sm border border-border-default">
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse"></span>
-              Updating
+      {!showDetail ? (
+        <>
+          <div className="px-5 pb-3 shrink-0 flex justify-between items-center border-b border-border-default/50">
+            <div className="flex items-center gap-3">
+              <h3 className="text-card-title font-semibold text-text-primary">Recommended</h3>
+              {isValidating && (
+                <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider flex items-center gap-1.5 bg-surface-secondary px-2 py-0.5 rounded-sm border border-border-default">
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse"></span>
+                  Updating
+                </span>
+              )}
+            </div>
+            <span className="text-label text-brand-primary font-bold bg-brand-primary/10 px-2 py-0.5 rounded-full">
+              {data?.recommendations?.length || 0} results
             </span>
-          )}
-        </div>
-        <span className="text-label text-brand-primary font-bold bg-brand-primary/10 px-2 py-0.5 rounded-full">
-          {data?.recommendations?.length || 0} results
-        </span>
-      </div>
+          </div>
 
-      <div id="mobile-sheet-content" className="flex-1 overflow-y-auto px-4 pt-4 pb-safe">
-        <RecommendationList 
-          data={data} 
-          loading={loading} 
-          error={error} 
-          isColdStarting={isColdStarting}
-          selectedLocalityId={selectedLocalityId}
-          onSelect={onSelect}
-          onHover={onHover}
-          onRetry={onRetry}
-        />
-      </div>
+          <div id="mobile-sheet-content" className="flex-1 overflow-y-auto px-4 pt-4 pb-safe">
+            <RecommendationList 
+              data={data} 
+              loading={loading} 
+              error={error} 
+              isColdStarting={isColdStarting}
+              selectedLocalityId={selectedLocalityId}
+              onSelect={handleSelect}
+              onHover={onHover}
+              onRetry={onRetry}
+            />
+          </div>
+        </>
+      ) : (
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="px-3 pb-2 shrink-0 border-b border-border-default/50">
+            <button
+              onClick={handleBack}
+              className="flex items-center gap-2 py-1.5 px-3 rounded-full hover:bg-surface-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 text-text-secondary hover:text-text-primary font-medium text-[13px]"
+              aria-label="Back to recommendations"
+            >
+              <ArrowLeft size={16} />
+              Back
+            </button>
+          </div>
+          <div id="mobile-sheet-content" className="flex-1 overflow-y-auto pb-safe">
+            <NeighbourhoodDetail recommendation={selectedRecommendation} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
