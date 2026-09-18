@@ -175,7 +175,10 @@ def rank_candidates(
                     rent_max_inr=None,
                     confidence=None
                 )
-            elif candidate.rent_max_inr is not None and candidate.rent_max_inr <= constraints.max_budget_inr:
+            elif (
+                candidate.rent_max_inr is not None
+                and candidate.rent_max_inr <= constraints.max_budget_inr
+            ):
                 affordability = AffordabilityInfo(
                     status=AffordabilityStatus.AFFORDABLE,
                     rent_min_inr=candidate.rent_min_inr,

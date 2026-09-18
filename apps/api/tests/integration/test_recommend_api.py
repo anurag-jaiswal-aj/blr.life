@@ -177,7 +177,10 @@ async def test_recommend_affordability(
     )
     # l3 has no rent observation
     l4 = Locality(
-        name="Starts Area", slug="starts-area", is_active=True, centroid="SRID=4326;POINT(77.66 13.1)"
+        name="Starts Area",
+        slug="starts-area",
+        is_active=True,
+        centroid="SRID=4326;POINT(77.66 13.1)",
     )
     async_db_session.add(l4)
     await async_db_session.flush()
@@ -231,7 +234,8 @@ async def test_recommend_affordability_insufficient(
 ):
     from app.models.observations import HousingConfiguration, LocalityRentObservation
     l1, _, _ = setup_recommendation_data
-    # Add rent observation that would normally be affordable (15k < 20k), but confidence is insufficient
+    # Add rent observation that would normally be affordable (15k < 20k),
+    # but confidence is insufficient
     r1 = LocalityRentObservation(
         locality_id=l1.id,
         housing_config=HousingConfiguration.BHK_1,

@@ -3,7 +3,8 @@ from .test_domain_integration import setup_test_database
 import json
 import os
 
-# We need to import the functions from the script, but since it's a script we can import it this way:
+# We need to import the functions from the script, but since it's a script
+# we can import it this way:
 import sys
 import tempfile
 
@@ -101,12 +102,16 @@ async def test_ingest_dry_run(base_valid_data, temp_json_file, async_db_session)
         json.dump(base_valid_data, f)
 
     # Check current state
-    initial_count = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
+    result = await async_db_session.execute(select(LocalityRentObservation))
+    initial_count = len(result.scalars().all())
 
-    await run_ingestion(temp_json_file, dry_run=True, session_factory=DummyFactory(async_db_session))
+    await run_ingestion(
+        temp_json_file, dry_run=True, session_factory=DummyFactory(async_db_session)
+    )
 
     # State should remain the same
-    final_count = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
+    result = await async_db_session.execute(select(LocalityRentObservation))
+    final_count = len(result.scalars().all())
     assert final_count == initial_count
 
 
@@ -115,7 +120,9 @@ async def test_ingest_successful_transaction(base_valid_data, temp_json_file, as
     with open(temp_json_file, "w") as f:
         json.dump(base_valid_data, f)
 
-    await run_ingestion(temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session))
+    await run_ingestion(
+        temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session)
+    )
 
     # Verify observation
     obs = (await async_db_session.execute(
@@ -136,12 +143,18 @@ async def test_ingest_idempotency(base_valid_data, temp_json_file, async_db_sess
         json.dump(base_valid_data, f)
 
     # First run
-    await run_ingestion(temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session))
-    obs_count_1 = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
+    await run_ingestion(
+        temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session)
+    )
+    res1 = await async_db_session.execute(select(LocalityRentObservation))
+    obs_count_1 = len(res1.scalars().all())
 
     # Second run
-    await run_ingestion(temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session))
-    obs_count_2 = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
+    await run_ingestion(
+        temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session)
+    )
+    res2 = await async_db_session.execute(select(LocalityRentObservation))
+    obs_count_2 = len(res2.scalars().all())
 
     # Should skip exact duplicates
     assert obs_count_1 == obs_count_2
@@ -151,7 +164,9 @@ async def test_ingest_idempotency(base_valid_data, temp_json_file, async_db_sess
 async def test_ingest_deprecates_previous(base_valid_data, temp_json_file, async_db_session):
     with open(temp_json_file, "w") as f:
         json.dump(base_valid_data, f)
-    await run_ingestion(temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session))
+    await run_ingestion(
+        temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session)
+    )
 
     # New file with newer data
     new_data = base_valid_data.copy()
@@ -162,7 +177,9 @@ async def test_ingest_deprecates_previous(base_valid_data, temp_json_file, async
     with open(temp_json_file, "w") as f:
         json.dump(new_data, f)
 
-    await run_ingestion(temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session))
+    await run_ingestion(
+        temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session)
+    )
 
     obs = (await async_db_session.execute(
         select(LocalityRentObservation)
@@ -193,7 +210,9 @@ async def test_ingest_quality_protection(base_valid_data, temp_json_file, async_
     # Insert HIGH
     with open(temp_json_file, "w") as f:
         json.dump(base_valid_data, f)
-    await run_ingestion(temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session))
+    await run_ingestion(
+        temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session)
+    )
 
     # Try inserting LOW
     low_data = base_valid_data.copy()
@@ -204,7 +223,9 @@ async def test_ingest_quality_protection(base_valid_data, temp_json_file, async_
     with open(temp_json_file, "w") as f:
         json.dump(low_data, f)
 
-    await run_ingestion(temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session))
+    await run_ingestion(
+        temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session)
+    )
 
     obs = (await async_db_session.execute(
         select(LocalityRentObservation)
@@ -223,9 +244,13 @@ async def test_ingest_invalid_locality(base_valid_data, temp_json_file, async_db
     with open(temp_json_file, "w") as f:
         json.dump(base_valid_data, f)
 
-    initial_count = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
-    await run_ingestion(temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session))
-    final_count = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
+    result = await async_db_session.execute(select(LocalityRentObservation))
+    initial_count = len(result.scalars().all())
+    await run_ingestion(
+        temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session)
+    )
+    result = await async_db_session.execute(select(LocalityRentObservation))
+    final_count = len(result.scalars().all())
 
     # Should not insert anything
     assert initial_count == final_count
@@ -238,9 +263,13 @@ async def test_ingest_invalid_rent_range(base_valid_data, temp_json_file, async_
     with open(temp_json_file, "w") as f:
         json.dump(base_valid_data, f)
 
-    initial_count = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
-    await run_ingestion(temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session))
-    final_count = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
+    result = await async_db_session.execute(select(LocalityRentObservation))
+    initial_count = len(result.scalars().all())
+    await run_ingestion(
+        temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session)
+    )
+    result = await async_db_session.execute(select(LocalityRentObservation))
+    final_count = len(result.scalars().all())
 
     assert initial_count == final_count
 
@@ -252,9 +281,13 @@ async def test_ingest_missing_rent_boundaries(base_valid_data, temp_json_file, a
     with open(temp_json_file, "w") as f:
         json.dump(base_valid_data, f)
 
-    initial_count = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
-    await run_ingestion(temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session))
-    final_count = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
+    result = await async_db_session.execute(select(LocalityRentObservation))
+    initial_count = len(result.scalars().all())
+    await run_ingestion(
+        temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session)
+    )
+    result = await async_db_session.execute(select(LocalityRentObservation))
+    final_count = len(result.scalars().all())
 
     assert initial_count == final_count
 
@@ -265,8 +298,12 @@ async def test_ingest_invalid_confidence(base_valid_data, temp_json_file, async_
     with open(temp_json_file, "w") as f:
         json.dump(base_valid_data, f)
 
-    initial_count = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
-    await run_ingestion(temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session))
-    final_count = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
+    result = await async_db_session.execute(select(LocalityRentObservation))
+    initial_count = len(result.scalars().all())
+    await run_ingestion(
+        temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session)
+    )
+    result = await async_db_session.execute(select(LocalityRentObservation))
+    final_count = len(result.scalars().all())
 
     assert initial_count == final_count

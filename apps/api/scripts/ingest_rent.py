@@ -153,7 +153,9 @@ async def run_ingestion(input_path: str, dry_run: bool, session_factory=None):
 
                 if key not in snapshot_map:
                     # Check if DataSource exists
-                    ds = (await session.execute(select(DataSource).where(DataSource.key == key))).scalar_one_or_none()
+                    ds = (await session.execute(
+                        select(DataSource).where(DataSource.key == key)
+                    )).scalar_one_or_none()
                     if not ds:
                         ds = DataSource(
                             key=key,
@@ -224,7 +226,11 @@ async def run_ingestion(input_path: str, dry_run: bool, session_factory=None):
                     current_rank = CONFIDENCE_RANK.get(existing_obs.confidence, 0)
                     new_rank = CONFIDENCE_RANK.get(MetricConfidence(obs.confidence), 0)
                     if new_rank < current_rank:
-                        print(f"Skipping {obs.locality_slug} {obs.bhk}: cannot downgrade confidence from {existing_obs.confidence} to {obs.confidence}.")
+                        print(
+                            f"Skipping {obs.locality_slug} {obs.bhk}: cannot "
+                            f"downgrade confidence from {existing_obs.confidence} "
+                            f"to {obs.confidence}."
+                        )
                         skipped_count += 1
                         continue
 
@@ -246,7 +252,10 @@ async def run_ingestion(input_path: str, dry_run: bool, session_factory=None):
                 new_count += 1
 
             await session.commit()
-            print(f"Success! Inserted {new_count} new observations, deprecated {deprecated_count}, skipped {skipped_count}.")
+            print(
+                f"Success! Inserted {new_count} new observations, "
+                f"deprecated {deprecated_count}, skipped {skipped_count}."
+            )
         except Exception as e:
             await session.rollback()
             print(f"Fatal execution error during transaction: {e}")
@@ -256,7 +265,9 @@ async def run_ingestion(input_path: str, dry_run: bool, session_factory=None):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Ingest Locality Rent Data")
     parser.add_argument("--input", required=True, help="Path to JSON data file")
-    parser.add_argument("--dry-run", action="store_true", help="Perform validation without writing to DB")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Perform validation without writing to DB"
+    )
     args = parser.parse_args()
 
     asyncio.run(run_ingestion(args.input, args.dry_run))
