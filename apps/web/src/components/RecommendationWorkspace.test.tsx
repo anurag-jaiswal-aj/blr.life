@@ -114,7 +114,7 @@ describe('RecommendationWorkspace', () => {
   it('renders the desktop Refine action in the desktop workspace and opens controls', () => {
     vi.mocked(isDesktopHook.useIsDesktop).mockReturnValue({ isDesktop: true, mounted: true });
 
-    const defaultState = {
+    const defaultState: urlState.AppState = {
       lat: 12.9716,
       lng: 77.5946,
       max_dist: 5,
@@ -130,7 +130,7 @@ describe('RecommendationWorkspace', () => {
       loc: null,
     };
     vi.mocked(urlState.useUrlState).mockReturnValue({
-      state: defaultState as any,
+      state: defaultState,
       updateState: vi.fn(),
       getApiRequest: vi.fn(),
     });
