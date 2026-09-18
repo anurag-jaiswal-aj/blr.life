@@ -1,15 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ControlsPanel } from './ControlsPanel';
 import { Settings2, X } from 'lucide-react';
 import { AppState } from '../hooks/useUrlState';
 
-interface MobileControlsDisclosureProps {
+interface ControlsDisclosureProps {
   state: AppState;
   updateState: (updates: Partial<AppState>) => void;
 }
 
-export function MobileControlsDisclosure({ state, updateState }: MobileControlsDisclosureProps) {
+export function ControlsDisclosure({ state, updateState }: ControlsDisclosureProps) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <>
@@ -21,8 +27,8 @@ export function MobileControlsDisclosure({ state, updateState }: MobileControlsD
         <span>Refine</span>
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-[100] bg-surface-app flex flex-col animate-in fade-in duration-200">
+      {mounted && open && createPortal(
+        <div className="fixed inset-0 z-[100] md:inset-y-0 md:left-auto md:right-0 md:w-96 md:border-l md:border-border-default md:shadow-2xl bg-surface-app flex flex-col animate-in fade-in duration-200 md:slide-in-from-right-4">
           <div className="flex items-center justify-between px-4 py-4 bg-surface-primary border-b border-border-default shrink-0">
             <h2 className="text-card-title font-bold text-text-primary">Refine recommendations</h2>
             <button 
@@ -36,7 +42,8 @@ export function MobileControlsDisclosure({ state, updateState }: MobileControlsD
           <div className="flex-1 overflow-y-auto px-4 py-6 pb-12">
             <ControlsPanel state={state} updateState={updateState} />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

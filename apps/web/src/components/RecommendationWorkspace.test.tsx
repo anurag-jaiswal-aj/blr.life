@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { RecommendationWorkspace } from './RecommendationWorkspace';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as urlState from '../hooks/useUrlState';
@@ -111,6 +111,52 @@ describe('RecommendationWorkspace', () => {
     expect(screen.queryByTestId('mock-map')).toBeInTheDocument();
   });
 
+  it('renders the desktop Refine action in the desktop workspace and opens controls', () => {
+    vi.mocked(isDesktopHook.useIsDesktop).mockReturnValue({ isDesktop: true, mounted: true });
+
+    const defaultState = {
+      lat: 12.9716,
+      lng: 77.5946,
+      max_dist: 5,
+      max_budget_inr: null,
+      bhk_type: null,
+      w_metro: 0.5,
+      w_work: 0.5,
+      w_cafe: 0.5,
+      w_restaurant: 0.5,
+      w_park: 0.5,
+      w_healthcare: 0.5,
+      w_nightlife: 0.5,
+      loc: null,
+    };
+    vi.mocked(urlState.useUrlState).mockReturnValue({
+      state: defaultState as any,
+      updateState: vi.fn(),
+      getApiRequest: vi.fn(),
+    });
+
+    vi.mocked(recommendations.useRecommendations).mockReturnValue({
+      data: { recommendations: [], provenance: { calc_versions_used: [] } },
+      loading: false,
+      error: null,
+      isValidating: false,
+      isColdStarting: false,
+      retry: vi.fn(),
+    });
+
+    render(<RecommendationWorkspace />);
+
+    const refineButton = screen.getByRole('button', { name: /Refine/i });
+    expect(refineButton).toBeInTheDocument();
+
+    expect(screen.queryByRole('heading', { name: /Refine recommendations/i })).not.toBeInTheDocument();
+
+    fireEvent.click(refineButton);
+
+    expect(screen.getByRole('heading', { name: /Refine recommendations/i })).toBeInTheDocument();
+    expect(screen.getByText('Budget & Home')).toBeInTheDocument();
+  });
+
   it('renders mobile-specific layout components without duplicating desktop ones when on mobile', () => {
     vi.mocked(isDesktopHook.useIsDesktop).mockReturnValue({ isDesktop: false, mounted: true });
 
@@ -184,8 +230,9 @@ describe('RecommendationWorkspace', () => {
 
     render(<RecommendationWorkspace />);
     
-    // Mobile controls should NOT be present
-    expect(screen.queryByRole('button', { name: /refine/i })).not.toBeInTheDocument();
+    // Refine button SHOULD be present on desktop now
+    expect(screen.getByRole('button', { name: /refine/i })).toBeInTheDocument();
+    // Mobile recommendation sheet toggle should NOT be present
     expect(screen.queryByRole('button', { name: /expand recommendations/i })).not.toBeInTheDocument();
     // Desktop tuning bar has preference chips
     expect(screen.getByText(/Commute · Low/i)).toBeInTheDocument();

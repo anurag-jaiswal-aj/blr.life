@@ -9,7 +9,7 @@ import { RecommendationList } from '../components/RecommendationList';
 import { NeighbourhoodDetail } from '../components/NeighbourhoodDetail';
 import { WorkLocationInput } from '../components/WorkLocationInput';
 import { MobileRecommendationSheet } from '../components/MobileRecommendationSheet';
-import { MobileControlsDisclosure } from '../components/MobileControlsDisclosure';
+import { ControlsDisclosure } from '../components/ControlsDisclosure';
 import { ShareButton } from '../components/ShareButton';
 import { MapPin, SlidersHorizontal, Map as MapIcon, X } from 'lucide-react';
 
@@ -110,6 +110,9 @@ export function RecommendationWorkspace() {
         </div>
         <div className="flex items-center gap-2">
           {hasLocation && <ShareButton />}
+          {hasLocation && mounted && isDesktop && (
+            <ControlsDisclosure state={state} updateState={updateState} />
+          )}
         </div>
       </header>
 
@@ -122,7 +125,7 @@ export function RecommendationWorkspace() {
             {state.loc || `Custom Location (${state.lat?.toFixed(4)}, ${state.lng?.toFixed(4)})`}
           </div>
         {mounted && !isDesktop && (
-          <MobileControlsDisclosure state={state} updateState={updateState} />
+          <ControlsDisclosure state={state} updateState={updateState} />
           )}
         </div>
       )}
