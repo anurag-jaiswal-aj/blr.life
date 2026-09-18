@@ -48,29 +48,32 @@ export function useRecommendations(request: RecommendationRequest | null | undef
       }
     }, 5000);
 
-    fetchRecommendations(currentRequest)
-      .then((res) => {
-        if (active) {
-          clearTimeout(coldStartTimer);
-          setData(res);
-          setLoading(false);
-          setIsValidating(false);
-          setIsColdStarting(false);
-        }
-      })
-      .catch((err) => {
-        if (active) {
-          clearTimeout(coldStartTimer);
-          setError(err.message || 'Unknown error occurred');
-          setLoading(false);
-          setIsValidating(false);
-          setIsColdStarting(false);
-        }
-      });
+    const debounceTimer = setTimeout(() => {
+      fetchRecommendations(currentRequest)
+        .then((res) => {
+          if (active) {
+            clearTimeout(coldStartTimer);
+            setData(res);
+            setLoading(false);
+            setIsValidating(false);
+            setIsColdStarting(false);
+          }
+        })
+        .catch((err) => {
+          if (active) {
+            clearTimeout(coldStartTimer);
+            setError(err.message || 'Unknown error occurred');
+            setLoading(false);
+            setIsValidating(false);
+            setIsColdStarting(false);
+          }
+        });
+    }, 300);
 
     return () => {
       active = false;
       clearTimeout(coldStartTimer);
+      clearTimeout(debounceTimer);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requestHash, fetchTrigger]);

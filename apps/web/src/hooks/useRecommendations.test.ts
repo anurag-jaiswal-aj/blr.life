@@ -105,4 +105,60 @@ describe('useRecommendations (SUBMISSION)', () => {
 
     vi.useRealTimers();
   });
+
+  it('debounces rapid request changes within 300ms', () => {
+    vi.useFakeTimers();
+    const mockRes = { recommendations: [], provenance: { calc_versions_used: [] } };
+    vi.mocked(api.fetchRecommendations).mockResolvedValue(mockRes as any);
+
+    const reqA = { work_location: { lat: 1, lng: 1 }, constraints: {}, preferences: {} as any };
+    const reqB = { work_location: { lat: 2, lng: 2 }, constraints: {}, preferences: {} as any };
+    const reqC = { work_location: { lat: 3, lng: 3 }, constraints: {}, preferences: {} as any };
+
+    const { rerender } = renderHook((req) => useRecommendations(req), { initialProps: reqA });
+
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+    rerender(reqB);
+
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+    rerender(reqC);
+
+    // At this point, 200ms total passed since first request. None should have fired.
+    expect(api.fetchRecommendations).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(350); // Pass the 300ms threshold for reqC
+    });
+
+    expect(api.fetchRecommendations).toHaveBeenCalledTimes(1);
+    expect(api.fetchRecommendations).toHaveBeenCalledWith(reqC);
+
+    vi.useRealTimers();
+  });
+
+  it('cancels pending fetch on unmount', () => {
+    vi.useFakeTimers();
+    const req = { work_location: { lat: 1, lng: 1 }, constraints: {}, preferences: {} as any };
+
+    const { unmount } = renderHook(() => useRecommendations(req));
+
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+
+    unmount();
+
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+
+    // The fetch should have been cleared on unmount.
+    expect(api.fetchRecommendations).not.toHaveBeenCalled();
+
+    vi.useRealTimers();
+  });
 });
