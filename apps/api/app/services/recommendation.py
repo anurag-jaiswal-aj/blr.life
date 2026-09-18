@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 
+from app.models.observations import MetricConfidence
 from app.schemas.recommendation import (
     AffordabilityInfo,
     AffordabilityStatus,
@@ -183,21 +184,33 @@ def rank_candidates(
                     status=AffordabilityStatus.AFFORDABLE,
                     rent_min_inr=candidate.rent_min_inr,
                     rent_max_inr=candidate.rent_max_inr,
-                    confidence=candidate.rent_confidence,
+                    confidence=(
+                        MetricConfidence(candidate.rent_confidence)
+                        if candidate.rent_confidence
+                        else None
+                    ),
                 )
             elif candidate.rent_min_inr <= constraints.max_budget_inr:
                 affordability = AffordabilityInfo(
                     status=AffordabilityStatus.STARTS_WITHIN_BUDGET,
                     rent_min_inr=candidate.rent_min_inr,
                     rent_max_inr=candidate.rent_max_inr,
-                    confidence=candidate.rent_confidence,
+                    confidence=(
+                        MetricConfidence(candidate.rent_confidence)
+                        if candidate.rent_confidence
+                        else None
+                    ),
                 )
             else:
                 affordability = AffordabilityInfo(
                     status=AffordabilityStatus.OVER_BUDGET,
                     rent_min_inr=candidate.rent_min_inr,
                     rent_max_inr=candidate.rent_max_inr,
-                    confidence=candidate.rent_confidence,
+                    confidence=(
+                        MetricConfidence(candidate.rent_confidence)
+                        if candidate.rent_confidence
+                        else None
+                    ),
                 )
 
         # Normalization
