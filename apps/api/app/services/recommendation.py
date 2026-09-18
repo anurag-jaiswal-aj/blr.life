@@ -2,14 +2,14 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.schemas.recommendation import (
+    AffordabilityInfo,
+    AffordabilityStatus,
     ComponentScores,
     RawMetrics,
     RecommendationConstraints,
     RecommendationExplanations,
     RecommendationPreferences,
     RecommendationResult,
-    AffordabilityStatus,
-    AffordabilityInfo,
 )
 
 

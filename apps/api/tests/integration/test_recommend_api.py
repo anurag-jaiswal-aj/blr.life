@@ -1,13 +1,17 @@
 from datetime import UTC, datetime
+
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
 from app.db.session import get_db
 from app.main import app
 from app.models.locality import Locality
 from app.models.observations import LocalityMetric, MetricConfidence, MetricType
 from tests.integration.test_domain_integration import TEST_ASYNC_URL
+
+
 @pytest_asyncio.fixture
 async def async_db_session():
     engine = create_async_engine(TEST_ASYNC_URL, echo=False)

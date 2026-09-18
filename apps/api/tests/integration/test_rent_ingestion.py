@@ -1,5 +1,3 @@
-from .test_domain_integration import setup_test_database
-
 import json
 import os
 
@@ -15,6 +13,8 @@ from sqlalchemy import select
 from app.models.locality import Locality
 from app.models.observations import HousingConfiguration, LocalityRentObservation, MetricConfidence
 
+from .test_domain_integration import setup_test_database
+
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../scripts"))
 try:
     from scripts.ingest_rent import run_ingestion
@@ -25,6 +25,8 @@ except ImportError:
 
 
 from tests.integration.test_domain_integration import TEST_ASYNC_URL
+
+_ = setup_test_database  # use the import to avoid F401/F811
 
 
 @pytest_asyncio.fixture
@@ -126,7 +128,7 @@ async def test_ingest_successful_transaction(base_valid_data, temp_json_file, as
 
     # Verify observation
     obs = (await async_db_session.execute(
-        select(LocalityRentObservation).where(LocalityRentObservation.is_current == True)
+        select(LocalityRentObservation).where(LocalityRentObservation.is_current.is_(True))
         .order_by(LocalityRentObservation.id.desc())
     )).scalars().first()
 
@@ -185,7 +187,7 @@ async def test_ingest_deprecates_previous(base_valid_data, temp_json_file, async
         select(LocalityRentObservation)
         .where(
             LocalityRentObservation.housing_config == "2bhk",
-            LocalityRentObservation.is_current == True
+            LocalityRentObservation.is_current.is_(True)
         )
     )).scalars().all()
 
@@ -198,7 +200,7 @@ async def test_ingest_deprecates_previous(base_valid_data, temp_json_file, async
         select(LocalityRentObservation)
         .where(
             LocalityRentObservation.housing_config == "2bhk",
-            LocalityRentObservation.is_current == False,
+            LocalityRentObservation.is_current.is_(False),
             LocalityRentObservation.rent_min_inr == 20000
         )
     )).scalars().first()
@@ -229,7 +231,7 @@ async def test_ingest_quality_protection(base_valid_data, temp_json_file, async_
 
     obs = (await async_db_session.execute(
         select(LocalityRentObservation)
-        .where(LocalityRentObservation.is_current == True)
+        .where(LocalityRentObservation.is_current.is_(True))
         .order_by(LocalityRentObservation.id.desc())
     )).scalars().first()
 

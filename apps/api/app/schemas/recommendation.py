@@ -1,9 +1,10 @@
+import enum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.models.observations import HousingConfiguration, MetricConfidence
-import enum
+
 
 class AffordabilityStatus(enum.StrEnum):
     AFFORDABLE = "affordable"

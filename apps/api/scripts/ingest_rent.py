@@ -39,16 +39,16 @@ class Observation(BaseModel):
     def validate_bhk(cls, v):
         try:
             return HousingConfiguration(v).value
-        except ValueError:
-            raise ValueError(f"Invalid housing_config: {v}")
+        except ValueError as err:
+            raise ValueError(f"Invalid housing_config: {v}") from err
 
     @field_validator("confidence")
     @classmethod
     def validate_confidence(cls, v):
         try:
             return MetricConfidence(v).value
-        except ValueError:
-            raise ValueError(f"Invalid confidence: {v}")
+        except ValueError as err:
+            raise ValueError(f"Invalid confidence: {v}") from err
 
     @model_validator(mode="after")
     def validate_rent(self) -> "Observation":
@@ -211,7 +211,7 @@ async def run_ingestion(input_path: str, dry_run: bool, session_factory=None):
                     .where(
                         LocalityRentObservation.locality_id == loc.id,
                         LocalityRentObservation.housing_config == obs.bhk,
-                        LocalityRentObservation.is_current == True
+                        LocalityRentObservation.is_current.is_(True)
                     )
                 )).scalar_one_or_none()
 
