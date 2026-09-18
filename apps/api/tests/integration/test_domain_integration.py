@@ -40,6 +40,20 @@ TEST_ASYNC_URL = os.getenv(
     f"postgresql+asyncpg://{_TEST_PG_USER}:{_TEST_PG_PASSWORD}"
     f"@{_TEST_PG_HOST}:{_TEST_PG_PORT}/{_TEST_DB_NAME}",
 )
+
+
+def verify_test_database_url_safety(db_url: str) -> None:
+    """Ensure the test database URL does not point to the development database."""
+    url_obj = sa.engine.make_url(db_url)
+    if url_obj.database == "blrlife":
+        raise RuntimeError(
+            "Integration tests cannot run against the development database 'blrlife'. "
+            "Please configure TEST_DB_URL to use an isolated test database."
+        )
+
+
+verify_test_database_url_safety(TEST_ASYNC_URL)
+
 TEST_SYNC_URL = TEST_ASYNC_URL.replace("postgresql+asyncpg://", "postgresql+psycopg://")
 ADMIN_SYNC_URL = TEST_SYNC_URL.replace(f"/{_TEST_DB_NAME}", "/blrlife")
 
@@ -539,3 +553,22 @@ class TestLocalityMetric:
             text("SELECT value FROM locality_metric WHERE locality_id=:lid"), {"lid": lid}
         ).scalar()
         assert Decimal(str(stored)) == Decimal("12.3456")
+
+
+def test_database_url_safety_guard_accepts_test_db() -> None:
+    # A valid test database URL should pass silently
+    valid_url = "postgresql+asyncpg://user:pass@localhost:5432/blrlife_test"
+    verify_test_database_url_safety(valid_url)
+
+
+def test_database_url_safety_guard_rejects_dev_db() -> None:
+    # A development database URL should be rejected
+    dev_url = "postgresql+asyncpg://user:secretpass123@localhost:5432/blrlife"
+    with pytest.raises(RuntimeError) as exc_info:
+        verify_test_database_url_safety(dev_url)
+
+    error_msg = str(exc_info.value)
+    assert "Integration tests cannot run against the development database 'blrlife'" in error_msg
+    # Ensure credentials are not exposed in the error message
+    assert "secretpass123" not in error_msg
+    assert "user" not in error_msg
