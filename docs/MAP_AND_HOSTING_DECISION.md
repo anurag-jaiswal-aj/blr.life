@@ -90,3 +90,12 @@ The architecture is fully viable at ₹0/month, provided we swap the map tile pr
 3. Deploy API Docker container to Koyeb Free.
 4. Deploy Frontend to Vercel Hobby (injecting Koyeb API URL and Mapbox Token).
 5. Map Cloudflare DNS to Vercel.
+
+## Addendum: Final Current State
+After further evaluation and implementation testing, the final architecture was pivoted away from Mapbox and Koyeb:
+- **Map Provider**: OpenFreeMap is the current basemap provider. No Mapbox account, token, or endpoint is required.
+- **Map Rendering**: MapLibre GL JS is used for rendering.
+- **MapLibre Version Fix**: A critical map-rendering issue where vector tiles would not load in the browser was resolved by downgrading `maplibre-gl` from `v6.x` to `v4.7.1`. The issue was caused by a compatibility problem between MapLibre v6 web workers and the Next.js Turbopack integration in this application setup, not by OpenFreeMap itself. OpenFreeMap vector tiles and glyphs now load successfully.
+- **Backend Hosting**: The FastAPI backend is deployed on Render, not Koyeb.
+- **Frontend Hosting**: Vercel.
+- **Database Hosting**: Neon PostgreSQL/PostGIS.

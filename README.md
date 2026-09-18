@@ -4,31 +4,46 @@
 
 **blr.life** is a Bengaluru living-intelligence and location-intelligence platform. It aims to answer one primary question: Given your workplace, housing budget, office frequency, and lifestyle priorities, where should you live in Bengaluru?
 
-## Problem Statement
+## Overview
+
 Finding the right neighbourhood in Bengaluru is notoriously difficult. It involves complex tradeoffs between rent, commute times, metro access, and lifestyle preferences. Existing platforms either provide generic real-estate listings without commute/lifestyle context or rely on subjective, non-data-driven opinions.
 
-## V1 Objective
-Deliver a fast, intuitive web application where users can input their workplace, budget, and preferences to receive a ranked, data-driven, and highly explainable list of recommended Bengaluru neighbourhoods.
+blr.life delivers a fast, intuitive web application where users can input their workplace, budget, and preferences to receive a ranked, data-driven, and highly explainable list of recommended Bengaluru neighbourhoods.
+
+## Key Features
+
+- **Deterministic Scoring**: Data-driven ranking system prioritizing proximity, metro access, and curated lifestyle amenities.
+- **Explainable Recommendations**: Transparent breakdown of why a locality was recommended, including warnings for missing data.
+- **Interactive Map**: High-performance vector map rendering with dynamic work and recommendation markers.
+- **Responsive Workspace**: Advanced 3-pane desktop workspace that allows simultaneous map exploration and detail viewing, with a mobile-optimized sheet interface.
+- **Shareable Links**: URL-based application state for easily sharing location research with roommates or family.
+
+## Architecture
+
+The system is designed as a modular monolith optimized for a zero-cost serverless deployment. The Next.js frontend communicates via REST with a FastAPI backend. The backend connects to PostgreSQL + PostGIS for complex geospatial distance and metric queries.
 
 ## Technology Stack
-- **Frontend**: Next.js (App Router), TypeScript, Tailwind CSS, Vitest
-- **Backend**: Python 3.11+, FastAPI, Pydantic Settings, SQLAlchemy 2.x, Alembic, pytest, Ruff, mypy
+
+- **Frontend**: Next.js (App Router), React, TypeScript, Tailwind CSS, Lucide React
+- **Backend**: Python 3.11+, FastAPI (Async), Pydantic, SQLAlchemy 2.x, Alembic
 - **Database**: PostgreSQL with PostGIS extension
-- **Infrastructure**: Docker & Docker Compose (Modular Monolith)
+- **Map Architecture**: MapLibre GL JS with OpenFreeMap vector tiles
+- **Testing & Tooling**: Vitest, pytest, Ruff, mypy, ESLint
 
-## High-Level Architecture
-The system is designed as a modular monolith. The Next.js frontend (`apps/web`) communicates via REST with a FastAPI backend (`apps/api`). The backend connects to PostgreSQL + PostGIS for geospatial and metric queries.
+## Recommendation Engine
 
-## Repository Status
-🟢 **STATUS: APPLICATION FOUNDATION STAGE** 🟢
-The executable application foundation is running. Frontend, backend, database migrations, and testing infrastructures are configured. Product features (recommendations, maps, area data) will be built in subsequent work units.
+The core backend recommendation algorithm is deterministic:
+1. **Locality Data**: Geographic polygons (PostGIS points/boundaries), derived amenity counts, average rent bands, and metro proximity.
+2. **Inputs**: Work location (Lat/Lng), Max Budget, BHK Type, Lifestyle weights (Commute, Metro, Cafes, Parks, etc.).
+3. **Scoring**: Calculates a `BLR Score` utilizing normalized spatial distance, metro access, and aggregated amenity accessibility via min/max scaling. Missing metrics correctly contribute `0` to the numerator while weights remain in the denominator.
+4. **Outputs**: Ranked list of localities with sub-scores, rank, and human-readable pros/warnings.
 
-## Prerequisites
+## Local Development Setup
+
+### Prerequisites
 - Node.js v20+ & npm v10+
 - Python 3.11+ & `uv` (recommended)
 - Docker & Docker Compose
-
-## Local Development Quick Start
 
 ### 1. Environment Setup
 ```bash
@@ -59,7 +74,31 @@ npm install
 npm run dev
 ```
 
-### 4. Code Quality & Testing Commands
+## Environment Variables
+
+| Variable | Environment | Required | Purpose |
+|---|---|---|---|
+| `DATABASE_URL` | Backend | YES | PostgreSQL connection string (must use `postgresql+asyncpg://` schema). |
+| `ENVIRONMENT` | Backend | YES | Set to `development` or `production`. |
+| `CORS_ORIGINS` | Backend | YES | Allowed CORS origins (e.g. `["http://localhost:3000"]`). |
+| `TRUSTED_HOSTS` | Backend | YES | Allowed Host headers (e.g. `["*"]`). |
+| `FORWARDED_ALLOW_IPS` | Backend | YES | Proxy trust for rate-limiting (e.g. `127.0.0.1`). |
+| `NEXT_PUBLIC_API_URL` | Frontend | YES | The URL pointing to the FastAPI backend. |
+| `NOMINATIM_USER_AGENT` | Frontend | YES | Identifies geocoding requests to OSM Nominatim. |
+
+*(Note: Production MapLibre rendering uses OpenFreeMap; no Mapbox API token is required.)*
+
+## Deployment
+
+The production architecture is deployed using the following platforms:
+- **Frontend**: [Vercel](https://vercel.com/)
+- **Backend**: [Render](https://render.com/) (Web Service - Docker)
+- **Database**: [Neon](https://neon.tech/) (PostgreSQL + PostGIS)
+
+Detailed deployment instructions, database configurations, and zero-cost scaling analyses are available in `docs/DEPLOYMENT.md` and `docs/PRODUCTION_READINESS_AUDIT.md`.
+
+## Testing & Quality
+
 ```bash
 make lint       # Runs Ruff (backend) & ESLint (frontend)
 make format     # Formats Python backend code
@@ -67,37 +106,24 @@ make typecheck  # Runs mypy (backend) & tsc (frontend)
 make test       # Runs pytest (backend) & Vitest (frontend)
 ```
 
-## Configuration
+## Project Structure
 
-The application is configured via environment variables (or `.env` file).
+- `apps/api/`: Python FastAPI backend.
+- `apps/web/`: TypeScript Next.js frontend.
+- `data/`: Raw data assets (GeoJSON, seed scripts).
+- `docs/`: Comprehensive architecture and deployment planning documentation.
+- `scripts/`: Data ingestion and validation utilities.
 
-### Security & Rate Limiting
-- `CORS_ORIGINS`: JSON array or comma-separated list of allowed origins. Defaults to `["http://localhost:3000"]`.
-- `TRUSTED_HOSTS`: JSON array or comma-separated list of allowed host headers. Defaults to `["*"]`.
-- `RATE_LIMIT_PER_MINUTE`: Integer specifying the rate limit per minute for the recommendation endpoint. Defaults to `10`.
+## Documentation
 
-**V1 Rate Limiter Limitations:**
-- The rate limiter uses a process-local in-memory store.
-- Application restarts reset the counters.
-- If multiple Uvicorn workers are used (`--workers N`), the effective rate limit is `N * RATE_LIMIT_PER_MINUTE`.
-- The limiter uses the direct peer IP (`request.client.host`). If deployed behind a reverse proxy (e.g., Nginx, Caddy, AWS ELB), all users will share the same bucket unless proxy headers are explicitly configured. Handling of trusted reverse proxies and `X-Forwarded-For` is deferred to the infrastructure/deployment work unit. Do not blindly trust `X-Forwarded-For` without configuring trusted proxy IP addresses.
-
-## Expected Local Endpoints
-- **Frontend App**: [http://localhost:3000](http://localhost:3000)
-- **Backend API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **Liveness Health Check**: [http://localhost:8000/health](http://localhost:8000/health)
-- **Database Readiness Check**: [http://localhost:8000/ready](http://localhost:8000/ready)
-
-## Documentation Index
 All foundational documentation is located in the `docs/` directory:
-
-- [Product Requirements](docs/PRODUCT_REQUIREMENTS.md)
-- [V1 Scope](docs/V1_SCOPE.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Domain Model](docs/DOMAIN_MODEL.md)
 - [Data Strategy](docs/DATA_STRATEGY.md)
 - [Recommendation Engine](docs/RECOMMENDATION_ENGINE.md)
 - [Security](docs/SECURITY.md)
 - [Testing Strategy](docs/TESTING_STRATEGY.md)
-- [Engineering Guidelines](docs/ENGINEERING_GUIDELINES.md)
-- [Implementation Roadmap](docs/IMPLEMENTATION_ROADMAP.md)
+
+## License
+
+This project is open-source and available under the MIT License.
