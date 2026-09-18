@@ -35,4 +35,36 @@ describe('ResultCard', () => {
     expect(screen.getByText(/500 m/i)).toBeInTheDocument();
     expect(screen.queryByText('—')).not.toBeInTheDocument();
   });
+
+  it('renders affordable status', () => {
+    const affordableResult = { ...mockResult, affordability: { status: 'affordable', rent_min_inr: 15000, rent_max_inr: 20000, confidence: 'high' } };
+    render(<ResultCard result={affordableResult} />);
+    expect(screen.getByText(/Within budget/i)).toBeInTheDocument();
+    expect(screen.getByText(/15,000/i)).toBeInTheDocument();
+  });
+
+  it('renders starts_within_budget status', () => {
+    const startsResult = { ...mockResult, affordability: { status: 'starts_within_budget', rent_min_inr: 18000, rent_max_inr: 25000, confidence: 'high' } };
+    render(<ResultCard result={startsResult} />);
+    expect(screen.getByText(/Starts within budget/i)).toBeInTheDocument();
+  });
+
+  it('renders over_budget status', () => {
+    const overResult = { ...mockResult, affordability: { status: 'over_budget', rent_min_inr: 25000, rent_max_inr: 30000, confidence: 'high' } };
+    render(<ResultCard result={overResult} />);
+    expect(screen.getByText(/Over budget/i)).toBeInTheDocument();
+  });
+
+  it('renders unknown status', () => {
+    const unknownResult = { ...mockResult, affordability: { status: 'unknown', rent_min_inr: null, rent_max_inr: null, confidence: null } };
+    render(<ResultCard result={unknownResult} />);
+    expect(screen.getByText(/Rent unavailable/i)).toBeInTheDocument();
+    expect(screen.getByText(/Affordability cannot be verified/i)).toBeInTheDocument();
+  });
+
+  it('renders LOW confidence as estimate', () => {
+    const estResult = { ...mockResult, affordability: { status: 'affordable', rent_min_inr: 15000, rent_max_inr: 20000, confidence: 'low' } };
+    render(<ResultCard result={estResult} />);
+    expect(screen.getByText(/\(Est\.\)/i)).toBeInTheDocument();
+  });
 });

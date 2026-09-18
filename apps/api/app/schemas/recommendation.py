@@ -2,9 +2,20 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.models.observations import HousingConfiguration
+from app.models.observations import HousingConfiguration, MetricConfidence
+import enum
 
+class AffordabilityStatus(enum.StrEnum):
+    AFFORDABLE = "affordable"
+    STARTS_WITHIN_BUDGET = "starts_within_budget"
+    OVER_BUDGET = "over_budget"
+    UNKNOWN = "unknown"
 
+class AffordabilityInfo(BaseModel):
+    status: AffordabilityStatus = Field(..., description="The affordability classification")
+    rent_min_inr: int | None = Field(None, description="Minimum rent in INR")
+    rent_max_inr: int | None = Field(None, description="Maximum rent in INR")
+    confidence: MetricConfidence | None = Field(None, description="Confidence level of the rent estimate")
 class WorkLocation(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -139,6 +150,9 @@ class RecommendationResult(BaseModel):
     raw_metrics: RawMetrics
     metadata: dict[str, Any] = Field(
         ..., description="Extraneous metadata (e.g. nearest station details)"
+    )
+    affordability: AffordabilityInfo | None = Field(
+        None, description="Affordability status if budget constraints were provided"
     )
     explanations: RecommendationExplanations
 

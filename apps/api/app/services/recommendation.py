@@ -8,6 +8,8 @@ from app.schemas.recommendation import (
     RecommendationExplanations,
     RecommendationPreferences,
     RecommendationResult,
+    AffordabilityStatus,
+    AffordabilityInfo,
 )
 
 
@@ -35,6 +37,7 @@ class CandidateLocality:
     calc_version: str | None = None
     rent_min_inr: int | None = None
     rent_max_inr: int | None = None
+    rent_confidence: str | None = None
 
 
 # -----------------------------------------------------------------------------
@@ -116,14 +119,9 @@ def generate_explanations(
 
     # Affordability explanations
     if constraints.max_budget_inr is not None and constraints.bhk_type is not None:
-        if candidate.rent_min_inr is None:
+        if candidate.rent_min_inr is None or candidate.rent_confidence == "insufficient":
             warnings.append(
-                f"Rent data unavailable for {constraints.bhk_type}. Affordability unknown."
-            )
-        elif candidate.rent_min_inr <= constraints.max_budget_inr:
-            pros.append(
-                f"Observed {constraints.bhk_type} rent band (from "
-                f"₹{candidate.rent_min_inr:,}) overlaps your budget."
+                f"Rent data unavailable for {constraints.bhk_type}. Cannot verify affordability."
             )
 
     # Amenity explanations
@@ -168,13 +166,36 @@ def rank_candidates(
         ):
             continue
 
-        if (
-            constraints.max_budget_inr is not None
-            and constraints.bhk_type is not None
-            and candidate.rent_min_inr is not None
-            and candidate.rent_min_inr > constraints.max_budget_inr
-        ):
-            continue
+        affordability = None
+        if constraints.max_budget_inr is not None and constraints.bhk_type is not None:
+            if candidate.rent_min_inr is None or candidate.rent_confidence == "insufficient":
+                affordability = AffordabilityInfo(
+                    status=AffordabilityStatus.UNKNOWN,
+                    rent_min_inr=None,
+                    rent_max_inr=None,
+                    confidence=None
+                )
+            elif candidate.rent_max_inr is not None and candidate.rent_max_inr <= constraints.max_budget_inr:
+                affordability = AffordabilityInfo(
+                    status=AffordabilityStatus.AFFORDABLE,
+                    rent_min_inr=candidate.rent_min_inr,
+                    rent_max_inr=candidate.rent_max_inr,
+                    confidence=candidate.rent_confidence
+                )
+            elif candidate.rent_min_inr <= constraints.max_budget_inr:
+                affordability = AffordabilityInfo(
+                    status=AffordabilityStatus.STARTS_WITHIN_BUDGET,
+                    rent_min_inr=candidate.rent_min_inr,
+                    rent_max_inr=candidate.rent_max_inr,
+                    confidence=candidate.rent_confidence
+                )
+            else:
+                affordability = AffordabilityInfo(
+                    status=AffordabilityStatus.OVER_BUDGET,
+                    rent_min_inr=candidate.rent_min_inr,
+                    rent_max_inr=candidate.rent_max_inr,
+                    confidence=candidate.rent_confidence
+                )
 
         # Normalization
         norm_metro = normalize_metro_distance(
@@ -272,6 +293,7 @@ def rank_candidates(
                     nightlife_accessibility=candidate.nightlife_count,
                 ),
                 metadata=metadata,
+                affordability=affordability,
                 explanations=explanations,
             )
         )

@@ -51,6 +51,15 @@ export interface RecommendationExplanations {
   warnings: string[];
 }
 
+export type AffordabilityStatus = 'affordable' | 'starts_within_budget' | 'over_budget' | 'unknown';
+
+export interface AffordabilityInfo {
+  status: AffordabilityStatus;
+  rent_min_inr: number | null;
+  rent_max_inr: number | null;
+  confidence: string | null;
+}
+
 export interface RecommendationResult {
   locality_id: number;
   slug: string;
@@ -70,6 +79,7 @@ export interface RecommendationResult {
       lng: number;
     };
   };
+  affordability: AffordabilityInfo | null;
   explanations: RecommendationExplanations;
 }
 

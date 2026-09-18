@@ -1,11 +1,10 @@
+import React from "react";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { ControlsPanel } from "./ControlsPanel";
+import { AppState } from "../hooks/useUrlState";
+import { describe, it, expect, vi } from "vitest";
 
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { ControlsPanel } from './ControlsPanel';
-import { AppState } from '../hooks/useUrlState';
-import { describe, it, expect, vi } from 'vitest';
-
-describe('ControlsPanel (CONTROLS)', () => {
+describe("ControlsPanel (CONTROLS)", () => {
   const defaultState: AppState = {
     lat: 12.97,
     lng: 77.59,
@@ -21,47 +20,70 @@ describe('ControlsPanel (CONTROLS)', () => {
     w_nightlife: 0,
   };
 
-  it('renders preference controls when coordinates are present', () => {
+  it("renders preference controls when coordinates are present", () => {
     render(<ControlsPanel state={defaultState} updateState={vi.fn()} />);
     expect(screen.getByLabelText(/Maximum Distance/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Metro Importance/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Near Work Importance/i)).toBeInTheDocument();
   });
 
-  it('updates state when sliders are changed', () => {
+  it("updates state when sliders are changed", () => {
     const updateSpy = vi.fn();
     render(<ControlsPanel state={defaultState} updateState={updateSpy} />);
-    
-    fireEvent.change(screen.getByLabelText(/Maximum Distance/i), { target: { value: '20' } });
+
+    fireEvent.change(screen.getByLabelText(/Maximum Distance/i), {
+      target: { value: "20" },
+    });
     expect(updateSpy).toHaveBeenCalledWith({ max_dist: 20 });
-    
-    fireEvent.change(screen.getByLabelText(/Metro Importance Weight/i), { target: { value: '0.5' } });
+
+    fireEvent.change(screen.getByLabelText(/Metro Importance Weight/i), {
+      target: { value: "0.5" },
+    });
     expect(updateSpy).toHaveBeenCalledWith({ w_metro: 0.5 });
-    
-    fireEvent.change(screen.getByLabelText(/Near Work Importance Weight/i), { target: { value: '0.8' } });
+
+    fireEvent.change(screen.getByLabelText(/Near Work Importance Weight/i), {
+      target: { value: "0.8" },
+    });
     expect(updateSpy).toHaveBeenCalledWith({ w_work: 0.8 });
   });
 
   // WorkLocationInput is now rendered in RecommendationWorkspace
 
-  it('updates amenity priorities when lifestyle accordion is toggled and selectors clicked', () => {
+  it("updates amenity priorities when lifestyle accordion is toggled and selectors clicked", () => {
     const updateSpy = vi.fn();
-    const { getByText } = render(<ControlsPanel state={defaultState} updateState={updateSpy} />);
-    
-    fireEvent.click(getByText('Lifestyle Preferences'));
-    
-    const cafeLabel = getByText('Cafes').parentElement;
+    const { getByText } = render(
+      <ControlsPanel state={defaultState} updateState={updateSpy} />,
+    );
+
+    fireEvent.click(getByText("Lifestyle Preferences"));
+
+    const cafeLabel = getByText("Cafes").parentElement;
     if (cafeLabel) {
-      const mustBtn = cafeLabel.querySelectorAll('button')[2];
+      const mustBtn = cafeLabel.querySelectorAll("button")[2];
       fireEvent.click(mustBtn);
       expect(updateSpy).toHaveBeenCalledWith({ w_cafe: 1.0 });
     }
-    
-    const diningLabel = getByText('Dining').parentElement;
+
+    const diningLabel = getByText("Dining").parentElement;
     if (diningLabel) {
-      const niceBtn = diningLabel.querySelectorAll('button')[1];
+      const niceBtn = diningLabel.querySelectorAll("button")[1];
       fireEvent.click(niceBtn);
       expect(updateSpy).toHaveBeenCalledWith({ w_restaurant: 0.5 });
     }
+  });
+
+  it("renders budget controls and updates state", () => {
+    const updateSpy = vi.fn();
+    render(<ControlsPanel state={defaultState} updateState={updateSpy} />);
+
+    const rentInput = screen.getByLabelText(/Max Rent/i);
+    expect(rentInput).toBeInTheDocument();
+    fireEvent.change(rentInput, { target: { value: "25000" } });
+    expect(updateSpy).toHaveBeenCalledWith({ max_budget_inr: 25000 });
+
+    const typeSelect = screen.getByLabelText(/Property Type/i);
+    expect(typeSelect).toBeInTheDocument();
+    fireEvent.change(typeSelect, { target: { value: "1bhk" } });
+    expect(updateSpy).toHaveBeenCalledWith({ bhk_type: "1bhk" });
   });
 });

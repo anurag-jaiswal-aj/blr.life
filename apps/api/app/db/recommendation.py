@@ -164,6 +164,7 @@ async def get_candidate_localities(
         stmt = stmt.add_columns(
             func.max(LocalityRentObservation.rent_min_inr).label("rent_min_inr"),
             func.max(LocalityRentObservation.rent_max_inr).label("rent_max_inr"),
+            func.max(LocalityRentObservation.confidence.cast(String)).label("rent_confidence"),
         ).outerjoin(
             LocalityRentObservation,
             (LocalityRentObservation.locality_id == Locality.id)
@@ -220,6 +221,7 @@ async def get_candidate_localities(
                 ),
                 rent_min_inr=getattr(row, "rent_min_inr", None),
                 rent_max_inr=getattr(row, "rent_max_inr", None),
+                rent_confidence=getattr(row, "rent_confidence", None),
             )
         )
 
