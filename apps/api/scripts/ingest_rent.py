@@ -153,9 +153,9 @@ async def run_ingestion(input_path: str, dry_run: bool, session_factory=None):
 
                 if key not in snapshot_map:
                     # Check if DataSource exists
-                    ds = (await session.execute(
-                        select(DataSource).where(DataSource.key == key)
-                    )).scalar_one_or_none()
+                    ds = (
+                        await session.execute(select(DataSource).where(DataSource.key == key))
+                    ).scalar_one_or_none()
                     if not ds:
                         ds = DataSource(
                             key=key,
@@ -167,13 +167,15 @@ async def run_ingestion(input_path: str, dry_run: bool, session_factory=None):
                         await session.flush()
 
                     # Check if Snapshot exists
-                    snap = (await session.execute(
-                        select(DatasetSnapshot).where(
-                            DatasetSnapshot.data_source_id == ds.id,
-                            DatasetSnapshot.source_version == dataset.dataset_version,
-                            DatasetSnapshot.content_checksum == checksum
+                    snap = (
+                        await session.execute(
+                            select(DatasetSnapshot).where(
+                                DatasetSnapshot.data_source_id == ds.id,
+                                DatasetSnapshot.source_version == dataset.dataset_version,
+                                DatasetSnapshot.content_checksum == checksum,
+                            )
                         )
-                    )).scalar_one_or_none()
+                    ).scalar_one_or_none()
 
                     if not snap:
                         try:
@@ -206,14 +208,15 @@ async def run_ingestion(input_path: str, dry_run: bool, session_factory=None):
                 snap_id = snapshot_map[key]
 
                 # Check for existing current observation
-                existing_obs = (await session.execute(
-                    select(LocalityRentObservation)
-                    .where(
-                        LocalityRentObservation.locality_id == loc.id,
-                        LocalityRentObservation.housing_config == obs.bhk,
-                        LocalityRentObservation.is_current.is_(True)
+                existing_obs = (
+                    await session.execute(
+                        select(LocalityRentObservation).where(
+                            LocalityRentObservation.locality_id == loc.id,
+                            LocalityRentObservation.housing_config == obs.bhk,
+                            LocalityRentObservation.is_current.is_(True),
+                        )
                     )
-                )).scalar_one_or_none()
+                ).scalar_one_or_none()
 
                 # Check idempotency
                 if existing_obs and existing_obs.snapshot_id == snap_id:

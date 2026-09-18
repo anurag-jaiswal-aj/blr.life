@@ -21,14 +21,19 @@ async def async_db_session():
         async with async_session_factory(bind=conn) as session:
             yield session
             await session.rollback()
+
+
 @pytest_asyncio.fixture
 async def async_client(async_db_session: AsyncSession):
     async def override_get_db():
         yield async_db_session
+
     app.dependency_overrides[get_db] = override_get_db
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
     app.dependency_overrides.clear()
+
+
 @pytest.fixture
 async def setup_recommendation_data(async_db_session):
     l1 = Locality(
@@ -69,6 +74,8 @@ async def setup_recommendation_data(async_db_session):
     async_db_session.add_all([m1, m2])
     await async_db_session.commit()
     return l1, l2, l3
+
+
 @pytest.mark.asyncio
 async def test_recommend_success_standard(async_client: AsyncClient, setup_recommendation_data):
     payload = {
@@ -91,6 +98,8 @@ async def test_recommend_success_standard(async_client: AsyncClient, setup_recom
     assert recs[1]["slug"] == "no-metro"
     assert recs[1]["component_scores"]["metro"] is None
     assert recs[2]["slug"] == "far-area"
+
+
 @pytest.mark.asyncio
 async def test_recommend_hard_constraint_work_distance(
     async_client: AsyncClient, setup_recommendation_data
@@ -108,6 +117,8 @@ async def test_recommend_hard_constraint_work_distance(
     assert len(recs) == 2
     for r in recs:
         assert r["raw_metrics"]["work_distance_km"] <= 2.0
+
+
 @pytest.mark.asyncio
 async def test_recommend_validation_errors(async_client: AsyncClient):
     payload = {
@@ -121,6 +132,8 @@ async def test_recommend_validation_errors(async_client: AsyncClient):
     }
     response = await async_client.post("/api/v1/recommend", json=payload)
     assert response.status_code == 422
+
+
 @pytest.mark.asyncio
 async def test_recommend_amenities(
     async_client: AsyncClient, setup_recommendation_data, async_db_session: AsyncSession
@@ -155,11 +168,14 @@ async def test_recommend_amenities(
     assert l1_rec["raw_metrics"]["cafe_accessibility"] == 59.0
     assert l1_rec["component_scores"]["cafe"] == 1.0
     assert "High cafe count within 1.5km" in l1_rec["explanations"]["pros"]
+
+
 @pytest.mark.asyncio
 async def test_recommend_affordability(
     async_client: AsyncClient, setup_recommendation_data, async_db_session: AsyncSession
 ):
     from app.models.observations import HousingConfiguration, LocalityRentObservation
+
     l1, l2, l3 = setup_recommendation_data
     # l1 is affordable
     r1 = LocalityRentObservation(
@@ -232,11 +248,14 @@ async def test_recommend_affordability(
     }
     resp2 = await async_client.post("/api/v1/recommend", json=payload_partial)
     assert resp2.status_code == 422
+
+
 @pytest.mark.asyncio
 async def test_recommend_affordability_insufficient(
     async_client: AsyncClient, setup_recommendation_data, async_db_session: AsyncSession
 ):
     from app.models.observations import HousingConfiguration, LocalityRentObservation
+
     l1, _, _ = setup_recommendation_data
     # Add rent observation that would normally be affordable (15k < 20k),
     # but confidence is insufficient

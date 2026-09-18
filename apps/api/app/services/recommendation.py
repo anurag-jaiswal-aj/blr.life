@@ -173,7 +173,7 @@ def rank_candidates(
                     status=AffordabilityStatus.UNKNOWN,
                     rent_min_inr=None,
                     rent_max_inr=None,
-                    confidence=None
+                    confidence=None,
                 )
             elif (
                 candidate.rent_max_inr is not None
@@ -183,21 +183,21 @@ def rank_candidates(
                     status=AffordabilityStatus.AFFORDABLE,
                     rent_min_inr=candidate.rent_min_inr,
                     rent_max_inr=candidate.rent_max_inr,
-                    confidence=candidate.rent_confidence
+                    confidence=candidate.rent_confidence,
                 )
             elif candidate.rent_min_inr <= constraints.max_budget_inr:
                 affordability = AffordabilityInfo(
                     status=AffordabilityStatus.STARTS_WITHIN_BUDGET,
                     rent_min_inr=candidate.rent_min_inr,
                     rent_max_inr=candidate.rent_max_inr,
-                    confidence=candidate.rent_confidence
+                    confidence=candidate.rent_confidence,
                 )
             else:
                 affordability = AffordabilityInfo(
                     status=AffordabilityStatus.OVER_BUDGET,
                     rent_min_inr=candidate.rent_min_inr,
                     rent_max_inr=candidate.rent_max_inr,
-                    confidence=candidate.rent_confidence
+                    confidence=candidate.rent_confidence,
                 )
 
         # Normalization

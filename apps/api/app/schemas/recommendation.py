@@ -12,6 +12,7 @@ class AffordabilityStatus(enum.StrEnum):
     OVER_BUDGET = "over_budget"
     UNKNOWN = "unknown"
 
+
 class AffordabilityInfo(BaseModel):
     status: AffordabilityStatus = Field(..., description="The affordability classification")
     rent_min_inr: int | None = Field(None, description="Minimum rent in INR")
@@ -19,6 +20,8 @@ class AffordabilityInfo(BaseModel):
     confidence: MetricConfidence | None = Field(
         None, description="Confidence level of the rent estimate"
     )
+
+
 class WorkLocation(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
