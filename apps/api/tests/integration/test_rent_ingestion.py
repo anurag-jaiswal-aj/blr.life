@@ -1,280 +1,270 @@
 import json
-from pathlib import Path
+import os
+
+# We need to import the functions from the script, but since it's a script we can import it this way:
+import sys
+import tempfile
 
 import pytest
 import pytest_asyncio
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy import select
 
-from app.ingestion.rent_pipeline import run_rent_ingestion
 from app.models.locality import Locality
 from app.models.observations import HousingConfiguration, LocalityRentObservation, MetricConfidence
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "../../../scripts"))
+try:
+    from scripts.ingest_rent import run_ingestion
+except ImportError:
+    # If ran from another cwd
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../scripts")))
+    from ingest_rent import run_ingestion
+
+
 from tests.integration.test_domain_integration import TEST_ASYNC_URL
 
 
 @pytest_asyncio.fixture
-async def async_db_session():
+async def async_db_session(setup_test_database):
+    # Use the test engine URL
+    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
     engine = create_async_engine(TEST_ASYNC_URL, echo=False)
     async_session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-
     async with engine.connect() as conn:
         await conn.begin_nested()
         async with async_session_factory(bind=conn) as session:
+            # Setup locality
+            loc = Locality(
+                slug="whitefield",
+                name="Whitefield",
+                is_active=True,
+                centroid="POINT(77.7 12.9)"
+            )
+            session.add(loc)
+            await session.commit()
             yield session
             await session.rollback()
 
+class DummyFactory:
+    def __init__(self, session):
+        self.session = session
+    def __call__(self):
+        return self
+    async def __aenter__(self):
+        return self.session
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        pass
 
 @pytest.fixture
-def rent_json_file(tmp_path: Path) -> str:
-    data = {
+def base_valid_data():
+    return {
         "dataset_version": "1.0",
-        "methodology": "Test curation",
+        "created_at": "2026-08-01T00:00:00Z",
+        "methodology": "Test",
+        "confidence_methodology": "Test",
+        "observation_count": 1,
         "observations": [
             {
-                "locality_slug": "test-loc-1",
-                "bhk": "1bhk",
-                "rent_min_inr": 15000,
-                "rent_max_inr": 25000,
-                "confidence": "low",
-            },
-            {
-                "locality_slug": "test-loc-1",
+                "locality_slug": "whitefield",
                 "bhk": "2bhk",
-                "rent_min_inr": 25000,
-                "rent_max_inr": 35000,
-                "confidence": "low",
-            },
-        ],
-    }
-    file_path = tmp_path / "rent.json"
-    with open(file_path, "w") as f:
-        json.dump(data, f)
-    return str(file_path)
-
-
-@pytest.mark.asyncio
-async def test_rent_ingestion_success(async_db_session: AsyncSession, rent_json_file: str) -> None:
-    # 1. Setup active locality
-    loc = Locality(
-        name="Test Locality 1",
-        slug="test-loc-1",
-        parent_zone="South",
-        is_active=True,
-        centroid="SRID=4326;POINT(77.5 12.9)",
-        geometry_source="osm_point",
-        geometry_confidence="low",
-    )
-    async_db_session.add(loc)
-    await async_db_session.commit()
-
-    # 2. Run Ingestion
-    stats = await run_rent_ingestion(async_db_session, rent_json_file)
-    assert stats["created"] == 2
-    assert stats["deactivated"] == 0
-    assert stats["unchanged"] == 0
-
-    # 3. Verify DB
-    stmt = select(LocalityRentObservation).where(
-        LocalityRentObservation.locality_id == loc.id, LocalityRentObservation.is_current.is_(True)
-    )
-    result = await async_db_session.execute(stmt)
-    observations = result.scalars().all()
-    assert len(observations) == 2
-
-    obs_1bhk = next(o for o in observations if o.housing_config == HousingConfiguration.BHK_1)
-    assert obs_1bhk.rent_min_inr == 15000
-    assert obs_1bhk.rent_max_inr == 25000
-
-    # 4. Run idempotent ingestion
-    stats2 = await run_rent_ingestion(async_db_session, rent_json_file)
-    assert stats2["created"] == 0
-    assert stats2["unchanged"] == 2
-
-
-@pytest.mark.asyncio
-async def test_rent_ingestion_stale_deactivation(
-    async_db_session: AsyncSession, tmp_path: Path
-) -> None:
-    # Setup active locality
-    loc = Locality(
-        name="Test Locality 1",
-        slug="test-loc-1",
-        parent_zone="South",
-        is_active=True,
-        centroid="SRID=4326;POINT(77.5 12.9)",
-        geometry_source="osm_point",
-        geometry_confidence="low",
-    )
-    async_db_session.add(loc)
-    await async_db_session.commit()
-
-    data = {
-        "dataset_version": "1.0",
-        "methodology": "Test curation",
-        "observations": [
-            {
-                "locality_slug": "test-loc-1",
-                "bhk": "1bhk",
-                "rent_min_inr": 15000,
-                "rent_max_inr": 25000,
-                "confidence": "low",
-            },
-            {
-                "locality_slug": "test-loc-1",
-                "bhk": "2bhk",
-                "rent_min_inr": 25000,
-                "rent_max_inr": 35000,
-                "confidence": "low",
-            },
-        ],
-    }
-    file1 = tmp_path / "rent1.json"
-    with open(file1, "w") as f:
-        json.dump(data, f)
-
-    await run_rent_ingestion(async_db_session, str(file1))
-
-    # Now remove 2BHK from new JSON
-    data2 = {
-        "dataset_version": "2.0",
-        "methodology": "Test curation v2",
-        "observations": [
-            {
-                "locality_slug": "test-loc-1",
-                "bhk": "1bhk",
-                "rent_min_inr": 15000,
-                "rent_max_inr": 25000,
-                "confidence": "low",
+                "rent_min_inr": 20000,
+                "rent_max_inr": 30000,
+                "confidence": "high",
+                "provenance": {
+                    "publisher": "TestPub",
+                    "source_title": "TestTitle",
+                    "source_url": None,
+                    "published_at": None,
+                    "accessed_at": "2026-08-01T00:00:00Z",
+                    "source_type": "test",
+                    "sample_count": None,
+                    "derivation": "test"
+                }
             }
-        ],
+        ]
     }
-    file2 = tmp_path / "rent2.json"
-    with open(file2, "w") as f:
-        json.dump(data2, f)
 
-    stats2 = await run_rent_ingestion(async_db_session, str(file2))
-    assert stats2["created"] == 1
-    assert stats2["deactivated"] == 2
-    assert stats2["unchanged"] == 0
 
-    # Verify DB
-    stmt = select(LocalityRentObservation).where(
-        LocalityRentObservation.locality_id == loc.id, LocalityRentObservation.is_current.is_(True)
-    )
-    result = await async_db_session.execute(stmt)
-    observations = result.scalars().all()
-    assert len(observations) == 1
-    assert observations[0].housing_config == HousingConfiguration.BHK_1
+@pytest.fixture
+def temp_json_file():
+    fd, path = tempfile.mkstemp(suffix=".json")
+    os.close(fd)
+    yield path
+    os.remove(path)
 
 
 @pytest.mark.asyncio
-async def test_rent_ingestion_ownership_isolation(
-    async_db_session: AsyncSession, tmp_path: Path
-) -> None:
-    from app.models.provenance import DatasetSnapshot, DataSource, SnapshotStatus
+async def test_ingest_dry_run(base_valid_data, temp_json_file, async_db_session):
+    with open(temp_json_file, "w") as f:
+        json.dump(base_valid_data, f)
 
-    # 1. Setup active locality
-    loc = Locality(
-        name="Test Locality Isolated",
-        slug="test-loc-isolated",
-        parent_zone="South",
-        is_active=True,
-        centroid="SRID=4326;POINT(77.5 12.9)",
-        geometry_source="osm_point",
-        geometry_confidence="low",
-    )
-    async_db_session.add(loc)
-    await async_db_session.commit()
+    # Check current state
+    initial_count = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
 
-    # 2. Setup unrelated data source & snapshot
-    other_source = DataSource(
-        key="other_source",
-        display_name="Other Source",
-    )
-    async_db_session.add(other_source)
-    await async_db_session.flush()
+    await run_ingestion(temp_json_file, dry_run=True, session_factory=DummyFactory(async_db_session))
 
-    other_snapshot = DatasetSnapshot(
-        data_source_id=other_source.id,
-        status=SnapshotStatus.COMPLETED,
-        retrieved_at=func.now(),
-    )
-    async_db_session.add(other_snapshot)
-    await async_db_session.flush()
+    # State should remain the same
+    final_count = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
+    assert final_count == initial_count
 
-    # 3. Setup Canonical data source & snapshot (so we can test canonical stale cleanup)
-    canonical_source = DataSource(
-        key="blr_life_curated_rent",
-        display_name="Curated Rent Affordability Bands",
-    )
-    async_db_session.add(canonical_source)
-    await async_db_session.flush()
 
-    canonical_snapshot = DatasetSnapshot(
-        data_source_id=canonical_source.id,
-        status=SnapshotStatus.COMPLETED,
-        retrieved_at=func.now(),
-    )
-    async_db_session.add(canonical_snapshot)
-    await async_db_session.flush()
+@pytest.mark.asyncio
+async def test_ingest_successful_transaction(base_valid_data, temp_json_file, async_db_session):
+    with open(temp_json_file, "w") as f:
+        json.dump(base_valid_data, f)
 
-    # 4. Insert an unrelated current observation
-    unrelated_obs = LocalityRentObservation(
-        locality_id=loc.id,
-        housing_config=HousingConfiguration.BHK_3,
-        rent_min_inr=50000,
-        rent_max_inr=60000,
-        snapshot_id=other_snapshot.id,
-        confidence=MetricConfidence.LOW,
-        is_current=True,
-    )
-    async_db_session.add(unrelated_obs)
+    await run_ingestion(temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session))
 
-    # 5. Insert a canonical current observation (that should become stale)
-    canonical_obs = LocalityRentObservation(
-        locality_id=loc.id,
-        housing_config=HousingConfiguration.BHK_1,
-        rent_min_inr=15000,
-        rent_max_inr=25000,
-        snapshot_id=canonical_snapshot.id,
-        confidence=MetricConfidence.LOW,
-        is_current=True,
-    )
-    async_db_session.add(canonical_obs)
-    await async_db_session.commit()
+    # Verify observation
+    obs = (await async_db_session.execute(
+        select(LocalityRentObservation).where(LocalityRentObservation.is_current == True)
+        .order_by(LocalityRentObservation.id.desc())
+    )).scalars().first()
 
-    # 6. Run ingestion with a file that has no 1BHK, but has 2BHK
-    data = {
-        "dataset_version": "1.0",
-        "methodology": "Test curation",
-        "observations": [
-            {
-                "locality_slug": "test-loc-isolated",
-                "bhk": "2bhk",
-                "rent_min_inr": 25000,
-                "rent_max_inr": 35000,
-                "confidence": "low",
-            },
-        ],
-    }
-    file1 = tmp_path / "rent_isolated.json"
-    with open(file1, "w") as f:
-        json.dump(data, f)
+    assert obs is not None
+    assert obs.rent_min_inr == 20000
+    assert obs.rent_max_inr == 30000
+    assert obs.housing_config == HousingConfiguration.BHK_2
+    assert obs.confidence == MetricConfidence.HIGH
 
-    stats = await run_rent_ingestion(async_db_session, str(file1))
-    assert stats["created"] == 1
-    assert stats["deactivated"] == 1
-    assert stats["unchanged"] == 0
 
-    # 7. Verify DB
-    stmt = select(LocalityRentObservation).where(
-        LocalityRentObservation.locality_id == loc.id, LocalityRentObservation.is_current.is_(True)
-    )
-    result = await async_db_session.execute(stmt)
-    observations = result.scalars().all()
-    assert len(observations) == 2
+@pytest.mark.asyncio
+async def test_ingest_idempotency(base_valid_data, temp_json_file, async_db_session):
+    with open(temp_json_file, "w") as f:
+        json.dump(base_valid_data, f)
 
-    configs = {o.housing_config for o in observations}
-    assert HousingConfiguration.BHK_3 in configs  # Unrelated observation was PRESERVED
-    assert HousingConfiguration.BHK_2 in configs  # New canonical observation was CREATED
-    assert HousingConfiguration.BHK_1 not in configs  # Old canonical observation was DEACTIVATED
+    # First run
+    await run_ingestion(temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session))
+    obs_count_1 = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
+
+    # Second run
+    await run_ingestion(temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session))
+    obs_count_2 = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
+
+    # Should skip exact duplicates
+    assert obs_count_1 == obs_count_2
+
+
+@pytest.mark.asyncio
+async def test_ingest_deprecates_previous(base_valid_data, temp_json_file, async_db_session):
+    with open(temp_json_file, "w") as f:
+        json.dump(base_valid_data, f)
+    await run_ingestion(temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session))
+
+    # New file with newer data
+    new_data = base_valid_data.copy()
+    new_data["dataset_version"] = "1.1"
+    new_data["observations"][0]["rent_min_inr"] = 25000
+    new_data["observations"][0]["rent_max_inr"] = 35000
+
+    with open(temp_json_file, "w") as f:
+        json.dump(new_data, f)
+
+    await run_ingestion(temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session))
+
+    obs = (await async_db_session.execute(
+        select(LocalityRentObservation)
+        .where(
+            LocalityRentObservation.housing_config == "2bhk",
+            LocalityRentObservation.is_current == True
+        )
+    )).scalars().all()
+
+    # Only 1 should be current
+    assert len(obs) == 1
+    assert obs[0].rent_min_inr == 25000
+
+    # Verify deprecated exists
+    deprecated = (await async_db_session.execute(
+        select(LocalityRentObservation)
+        .where(
+            LocalityRentObservation.housing_config == "2bhk",
+            LocalityRentObservation.is_current == False,
+            LocalityRentObservation.rent_min_inr == 20000
+        )
+    )).scalars().first()
+    assert deprecated is not None
+
+
+@pytest.mark.asyncio
+async def test_ingest_quality_protection(base_valid_data, temp_json_file, async_db_session):
+    # Insert HIGH
+    with open(temp_json_file, "w") as f:
+        json.dump(base_valid_data, f)
+    await run_ingestion(temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session))
+
+    # Try inserting LOW
+    low_data = base_valid_data.copy()
+    low_data["dataset_version"] = "1.2"
+    low_data["observations"][0]["confidence"] = "low"
+    low_data["observations"][0]["rent_min_inr"] = 10000
+
+    with open(temp_json_file, "w") as f:
+        json.dump(low_data, f)
+
+    await run_ingestion(temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session))
+
+    obs = (await async_db_session.execute(
+        select(LocalityRentObservation)
+        .where(LocalityRentObservation.is_current == True)
+        .order_by(LocalityRentObservation.id.desc())
+    )).scalars().first()
+
+    # Should remain HIGH, and rent_min 20000
+    assert obs.confidence == MetricConfidence.HIGH
+    assert obs.rent_min_inr == 20000
+
+
+@pytest.mark.asyncio
+async def test_ingest_invalid_locality(base_valid_data, temp_json_file, async_db_session):
+    base_valid_data["observations"][0]["locality_slug"] = "nonexistent-locality"
+    with open(temp_json_file, "w") as f:
+        json.dump(base_valid_data, f)
+
+    initial_count = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
+    await run_ingestion(temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session))
+    final_count = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
+
+    # Should not insert anything
+    assert initial_count == final_count
+
+
+@pytest.mark.asyncio
+async def test_ingest_invalid_rent_range(base_valid_data, temp_json_file, async_db_session):
+    base_valid_data["observations"][0]["rent_min_inr"] = 40000
+    base_valid_data["observations"][0]["rent_max_inr"] = 30000
+    with open(temp_json_file, "w") as f:
+        json.dump(base_valid_data, f)
+
+    initial_count = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
+    await run_ingestion(temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session))
+    final_count = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
+
+    assert initial_count == final_count
+
+
+@pytest.mark.asyncio
+async def test_ingest_missing_rent_boundaries(base_valid_data, temp_json_file, async_db_session):
+    base_valid_data["observations"][0]["rent_min_inr"] = None
+    base_valid_data["observations"][0]["rent_max_inr"] = None
+    with open(temp_json_file, "w") as f:
+        json.dump(base_valid_data, f)
+
+    initial_count = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
+    await run_ingestion(temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session))
+    final_count = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
+
+    assert initial_count == final_count
+
+
+@pytest.mark.asyncio
+async def test_ingest_invalid_confidence(base_valid_data, temp_json_file, async_db_session):
+    base_valid_data["observations"][0]["confidence"] = "super-high"
+    with open(temp_json_file, "w") as f:
+        json.dump(base_valid_data, f)
+
+    initial_count = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
+    await run_ingestion(temp_json_file, dry_run=False, session_factory=DummyFactory(async_db_session))
+    final_count = len((await async_db_session.execute(select(LocalityRentObservation))).scalars().all())
+
+    assert initial_count == final_count
