@@ -27,52 +27,80 @@ describe('useUrlState', () => {
     expect(result.current.state).toEqual({ lat: null, lng: null, max_dist: 15.0, w_metro: 1.0, w_work: 1.0, w_cafe: 0.0, w_restaurant: 0.0, w_park: 0.0, w_healthcare: 0.0, w_nightlife: 0.0, max_budget_inr: null, bhk_type: null, loc: null });
   });
 
-  it('updates state and pushes to router (URL SERIALIZATION)', () => {
-    const pushMock = (navigation as any).__getPushMock();
+  it('updates state and uses router.replace by default (URL SERIALIZATION)', () => {
+    const replaceMock = (navigation as any).__getReplaceMock();
     const { result } = renderHook(() => useUrlState());
-    
+
     act(() => {
       result.current.updateState({ lat: 13.0, lng: 77.5, max_dist: 5, w_metro: 0, w_work: 0, w_cafe: 1.0, w_restaurant: 1.0, w_park: 1.0, w_healthcare: 1.0, w_nightlife: 1.0 });
+    });
+
+    expect(replaceMock).toHaveBeenCalled();
+    const replaceUrl = replaceMock.mock.calls[0][0];
+    expect(replaceUrl).toContain('lat=13');
+    expect(replaceUrl).toContain('lng=77.5');
+    expect(replaceUrl).toContain('max_dist=5');
+    expect(replaceUrl).toContain('w_metro=0');
+    expect(replaceUrl).toContain('w_work=0');
+    expect(replaceUrl).toContain('w_cafe=1');
+    expect(replaceUrl).toContain('w_rest=1');
+    expect(replaceUrl).toContain('w_park=1');
+    expect(replaceUrl).toContain('w_health=1');
+    expect(replaceUrl).toContain('w_night=1');
+  });
+
+  it('updates state and uses router.push when explicit history is push', () => {
+    const pushMock = (navigation as any).__getPushMock();
+    const { result } = renderHook(() => useUrlState());
+
+    act(() => {
+      result.current.updateState({ lat: 13.0, lng: 77.5 }, { history: 'push' });
     });
 
     expect(pushMock).toHaveBeenCalled();
     const pushUrl = pushMock.mock.calls[0][0];
     expect(pushUrl).toContain('lat=13');
     expect(pushUrl).toContain('lng=77.5');
-    expect(pushUrl).toContain('max_dist=5');
-    expect(pushUrl).toContain('w_metro=0');
-    expect(pushUrl).toContain('w_work=0');
-    expect(pushUrl).toContain('w_cafe=1');
-    expect(pushUrl).toContain('w_rest=1');
-    expect(pushUrl).toContain('w_park=1');
-    expect(pushUrl).toContain('w_health=1');
-    expect(pushUrl).toContain('w_night=1');
+  });
+
+  it('updates state and uses router.replace when explicit history is replace', () => {
+    const replaceMock = (navigation as any).__getReplaceMock();
+    const { result } = renderHook(() => useUrlState());
+
+    act(() => {
+      result.current.updateState({ lat: 13.0, lng: 77.5 }, { history: 'replace' });
+    });
+
+    expect(replaceMock).toHaveBeenCalled();
+    const replaceUrl = replaceMock.mock.calls[0][0];
+    expect(replaceUrl).toContain('lat=13');
+    expect(replaceUrl).toContain('lng=77.5');
   });
 
   it('does not append parameters if they match DEFAULT_STATE or are NaN', () => {
-    const pushMock = (navigation as any).__getPushMock();
+    const replaceMock = (navigation as any).__getReplaceMock();
     const { result } = renderHook(() => useUrlState());
-    
+
     act(() => {
       result.current.updateState({ lat: NaN, lng: NaN, max_dist: 15.0, w_metro: 1.0, w_work: 1.0, w_cafe: 0.0, w_restaurant: 0.0, w_park: 0.0, w_healthcare: 0.0, w_nightlife: 0.0 });
     });
 
-    const pushUrl = pushMock.mock.calls[0][0];
-    expect(pushUrl).toBe('/');
+    const replaceUrl = replaceMock.mock.calls[0][0];
+    expect(replaceUrl).toBe('/');
   });
 
   it('maintains determinism between state updates and URL generation (URL DETERMINISM)', () => {
-    const pushMock = (navigation as any).__getPushMock();
+    const replaceMock = (navigation as any).__getReplaceMock();
     const { result, rerender } = renderHook(() => useUrlState());
-    
+
     act(() => {
       result.current.updateState({ lat: 12.9, lng: 77.6 });
     });
-    
-    const pushUrl = pushMock.mock.calls[0][0];
-    (navigation as any).__setSearchParams(pushUrl.split('?')[1] || '');
+
+    const replaceUrl = replaceMock.mock.calls[0][0];
+    (navigation as any).__setSearchParams(replaceUrl.split('?')[1] || '');
     rerender();
-    
+
     expect(result.current.state.lat).toBe(12.9);
   });
 
@@ -84,7 +112,7 @@ describe('useUrlState', () => {
   it('generates valid API request payload when state is populated', () => {
     (navigation as any).__setSearchParams('lat=12.9&lng=77.6&max_dist=20&w_metro=0.9&w_work=0.2&w_cafe=1&w_rest=0.5');
     const { result } = renderHook(() => useUrlState());
-    
+
     const req = result.current.getApiRequest();
     expect(req).toEqual({
       work_location: { lat: 12.9, lng: 77.6 },
@@ -96,10 +124,10 @@ describe('useUrlState', () => {
   it('restores state from shareable URL with complete housing constraints', () => {
     (navigation as any).__setSearchParams('lat=12.9&lng=77.6&max_dist=20&max_budget=30000&bhk=2bhk');
     const { result } = renderHook(() => useUrlState());
-    
+
     expect(result.current.state.max_budget_inr).toBe(30000);
     expect(result.current.state.bhk_type).toBe('2bhk');
-    
+
     const req = result.current.getApiRequest();
     expect(req?.constraints.max_budget_inr).toBe(30000);
     expect(req?.constraints.bhk_type).toBe('2bhk');
@@ -108,10 +136,10 @@ describe('useUrlState', () => {
   it('returns undefined API request when housing constraints are incomplete (budget only)', () => {
     (navigation as any).__setSearchParams('lat=12.9&lng=77.6&max_budget=30000');
     const { result } = renderHook(() => useUrlState());
-    
+
     expect(result.current.state.max_budget_inr).toBe(30000);
     expect(result.current.state.bhk_type).toBeNull();
-    
+
     const req = result.current.getApiRequest();
     expect(req).toBeUndefined(); // preserves previous state
   });
@@ -119,10 +147,10 @@ describe('useUrlState', () => {
   it('returns undefined API request when housing constraints are incomplete (bhk only)', () => {
     (navigation as any).__setSearchParams('lat=12.9&lng=77.6&bhk=1bhk');
     const { result } = renderHook(() => useUrlState());
-    
+
     expect(result.current.state.max_budget_inr).toBeNull();
     expect(result.current.state.bhk_type).toBe('1bhk');
-    
+
     const req = result.current.getApiRequest();
     expect(req).toBeUndefined(); // preserves previous state
   });

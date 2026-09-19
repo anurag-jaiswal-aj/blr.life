@@ -18,6 +18,8 @@ export interface AppState {
   loc?: string | null;
 }
 
+export type HistoryMode = 'replace' | 'push';
+
 const DEFAULT_STATE: AppState = {
   lat: null,
   lng: null,
@@ -86,7 +88,8 @@ export function useUrlState() {
   }, [searchParams]);
 
   const updateState = useCallback(
-    (newState: Partial<AppState>) => {
+    (newState: Partial<AppState>, options: { history?: HistoryMode } = {}) => {
+      const { history = 'replace' } = options;
       const merged = { ...state, ...newState };
       const params = new URLSearchParams();
 
@@ -105,7 +108,12 @@ export function useUrlState() {
       if (merged.bhk_type !== null) params.set('bhk', merged.bhk_type);
 
       const query = params.toString();
-      router.push(query ? `${pathname}?${query}` : pathname);
+      const url = query ? `${pathname}?${query}` : pathname;
+      if (history === 'push') {
+        router.push(url);
+      } else {
+        router.replace(url);
+      }
     },
     [state, pathname, router]
   );

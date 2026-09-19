@@ -42,7 +42,7 @@ export function RecommendationWorkspace() {
   }, [data?.recommendations, selectedLocalityId]);
 
   const handleWorkLocationSelect = (lat: number, lng: number) => {
-    updateState({ lat, lng });
+    updateState({ lat, lng }, { history: 'push' });
   };
 
   const selectedRecommendation = data?.recommendations.find(r => r.locality_id === selectedLocalityId) ?? null;

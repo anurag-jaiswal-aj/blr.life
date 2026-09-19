@@ -7,12 +7,13 @@ import { vi } from 'vitest';
 // Mock Next.js navigation
 vi.mock('next/navigation', () => {
   const pushMock = vi.fn();
+  const replaceMock = vi.fn();
   let currentParams = new URLSearchParams();
 
   return {
     useRouter: () => ({
       push: pushMock,
-      replace: vi.fn(),
+      replace: replaceMock,
       prefetch: vi.fn(),
     }),
     usePathname: () => '/',
@@ -21,6 +22,7 @@ vi.mock('next/navigation', () => {
       currentParams = new URLSearchParams(params);
     },
     __getPushMock: () => pushMock,
+    __getReplaceMock: () => replaceMock,
   };
 });
 

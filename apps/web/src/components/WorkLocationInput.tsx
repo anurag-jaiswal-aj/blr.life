@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect, useRef, useCallback, useId } from 'react';
 import { MapPin, Search, Loader2, ChevronDown, ChevronUp, X } from 'lucide-react';
-import { AppState } from '../hooks/useUrlState';
+import { AppState, HistoryMode } from '../hooks/useUrlState';
 import { searchPlaces, GeocodingResult } from '../lib/geocoding';
 
 interface WorkLocationInputProps {
   state: AppState;
-  updateState: (newState: Partial<AppState>) => void;
+  updateState: (newState: Partial<AppState>, options?: { history?: HistoryMode }) => void;
   compact?: boolean;
 }
 
@@ -131,7 +131,7 @@ export function WorkLocationInput({ state, updateState, compact = false }: WorkL
     setSearchError(null);
 
     // Feed into the SAME state as map click and manual coord entry
-    updateState({ lat: result.lat, lng: result.lng, loc: shortName });
+    updateState({ lat: result.lat, lng: result.lng, loc: shortName }, { history: 'push' });
   };
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -198,7 +198,7 @@ export function WorkLocationInput({ state, updateState, compact = false }: WorkL
     }
 
     setSelectedName(null);
-    updateState({ lat: parsedLat, lng: parsedLng });
+    updateState({ lat: parsedLat, lng: parsedLng }, { history: 'push' });
   };
 
   const hasLocation = state.lat !== null && state.lng !== null;
