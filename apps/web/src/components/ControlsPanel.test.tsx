@@ -86,4 +86,20 @@ describe("ControlsPanel (CONTROLS)", () => {
     fireEvent.change(typeSelect, { target: { value: "1bhk" } });
     expect(updateSpy).toHaveBeenCalledWith({ bhk_type: "1bhk" });
   });
+
+  it("displays correct priority labels and accessibility text for sliders", () => {
+    const stateWithMixedWeights: AppState = { ...defaultState, w_work: 0.5, w_metro: 1.0 };
+    const { getByText, getByLabelText } = render(
+      <ControlsPanel state={stateWithMixedWeights} updateState={vi.fn()} />
+    );
+
+    expect(getByText("50% Priority")).toBeInTheDocument();
+    expect(getByText("100% Priority")).toBeInTheDocument();
+
+    const workSlider = getByLabelText(/Near Work Importance Weight/i);
+    const metroSlider = getByLabelText(/Metro Importance Weight/i);
+
+    expect(workSlider).toHaveAttribute("aria-valuetext", "50% Priority");
+    expect(metroSlider).toHaveAttribute("aria-valuetext", "100% Priority");
+  });
 });

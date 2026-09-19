@@ -188,7 +188,7 @@ export function ControlsPanel({ state, updateState }: ControlsPanelProps) {
                 Near Work
               </label>
               <span className="text-sm font-bold text-brand-primary tabular-nums">
-                {Math.round(state.w_work * 100)}%
+                {Math.round(state.w_work * 100)}% Priority
               </span>
             </div>
             <input
@@ -203,6 +203,7 @@ export function ControlsPanel({ state, updateState }: ControlsPanelProps) {
               }
               className="w-full h-1 bg-border-default rounded-full appearance-none accent-brand-primary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50"
               aria-label="Near Work Importance Weight"
+              aria-valuetext={`${Math.round(state.w_work * 100)}% Priority`}
             />
           </div>
 
@@ -215,7 +216,7 @@ export function ControlsPanel({ state, updateState }: ControlsPanelProps) {
                 Metro Access
               </label>
               <span className="text-sm font-bold text-brand-primary tabular-nums">
-                {Math.round(state.w_metro * 100)}%
+                {Math.round(state.w_metro * 100)}% Priority
               </span>
             </div>
             <input
@@ -230,6 +231,7 @@ export function ControlsPanel({ state, updateState }: ControlsPanelProps) {
               }
               className="w-full h-1 bg-border-default rounded-full appearance-none accent-brand-primary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50"
               aria-label="Metro Importance Weight"
+              aria-valuetext={`${Math.round(state.w_metro * 100)}% Priority`}
             />
           </div>
         </div>
