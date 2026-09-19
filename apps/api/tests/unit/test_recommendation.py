@@ -466,3 +466,123 @@ def test_score_contributions() -> None:
     assert (
         miss.score_contributions.work_distance + miss.score_contributions.cafe == miss.total_score
     )
+
+
+def test_forced_inclusion_beyond_max_distance() -> None:
+    prefs = RecommendationPreferences(
+        metro_access_weight=1.0,
+        short_commute_weight=1.0,
+    )
+    constraints = RecommendationConstraints(max_work_distance_km=10.0)
+
+    c_close = CandidateLocality(
+        id=1,
+        slug="close",
+        name="Close",
+        lat=12.0,
+        lng=77.0,
+        metro_distance_m=0.0,
+        metro_confidence="high",
+        work_distance_km=5.0,
+    )
+    c_far = CandidateLocality(
+        id=2,
+        slug="far",
+        name="Far",
+        lat=12.0,
+        lng=77.0,
+        metro_distance_m=0.0,
+        metro_confidence="high",
+        work_distance_km=20.0,
+    )
+
+    # 1. Ordinary candidate beyond max_work_distance_km remains excluded
+    # 7. no include_locality_ids preserves existing behavior
+    results_normal, _ = rank_candidates([c_close, c_far], constraints, prefs, limit=10)
+    assert len(results_normal) == 1
+    assert results_normal[0].locality_id == 1
+
+    # 2. explicitly included candidate beyond max_work_distance_km is returned
+    results_included, _ = rank_candidates(
+        [c_close, c_far], constraints, prefs, limit=10, include_locality_ids=[2]
+    )
+    assert len(results_included) == 2
+    assert results_included[0].locality_id == 1  # Normal candidate still first
+    assert results_included[1].locality_id == 2  # Forced inclusion appended
+
+    # 3. included candidate retains its real work_distance_km
+    assert results_included[1].raw_metrics.work_distance_km == 20.0
+
+    # 4. included candidate is scored using the current request (20km => 0.0 work distance score)
+    assert results_included[1].component_scores.work_distance == 0.0
+
+
+def test_forced_inclusion_ordering_and_deduplication() -> None:
+    prefs = RecommendationPreferences(
+        metro_access_weight=1.0,
+        short_commute_weight=1.0,
+    )
+    constraints = RecommendationConstraints()
+
+    c1 = CandidateLocality(
+        id=1,
+        slug="c1",
+        name="C1",
+        lat=12.0,
+        lng=77.0,
+        work_distance_km=1.0,
+        metro_distance_m=0.0,
+        metro_confidence="high",
+    )
+    c2 = CandidateLocality(
+        id=2,
+        slug="c2",
+        name="C2",
+        lat=12.0,
+        lng=77.0,
+        work_distance_km=2.0,
+        metro_distance_m=0.0,
+        metro_confidence="high",
+    )
+    c3 = CandidateLocality(
+        id=3,
+        slug="c3",
+        name="C3",
+        lat=12.0,
+        lng=77.0,
+        work_distance_km=3.0,
+        metro_distance_m=0.0,
+        metro_confidence="high",
+    )
+    c4 = CandidateLocality(
+        id=4,
+        slug="c4",
+        name="C4",
+        lat=12.0,
+        lng=77.0,
+        work_distance_km=4.0,
+        metro_distance_m=0.0,
+        metro_confidence="high",
+    )
+
+    # 5. included candidate does not alter normal candidate filtering
+    # 6. included candidate already in top-N is not duplicated
+    results, _ = rank_candidates(
+        [c1, c2, c3, c4],
+        constraints,
+        prefs,
+        limit=2,
+        include_locality_ids=[2, 4, 4, 999],  # Test duplicates and nonexistent
+    )
+
+    # Normal top 2 would be c1, c2
+    # c2 is already in top 2 (not duplicated)
+    # c4 is outside top 2 (appended)
+    # 999 doesn't exist
+    assert len(results) == 3
+    assert results[0].locality_id == 1
+    assert results[0].rank == 1
+    assert results[1].locality_id == 2
+    assert results[1].rank == 2
+    assert results[2].locality_id == 4
+    assert results[2].rank == 3

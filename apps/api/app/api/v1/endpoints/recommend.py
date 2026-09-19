@@ -34,6 +34,7 @@ async def recommend_localities(
         constraints=request.constraints,
         preferences=request.preferences,
         limit=request.limit,
+        include_locality_ids=request.include_locality_ids,
     )
 
     return RecommendationResponse(

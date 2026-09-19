@@ -152,20 +152,27 @@ def rank_candidates(
     constraints: RecommendationConstraints,
     preferences: RecommendationPreferences,
     limit: int,
+    include_locality_ids: list[int] | None = None,
 ) -> tuple[list[RecommendationResult], list[str]]:
     """
     Filter, score, and rank candidates, returning the top results and provenance.
     """
-    results: list[RecommendationResult] = []
+    normal_results: list[RecommendationResult] = []
+    forced_results: list[RecommendationResult] = []
     calc_versions_used = set()
 
     for candidate in candidates:
+        is_included = include_locality_ids is not None and candidate.id in include_locality_ids
+        is_forced = False
+
         # Hard Constraints Filter
         if (
             constraints.max_work_distance_km is not None
             and candidate.work_distance_km > constraints.max_work_distance_km
         ):
-            continue
+            if not is_included:
+                continue
+            is_forced = True
 
         affordability = None
         if constraints.max_budget_inr is not None and constraints.bhk_type is not None:
@@ -298,67 +305,82 @@ def rank_candidates(
         if candidate.calc_version:
             calc_versions_used.add(candidate.calc_version)
 
-        results.append(
-            RecommendationResult(
-                locality_id=candidate.id,
-                slug=candidate.slug,
-                name=candidate.name,
-                rank=0,  # placeholder, set after sort
-                total_score=round(total_score, 2),
-                score_contributions=ComponentScores(
-                    metro=(
-                        rounded_contrib(w_metro, norm_metro) if norm_metro is not None else None
-                    ),
-                    work_distance=rounded_contrib(w_work, norm_work),
-                    cafe=(rounded_contrib(w_cafe, norm_cafe) if norm_cafe is not None else None),
-                    restaurant=(
-                        rounded_contrib(w_restaurant, norm_restaurant)
-                        if norm_restaurant is not None
-                        else None
-                    ),
-                    park=(rounded_contrib(w_park, norm_park) if norm_park is not None else None),
-                    healthcare=(
-                        rounded_contrib(w_healthcare, norm_healthcare)
-                        if norm_healthcare is not None
-                        else None
-                    ),
-                    nightlife=(
-                        rounded_contrib(w_nightlife, norm_nightlife)
-                        if norm_nightlife is not None
-                        else None
-                    ),
+        result = RecommendationResult(
+            locality_id=candidate.id,
+            slug=candidate.slug,
+            name=candidate.name,
+            rank=0,  # placeholder, set after sort
+            total_score=round(total_score, 2),
+            score_contributions=ComponentScores(
+                metro=(rounded_contrib(w_metro, norm_metro) if norm_metro is not None else None),
+                work_distance=rounded_contrib(w_work, norm_work),
+                cafe=(rounded_contrib(w_cafe, norm_cafe) if norm_cafe is not None else None),
+                restaurant=(
+                    rounded_contrib(w_restaurant, norm_restaurant)
+                    if norm_restaurant is not None
+                    else None
                 ),
-                component_scores=ComponentScores(
-                    metro=round(norm_metro, 4) if norm_metro is not None else None,
-                    work_distance=round(norm_work, 4),
-                    cafe=round(norm_cafe, 4) if norm_cafe is not None else None,
-                    restaurant=round(norm_restaurant, 4) if norm_restaurant is not None else None,
-                    park=round(norm_park, 4) if norm_park is not None else None,
-                    healthcare=round(norm_healthcare, 4) if norm_healthcare is not None else None,
-                    nightlife=round(norm_nightlife, 4) if norm_nightlife is not None else None,
+                park=(rounded_contrib(w_park, norm_park) if norm_park is not None else None),
+                healthcare=(
+                    rounded_contrib(w_healthcare, norm_healthcare)
+                    if norm_healthcare is not None
+                    else None
                 ),
-                raw_metrics=RawMetrics(
-                    metro_distance_m=candidate.metro_distance_m,
-                    work_distance_km=round(candidate.work_distance_km, 2),
-                    cafe_accessibility=candidate.cafe_count,
-                    restaurant_accessibility=candidate.restaurant_count,
-                    park_accessibility=candidate.park_count,
-                    healthcare_accessibility=candidate.healthcare_count,
-                    nightlife_accessibility=candidate.nightlife_count,
+                nightlife=(
+                    rounded_contrib(w_nightlife, norm_nightlife)
+                    if norm_nightlife is not None
+                    else None
                 ),
-                metadata=metadata,
-                affordability=affordability,
-                explanations=explanations,
-            )
+            ),
+            component_scores=ComponentScores(
+                metro=round(norm_metro, 4) if norm_metro is not None else None,
+                work_distance=round(norm_work, 4),
+                cafe=round(norm_cafe, 4) if norm_cafe is not None else None,
+                restaurant=round(norm_restaurant, 4) if norm_restaurant is not None else None,
+                park=round(norm_park, 4) if norm_park is not None else None,
+                healthcare=round(norm_healthcare, 4) if norm_healthcare is not None else None,
+                nightlife=round(norm_nightlife, 4) if norm_nightlife is not None else None,
+            ),
+            raw_metrics=RawMetrics(
+                metro_distance_m=candidate.metro_distance_m,
+                work_distance_km=round(candidate.work_distance_km, 2),
+                cafe_accessibility=candidate.cafe_count,
+                restaurant_accessibility=candidate.restaurant_count,
+                park_accessibility=candidate.park_count,
+                healthcare_accessibility=candidate.healthcare_count,
+                nightlife_accessibility=candidate.nightlife_count,
+            ),
+            metadata=metadata,
+            affordability=affordability,
+            explanations=explanations,
         )
 
-    # Deterministic Tie-breaking: score DESC, slug ASC
-    results.sort(key=lambda r: (-r.total_score, r.slug))
+        if is_forced:
+            forced_results.append(result)
+        else:
+            normal_results.append(result)
 
-    # Apply rank and limit
-    final_results = []
-    for idx, result in enumerate(results[:limit]):
+    # Deterministic Tie-breaking: score DESC, slug ASC
+    normal_results.sort(key=lambda r: (-r.total_score, r.slug))
+
+    # Take normal top N
+    top_n = normal_results[:limit]
+    top_n_ids = {r.locality_id for r in top_n}
+
+    # Gather forced inclusions that aren't already in top_n
+    appended_results = []
+    if include_locality_ids:
+        all_other = forced_results + normal_results[limit:]
+        for r in all_other:
+            if r.locality_id in include_locality_ids and r.locality_id not in top_n_ids:
+                appended_results.append(r)
+
+        # Sort appended results deterministically
+        appended_results.sort(key=lambda r: (-r.total_score, r.slug))
+
+    # Apply rank
+    final_results = top_n + appended_results
+    for idx, result in enumerate(final_results):
         result.rank = idx + 1
-        final_results.append(result)
 
     return final_results, sorted(list(calc_versions_used))
