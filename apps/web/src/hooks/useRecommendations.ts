@@ -1,6 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { RecommendationRequest, RecommendationResponse, fetchRecommendations } from '../lib/api';
 
+const responseCache = new Map<string, RecommendationResponse>();
+const CACHE_LIMIT = 50;
+
 export function useRecommendations(request: RecommendationRequest | null | undefined) {
   const [data, setData] = useState<RecommendationResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -32,6 +35,17 @@ export function useRecommendations(request: RecommendationRequest | null | undef
       return;
     }
 
+    if (responseCache.has(requestHash)) {
+      // Cache hit: cached RecommendationResponse objects are treated as immutable/read-only by consumers.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setData(responseCache.get(requestHash)!);
+      setError(null);
+      setLoading(false);
+      setIsValidating(false);
+      setIsColdStarting(false);
+      return;
+    }
+
     const currentRequest = JSON.parse(requestHash);
 
     if (data) {
@@ -53,6 +67,15 @@ export function useRecommendations(request: RecommendationRequest | null | undef
         .then((res) => {
           if (active) {
             clearTimeout(coldStartTimer);
+            if (!responseCache.has(requestHash)) {
+              if (responseCache.size >= CACHE_LIMIT) {
+                const firstKey = responseCache.keys().next().value;
+                if (firstKey) responseCache.delete(firstKey);
+              }
+              responseCache.set(requestHash, res);
+            } else {
+              responseCache.set(requestHash, res);
+            }
             setData(res);
             setLoading(false);
             setIsValidating(false);

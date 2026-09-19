@@ -24,7 +24,7 @@ describe('useRecommendations (SUBMISSION)', () => {
     vi.mocked(api.fetchRecommendations).mockResolvedValueOnce(mockRes as any);
 
     const req = {
-      work_location: { lat: 12.0, lng: 77.0 },
+      work_location: { lat: 12.1, lng: 77.0 },
       constraints: {},
       preferences: { metro_access_weight: 1.0, short_commute_weight: 1.0, cafe_weight: 0, restaurant_weight: 0, park_weight: 0, healthcare_weight: 0, nightlife_weight: 0 },
     };
@@ -44,7 +44,7 @@ describe('useRecommendations (SUBMISSION)', () => {
     vi.mocked(api.fetchRecommendations).mockRejectedValueOnce(new Error('API failure'));
 
     const req = {
-      work_location: { lat: 12.0, lng: 77.0 },
+      work_location: { lat: 12.2, lng: 77.0 },
       constraints: {},
       preferences: { metro_access_weight: 1.0, short_commute_weight: 1.0, cafe_weight: 0, restaurant_weight: 0, park_weight: 0, healthcare_weight: 0, nightlife_weight: 0 },
     };
@@ -68,7 +68,7 @@ describe('useRecommendations (SUBMISSION)', () => {
     vi.mocked(api.fetchRecommendations).mockReturnValueOnce(promise as any);
 
     const req = {
-      work_location: { lat: 12.0, lng: 77.0 },
+      work_location: { lat: 12.3, lng: 77.0 },
       constraints: {},
       preferences: { metro_access_weight: 1.0, short_commute_weight: 1.0, cafe_weight: 0, restaurant_weight: 0, park_weight: 0, healthcare_weight: 0, nightlife_weight: 0 },
     };
@@ -158,6 +158,168 @@ describe('useRecommendations (SUBMISSION)', () => {
 
     // The fetch should have been cleared on unmount.
     expect(api.fetchRecommendations).not.toHaveBeenCalled();
+
+    vi.useRealTimers();
+  });
+
+  it('A -> B -> A uses cached A without calling API again', async () => {
+    vi.useFakeTimers();
+    const reqA = { work_location: { lat: 991, lng: 991 }, constraints: {}, preferences: {} as any };
+    const reqB = { work_location: { lat: 992, lng: 992 }, constraints: {}, preferences: {} as any };
+    
+    const mockResA = { recommendations: [{ name: 'A' }], provenance: { calc_versions_used: [] } };
+    const mockResB = { recommendations: [{ name: 'B' }], provenance: { calc_versions_used: [] } };
+    
+    vi.mocked(api.fetchRecommendations)
+      .mockResolvedValueOnce(mockResA as any)
+      .mockResolvedValueOnce(mockResB as any);
+
+    const { result, rerender } = renderHook((req) => useRecommendations(req), { initialProps: reqA });
+    
+    // A fetches
+    act(() => { vi.advanceTimersByTime(350); });
+    await act(async () => { await Promise.resolve(); });
+    expect(api.fetchRecommendations).toHaveBeenCalledTimes(1);
+    expect(result.current.data).toEqual(mockResA);
+
+    // Switch to B
+    rerender(reqB);
+    act(() => { vi.advanceTimersByTime(350); });
+    await act(async () => { await Promise.resolve(); });
+    expect(api.fetchRecommendations).toHaveBeenCalledTimes(2);
+    expect(result.current.data).toEqual(mockResB);
+
+    // Switch back to A
+    rerender(reqA);
+    // Should be instant, no debounce wait
+    expect(result.current.data).toEqual(mockResA);
+    expect(result.current.loading).toBe(false);
+    expect(result.current.isColdStarting).toBe(false);
+    
+    // Fast-forward to prove no extra API call was scheduled
+    act(() => { vi.advanceTimersByTime(350); });
+    expect(api.fetchRecommendations).toHaveBeenCalledTimes(2); // Still 2
+
+    vi.useRealTimers();
+  });
+
+  it('failed requests are not cached', async () => {
+    vi.useFakeTimers();
+    const req = { work_location: { lat: 993, lng: 993 }, constraints: {}, preferences: {} as any };
+    
+    vi.mocked(api.fetchRecommendations)
+      .mockRejectedValueOnce(new Error('API failure'))
+      .mockResolvedValueOnce({ recommendations: [], provenance: { calc_versions_used: [] } } as any);
+
+    const { result, rerender } = renderHook((r) => useRecommendations(r), { initialProps: req });
+    
+    act(() => { vi.advanceTimersByTime(350); });
+    await act(async () => { await Promise.resolve(); });
+    expect(api.fetchRecommendations).toHaveBeenCalledTimes(1);
+    expect(result.current.error).toBe('API failure');
+
+    act(() => { result.current.retry(); });
+    act(() => { vi.advanceTimersByTime(350); });
+    await act(async () => { await Promise.resolve(); });
+    
+    expect(api.fetchRecommendations).toHaveBeenCalledTimes(2);
+    expect(result.current.error).toBeNull();
+    
+    vi.useRealTimers();
+  });
+
+  it('empty successful response is cached normally', async () => {
+    vi.useFakeTimers();
+    const req = { work_location: { lat: 994, lng: 994 }, constraints: {}, preferences: {} as any };
+    const mockRes = { recommendations: [], provenance: { calc_versions_used: [] } };
+    
+    vi.mocked(api.fetchRecommendations).mockResolvedValueOnce(mockRes as any);
+
+    const { result, rerender } = renderHook((r) => useRecommendations(r), { initialProps: req });
+    act(() => { vi.advanceTimersByTime(350); });
+    await act(async () => { await Promise.resolve(); });
+    expect(api.fetchRecommendations).toHaveBeenCalledTimes(1);
+    
+    rerender(null as any);
+    rerender(req);
+    
+    expect(result.current.data).toEqual(mockRes);
+    expect(api.fetchRecommendations).toHaveBeenCalledTimes(1);
+
+    vi.useRealTimers();
+  });
+
+  it('evicts oldest entries when exceeding FIFO limit', async () => {
+    vi.useFakeTimers();
+    const mockRes = { recommendations: [], provenance: { calc_versions_used: [] } };
+    vi.mocked(api.fetchRecommendations).mockResolvedValue(mockRes as any);
+
+    const { result, rerender } = renderHook((req) => useRecommendations(req), { 
+      initialProps: { work_location: { lat: 1000, lng: 1000 }, constraints: {}, preferences: {} as any } 
+    });
+
+    for (let i = 1000; i <= 1050; i++) {
+      rerender({ work_location: { lat: i, lng: i }, constraints: {}, preferences: {} as any });
+      act(() => { vi.advanceTimersByTime(350); });
+      await act(async () => { await Promise.resolve(); });
+    }
+    
+    const initialCallCount = vi.mocked(api.fetchRecommendations).mock.calls.length;
+
+    // Request 1000 should be evicted. Requesting it again should trigger an API call.
+    rerender({ work_location: { lat: 1000, lng: 1000 }, constraints: {}, preferences: {} as any });
+    act(() => { vi.advanceTimersByTime(350); });
+    await act(async () => { await Promise.resolve(); });
+    
+    expect(api.fetchRecommendations).toHaveBeenCalledTimes(initialCallCount + 1);
+
+    // Request 1050 should still be in cache
+    rerender({ work_location: { lat: 1050, lng: 1050 }, constraints: {}, preferences: {} as any });
+    expect(api.fetchRecommendations).toHaveBeenCalledTimes(initialCallCount + 1); // No new call
+
+    vi.useRealTimers();
+  });
+
+  it('preserves stale-response protection (in-flight response does not populate cache incorrectly)', async () => {
+    vi.useFakeTimers();
+    let resolveA: (val: any) => void;
+    let resolveB: (val: any) => void;
+    
+    vi.mocked(api.fetchRecommendations)
+      .mockImplementationOnce(() => new Promise(r => { resolveA = r; }))
+      .mockImplementationOnce(() => new Promise(r => { resolveB = r; }));
+
+    const reqA = { work_location: { lat: 2000, lng: 2000 }, constraints: {}, preferences: {} as any };
+    const reqB = { work_location: { lat: 2001, lng: 2001 }, constraints: {}, preferences: {} as any };
+
+    const { result, rerender } = renderHook((req) => useRecommendations(req), { initialProps: reqA });
+    
+    act(() => { vi.advanceTimersByTime(350); });
+    
+    rerender(reqB);
+    act(() => { vi.advanceTimersByTime(350); });
+
+    const mockResA = { recommendations: [{ name: 'A' }], provenance: { calc_versions_used: [] } };
+    await act(async () => {
+      resolveA!(mockResA);
+      await Promise.resolve();
+    });
+
+    const mockResB = { recommendations: [{ name: 'B' }], provenance: { calc_versions_used: [] } };
+    await act(async () => {
+      resolveB!(mockResB);
+      await Promise.resolve();
+    });
+
+    expect(result.current.data).toEqual(mockResB);
+    
+    rerender(reqA);
+    act(() => { vi.advanceTimersByTime(10); });
+    
+    // A should not be cached because active was false when it resolved
+    const currentCalls = vi.mocked(api.fetchRecommendations).mock.calls.length;
+    act(() => { vi.advanceTimersByTime(350); });
+    expect(api.fetchRecommendations).toHaveBeenCalledTimes(currentCalls + 1);
 
     vi.useRealTimers();
   });
