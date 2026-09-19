@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { RecommendationResult } from '../lib/api';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Info, X } from 'lucide-react';
 
 interface NeighbourhoodDetailProps {
   recommendation: RecommendationResult;
@@ -49,6 +49,29 @@ export function NeighbourhoodDetail({ recommendation }: NeighbourhoodDetailProps
   const cs = r.component_scores;
   const rm = r.raw_metrics;
 
+  const [isExplanationOpen, setIsExplanationOpen] = useState(false);
+  const explanationRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isExplanationOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsExplanationOpen(false);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isExplanationOpen]);
+
+  useEffect(() => {
+    if (!isExplanationOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (explanationRef.current && !explanationRef.current.contains(e.target as Node)) {
+        setIsExplanationOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [isExplanationOpen]);
+
   const scoreColour = 'text-brand-primary';
 
   const metroLabel = rm.metro_distance_m !== null
@@ -86,13 +109,55 @@ export function NeighbourhoodDetail({ recommendation }: NeighbourhoodDetailProps
               </p>
             )}
           </div>
-          <div className="text-right shrink-0 flex flex-col items-end">
+          <div className="text-right shrink-0 flex flex-col items-end relative">
             <div className={`text-[28px] font-extrabold tabular-nums leading-none ${scoreColour}`}>
               {Math.round(r.total_score)}
             </div>
-            <div className="text-[10px] font-bold text-text-muted uppercase tracking-wider mt-1">
-              Match Score
+            <div className="flex items-center gap-1 mt-1">
+              <div className="text-[10px] font-bold text-text-muted uppercase tracking-wider">
+                Match Score
+              </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsExplanationOpen(!isExplanationOpen);
+                }}
+                aria-label="Explain Match Score"
+                aria-expanded={isExplanationOpen}
+                className="text-text-muted hover:text-text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary rounded"
+              >
+                <Info size={13} />
+              </button>
             </div>
+            {isExplanationOpen && (
+              <div
+                ref={explanationRef}
+                role="dialog"
+                aria-label="Match Score Explanation"
+                className="absolute top-full right-0 mt-2 p-3 bg-surface-primary border border-border-default shadow-elevated rounded-lg z-50 w-[200px] text-left"
+              >
+                <div className="flex justify-between items-start mb-2 border-b border-border-subtle pb-2">
+                  <h4 className="text-[12px] font-bold text-text-primary leading-snug">How this score is calculated</h4>
+                  <button
+                    onClick={() => setIsExplanationOpen(false)}
+                    aria-label="Close explanation"
+                    className="text-text-muted hover:text-text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary rounded"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+                <ul className="text-[12px] text-text-secondary space-y-1.5 tabular-nums">
+                  {r.score_contributions.work_distance !== null && <li className="flex justify-between"><span>Work Proximity:</span> <span>+{r.score_contributions.work_distance} pts</span></li>}
+                  {r.score_contributions.metro !== null && <li className="flex justify-between"><span>Metro Access:</span> <span>+{r.score_contributions.metro} pts</span></li>}
+                  {r.score_contributions.cafe !== null && <li className="flex justify-between"><span>Cafes:</span> <span>+{r.score_contributions.cafe} pts</span></li>}
+                  {r.score_contributions.restaurant !== null && <li className="flex justify-between"><span>Restaurants:</span> <span>+{r.score_contributions.restaurant} pts</span></li>}
+                  {r.score_contributions.park !== null && <li className="flex justify-between"><span>Parks:</span> <span>+{r.score_contributions.park} pts</span></li>}
+                  {r.score_contributions.healthcare !== null && <li className="flex justify-between"><span>Healthcare:</span> <span>+{r.score_contributions.healthcare} pts</span></li>}
+                  {r.score_contributions.nightlife !== null && <li className="flex justify-between"><span>Nightlife:</span> <span>+{r.score_contributions.nightlife} pts</span></li>}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       </div>

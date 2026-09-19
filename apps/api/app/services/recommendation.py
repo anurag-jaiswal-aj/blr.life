@@ -270,6 +270,13 @@ def rank_candidates(
         else:
             total_score = (score_sum / total_selected_weights) * 100.0
 
+        def get_contrib(weight: float, norm_val: float | None) -> float | None:
+            if norm_val is None:
+                return None
+            if total_selected_weights <= 0:
+                return 0.0
+            return (weight * norm_val / total_selected_weights) * 100.0
+
         explanations = generate_explanations(candidate, constraints)
 
         metadata: dict[str, Any] = {"coordinates": {"lat": candidate.lat, "lng": candidate.lng}}
@@ -290,6 +297,15 @@ def rank_candidates(
                 name=candidate.name,
                 rank=0,  # placeholder, set after sort
                 total_score=round(total_score, 2),
+                score_contributions=ComponentScores(
+                    metro=round(get_contrib(w_metro, norm_metro), 2) if norm_metro is not None else None,
+                    work_distance=round(get_contrib(w_work, norm_work), 2),
+                    cafe=round(get_contrib(w_cafe, norm_cafe), 2) if norm_cafe is not None else None,
+                    restaurant=round(get_contrib(w_restaurant, norm_restaurant), 2) if norm_restaurant is not None else None,
+                    park=round(get_contrib(w_park, norm_park), 2) if norm_park is not None else None,
+                    healthcare=round(get_contrib(w_healthcare, norm_healthcare), 2) if norm_healthcare is not None else None,
+                    nightlife=round(get_contrib(w_nightlife, norm_nightlife), 2) if norm_nightlife is not None else None,
+                ),
                 component_scores=ComponentScores(
                     metro=round(norm_metro, 4) if norm_metro is not None else None,
                     work_distance=round(norm_work, 4),

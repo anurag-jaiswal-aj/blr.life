@@ -397,3 +397,65 @@ def test_recommendation_preferences_backward_compatibility() -> None:
     assert prefs.park_weight == 0.0
     assert prefs.healthcare_weight == 0.0
     assert prefs.nightlife_weight == 0.0
+
+
+def test_score_contributions() -> None:
+    prefs = RecommendationPreferences(
+        metro_access_weight=1.0,
+        short_commute_weight=1.0,
+        cafe_weight=0.5,
+    )
+    constraints = RecommendationConstraints()
+    candidate_perfect = CandidateLocality(
+        id=1,
+        slug="perfect",
+        name="Perfect",
+        lat=12.0,
+        lng=77.0,
+        metro_distance_m=0.0,
+        metro_confidence="high",
+        work_distance_km=0.0,
+        cafe_count=50,
+        cafe_confidence="high",
+    )
+    candidate_missing_metro = CandidateLocality(
+        id=2,
+        slug="missing-metro",
+        name="Missing Metro",
+        lat=12.0,
+        lng=77.0,
+        metro_distance_m=None,
+        metro_confidence=None,
+        work_distance_km=0.0,
+        cafe_count=50,
+        cafe_confidence="high",
+    )
+
+    results, _ = rank_candidates(
+        [candidate_perfect, candidate_missing_metro], constraints, prefs, limit=10
+    )
+
+    perf = next(r for r in results if r.slug == "perfect")
+    miss = next(r for r in results if r.slug == "missing-metro")
+
+    # total selected weights = 1.0 (metro) + 1.0 (work) + 0.5 (cafe) = 2.5
+    # perf contrib:
+    # metro = 1.0 * 1.0 / 2.5 * 100 = 40.0
+    # work = 1.0 * 1.0 / 2.5 * 100 = 40.0
+    # cafe = 0.5 * norm_cafe / 2.5 * 100 = 16.95
+    assert perf.score_contributions.metro == 40.0
+    assert perf.score_contributions.work_distance == 40.0
+    assert perf.score_contributions.cafe == 16.95
+    assert perf.total_score == 96.95
+    assert perf.score_contributions.metro + perf.score_contributions.work_distance + perf.score_contributions.cafe == perf.total_score
+
+    # miss contrib:
+    # metro is None, so score_contributions.metro is None
+    # work = 1.0 * 1.0 / 2.5 * 100 = 40.0
+    # cafe = 16.95
+    # sum = 56.95
+    assert miss.score_contributions.metro is None
+    assert miss.score_contributions.work_distance == 40.0
+    assert miss.score_contributions.cafe == 16.95
+    assert miss.total_score == 56.95
+    assert miss.score_contributions.work_distance + miss.score_contributions.cafe == miss.total_score

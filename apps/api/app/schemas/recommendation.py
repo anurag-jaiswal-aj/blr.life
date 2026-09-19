@@ -152,6 +152,9 @@ class RecommendationResult(BaseModel):
     name: str
     rank: int
     total_score: float = Field(..., description="Total BLR Score [0, 100]")
+    score_contributions: ComponentScores = Field(
+        ..., description="Weighted contribution to total score [0, 100]"
+    )
     component_scores: ComponentScores
     raw_metrics: RawMetrics
     metadata: dict[str, Any] = Field(

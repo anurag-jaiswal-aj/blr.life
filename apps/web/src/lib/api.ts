@@ -66,6 +66,7 @@ export interface RecommendationResult {
   name: string;
   rank: number;
   total_score: number;
+  score_contributions: ComponentScores;
   component_scores: ComponentScores;
   raw_metrics: RawMetrics;
   metadata: {
