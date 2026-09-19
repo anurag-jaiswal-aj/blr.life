@@ -307,26 +307,16 @@ def rank_candidates(
                 total_score=round(total_score, 2),
                 score_contributions=ComponentScores(
                     metro=(
-                        rounded_contrib(w_metro, norm_metro)
-                        if norm_metro is not None
-                        else None
+                        rounded_contrib(w_metro, norm_metro) if norm_metro is not None else None
                     ),
                     work_distance=rounded_contrib(w_work, norm_work),
-                    cafe=(
-                        rounded_contrib(w_cafe, norm_cafe)
-                        if norm_cafe is not None
-                        else None
-                    ),
+                    cafe=(rounded_contrib(w_cafe, norm_cafe) if norm_cafe is not None else None),
                     restaurant=(
                         rounded_contrib(w_restaurant, norm_restaurant)
                         if norm_restaurant is not None
                         else None
                     ),
-                    park=(
-                        rounded_contrib(w_park, norm_park)
-                        if norm_park is not None
-                        else None
-                    ),
+                    park=(rounded_contrib(w_park, norm_park) if norm_park is not None else None),
                     healthcare=(
                         rounded_contrib(w_healthcare, norm_healthcare)
                         if norm_healthcare is not None

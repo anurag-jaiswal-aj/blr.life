@@ -464,6 +464,5 @@ def test_score_contributions() -> None:
     assert miss.score_contributions.cafe == 16.95
     assert miss.total_score == 56.95
     assert (
-        miss.score_contributions.work_distance + miss.score_contributions.cafe
-        == miss.total_score
+        miss.score_contributions.work_distance + miss.score_contributions.cafe == miss.total_score
     )
