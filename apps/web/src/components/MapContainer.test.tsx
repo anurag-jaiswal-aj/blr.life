@@ -38,4 +38,49 @@ describe('MapContainer (MAP/COORDINATE SYNCHRONIZATION)', () => {
     // Testing specific inline styles on children of the marker in jsdom is brittle, 
     // but we can assume rendering didn't throw and all branches in the mapping ran.
   });
+
+  it('implements keyboard accessibility for recommendation markers', () => {
+    const recommendations: any = [
+      { locality_id: 1, name: 'Indiranagar', rank: 1, metadata: { coordinates: { lat: 12.9, lng: 77.6 } } },
+      { locality_id: 2, name: 'Koramangala', rank: 2, metadata: { coordinates: { lat: 13.0, lng: 77.7 } } },
+    ];
+    const selectSpy = vi.fn();
+
+    render(
+      <MapContainer
+        workLat={null}
+        workLng={null}
+        onWorkLocationSelect={vi.fn()}
+        recommendations={recommendations}
+        selectedLocalityId={1}
+        onRecommendationSelect={selectSpy}
+      />
+    );
+
+    // B. Marker attributes
+    const indiranagarMarker = screen.getByRole('button', { name: 'Select Indiranagar, Rank 1' });
+    const koramangalaMarker = screen.getByRole('button', { name: 'Select Koramangala, Rank 2' });
+
+    expect(indiranagarMarker).toHaveAttribute('tabIndex', '0');
+    expect(indiranagarMarker).toHaveAttribute('aria-pressed', 'true');
+    expect(koramangalaMarker).toHaveAttribute('aria-pressed', 'false');
+
+    // D. Pointer activation
+    fireEvent.click(koramangalaMarker);
+    expect(selectSpy).toHaveBeenCalledWith(2);
+    selectSpy.mockClear();
+
+    // C. Keyboard activation
+    fireEvent.keyDown(koramangalaMarker, { key: 'Enter' });
+    expect(selectSpy).toHaveBeenCalledWith(2);
+    selectSpy.mockClear();
+
+    fireEvent.keyDown(indiranagarMarker, { key: ' ' });
+    expect(selectSpy).toHaveBeenCalledWith(1);
+    selectSpy.mockClear();
+
+    // E. Unrelated keys
+    fireEvent.keyDown(indiranagarMarker, { key: 'Escape' });
+    expect(selectSpy).not.toHaveBeenCalled();
+  });
 });

@@ -148,9 +148,20 @@ export function MapContainer({
                   borderRadius: '50% 50% 50% 0',
                   transform: 'rotate(-45deg)',
                 }}
+                role="button"
+                tabIndex={0}
+                aria-label={`Select ${rec.name}, Rank ${rec.rank}`}
+                aria-pressed={isSelected}
                 onClick={(e) => {
                   e.stopPropagation();
                   if (onRecommendationSelect) onRecommendationSelect(rec.locality_id);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (onRecommendationSelect) onRecommendationSelect(rec.locality_id);
+                  }
                 }}
               >
                 <span style={{ transform: 'rotate(45deg)' }} className="leading-none">
