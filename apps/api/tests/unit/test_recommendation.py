@@ -447,7 +447,12 @@ def test_score_contributions() -> None:
     assert perf.score_contributions.work_distance == 40.0
     assert perf.score_contributions.cafe == 16.95
     assert perf.total_score == 96.95
-    assert perf.score_contributions.metro + perf.score_contributions.work_distance + perf.score_contributions.cafe == perf.total_score
+    assert (
+        perf.score_contributions.metro
+        + perf.score_contributions.work_distance
+        + perf.score_contributions.cafe
+        == perf.total_score
+    )
 
     # miss contrib:
     # metro is None, so score_contributions.metro is None
@@ -458,4 +463,7 @@ def test_score_contributions() -> None:
     assert miss.score_contributions.work_distance == 40.0
     assert miss.score_contributions.cafe == 16.95
     assert miss.total_score == 56.95
-    assert miss.score_contributions.work_distance + miss.score_contributions.cafe == miss.total_score
+    assert (
+        miss.score_contributions.work_distance + miss.score_contributions.cafe
+        == miss.total_score
+    )
