@@ -30,12 +30,12 @@ describe('useRecommendations (SUBMISSION)', () => {
     };
 
     const { result } = renderHook(() => useRecommendations(req as any));
-    
+
     await waitFor(() => {
       expect(result.current.data).not.toBeNull();
     });
 
-    expect(api.fetchRecommendations).toHaveBeenCalledWith(req);
+    expect(api.fetchRecommendations).toHaveBeenCalledWith(req, expect.any(AbortSignal));
     expect(result.current.data).toEqual(mockRes);
     expect(result.current.error).toBeNull();
   });
@@ -50,12 +50,12 @@ describe('useRecommendations (SUBMISSION)', () => {
     };
 
     const { result } = renderHook(() => useRecommendations(req));
-    
+
     await waitFor(() => {
       expect(result.current.error).toBe('API failure');
     });
 
-    expect(api.fetchRecommendations).toHaveBeenCalledWith(req);
+    expect(api.fetchRecommendations).toHaveBeenCalledWith(req, expect.any(AbortSignal));
     expect(result.current.data).toBeNull();
   });
 
@@ -74,7 +74,7 @@ describe('useRecommendations (SUBMISSION)', () => {
     };
 
     const { result } = renderHook(() => useRecommendations(req));
-    
+
     expect(result.current.loading).toBe(true);
     expect(result.current.isColdStarting).toBe(false);
 
@@ -94,7 +94,7 @@ describe('useRecommendations (SUBMISSION)', () => {
     act(() => {
       resolveApi!({ recommendations: [], provenance: { calc_versions_used: [] } });
     });
-    
+
     // Flush microtasks
     await act(async () => {
       await Promise.resolve();
@@ -135,7 +135,7 @@ describe('useRecommendations (SUBMISSION)', () => {
     });
 
     expect(api.fetchRecommendations).toHaveBeenCalledTimes(1);
-    expect(api.fetchRecommendations).toHaveBeenCalledWith(reqC);
+    expect(api.fetchRecommendations).toHaveBeenCalledWith(reqC, expect.any(AbortSignal));
 
     vi.useRealTimers();
   });
@@ -166,16 +166,16 @@ describe('useRecommendations (SUBMISSION)', () => {
     vi.useFakeTimers();
     const reqA = { work_location: { lat: 991, lng: 991 }, constraints: {}, preferences: {} as any };
     const reqB = { work_location: { lat: 992, lng: 992 }, constraints: {}, preferences: {} as any };
-    
+
     const mockResA = { recommendations: [{ name: 'A' }], provenance: { calc_versions_used: [] } };
     const mockResB = { recommendations: [{ name: 'B' }], provenance: { calc_versions_used: [] } };
-    
+
     vi.mocked(api.fetchRecommendations)
       .mockResolvedValueOnce(mockResA as any)
       .mockResolvedValueOnce(mockResB as any);
 
     const { result, rerender } = renderHook((req) => useRecommendations(req), { initialProps: reqA });
-    
+
     // A fetches
     act(() => { vi.advanceTimersByTime(350); });
     await act(async () => { await Promise.resolve(); });
@@ -195,7 +195,7 @@ describe('useRecommendations (SUBMISSION)', () => {
     expect(result.current.data).toEqual(mockResA);
     expect(result.current.loading).toBe(false);
     expect(result.current.isColdStarting).toBe(false);
-    
+
     // Fast-forward to prove no extra API call was scheduled
     act(() => { vi.advanceTimersByTime(350); });
     expect(api.fetchRecommendations).toHaveBeenCalledTimes(2); // Still 2
@@ -206,13 +206,13 @@ describe('useRecommendations (SUBMISSION)', () => {
   it('failed requests are not cached', async () => {
     vi.useFakeTimers();
     const req = { work_location: { lat: 993, lng: 993 }, constraints: {}, preferences: {} as any };
-    
+
     vi.mocked(api.fetchRecommendations)
       .mockRejectedValueOnce(new Error('API failure'))
       .mockResolvedValueOnce({ recommendations: [], provenance: { calc_versions_used: [] } } as any);
 
     const { result, rerender } = renderHook((r) => useRecommendations(r), { initialProps: req });
-    
+
     act(() => { vi.advanceTimersByTime(350); });
     await act(async () => { await Promise.resolve(); });
     expect(api.fetchRecommendations).toHaveBeenCalledTimes(1);
@@ -221,10 +221,10 @@ describe('useRecommendations (SUBMISSION)', () => {
     act(() => { result.current.retry(); });
     act(() => { vi.advanceTimersByTime(350); });
     await act(async () => { await Promise.resolve(); });
-    
+
     expect(api.fetchRecommendations).toHaveBeenCalledTimes(2);
     expect(result.current.error).toBeNull();
-    
+
     vi.useRealTimers();
   });
 
@@ -232,17 +232,17 @@ describe('useRecommendations (SUBMISSION)', () => {
     vi.useFakeTimers();
     const req = { work_location: { lat: 994, lng: 994 }, constraints: {}, preferences: {} as any };
     const mockRes = { recommendations: [], provenance: { calc_versions_used: [] } };
-    
+
     vi.mocked(api.fetchRecommendations).mockResolvedValueOnce(mockRes as any);
 
     const { result, rerender } = renderHook((r) => useRecommendations(r), { initialProps: req });
     act(() => { vi.advanceTimersByTime(350); });
     await act(async () => { await Promise.resolve(); });
     expect(api.fetchRecommendations).toHaveBeenCalledTimes(1);
-    
+
     rerender(null as any);
     rerender(req);
-    
+
     expect(result.current.data).toEqual(mockRes);
     expect(api.fetchRecommendations).toHaveBeenCalledTimes(1);
 
@@ -254,8 +254,8 @@ describe('useRecommendations (SUBMISSION)', () => {
     const mockRes = { recommendations: [], provenance: { calc_versions_used: [] } };
     vi.mocked(api.fetchRecommendations).mockResolvedValue(mockRes as any);
 
-    const { result, rerender } = renderHook((req) => useRecommendations(req), { 
-      initialProps: { work_location: { lat: 1000, lng: 1000 }, constraints: {}, preferences: {} as any } 
+    const { result, rerender } = renderHook((req) => useRecommendations(req), {
+      initialProps: { work_location: { lat: 1000, lng: 1000 }, constraints: {}, preferences: {} as any }
     });
 
     for (let i = 1000; i <= 1050; i++) {
@@ -263,14 +263,14 @@ describe('useRecommendations (SUBMISSION)', () => {
       act(() => { vi.advanceTimersByTime(350); });
       await act(async () => { await Promise.resolve(); });
     }
-    
+
     const initialCallCount = vi.mocked(api.fetchRecommendations).mock.calls.length;
 
     // Request 1000 should be evicted. Requesting it again should trigger an API call.
     rerender({ work_location: { lat: 1000, lng: 1000 }, constraints: {}, preferences: {} as any });
     act(() => { vi.advanceTimersByTime(350); });
     await act(async () => { await Promise.resolve(); });
-    
+
     expect(api.fetchRecommendations).toHaveBeenCalledTimes(initialCallCount + 1);
 
     // Request 1050 should still be in cache
@@ -284,7 +284,7 @@ describe('useRecommendations (SUBMISSION)', () => {
     vi.useFakeTimers();
     let resolveA: (val: any) => void;
     let resolveB: (val: any) => void;
-    
+
     vi.mocked(api.fetchRecommendations)
       .mockImplementationOnce(() => new Promise(r => { resolveA = r; }))
       .mockImplementationOnce(() => new Promise(r => { resolveB = r; }));
@@ -293,9 +293,9 @@ describe('useRecommendations (SUBMISSION)', () => {
     const reqB = { work_location: { lat: 2001, lng: 2001 }, constraints: {}, preferences: {} as any };
 
     const { result, rerender } = renderHook((req) => useRecommendations(req), { initialProps: reqA });
-    
+
     act(() => { vi.advanceTimersByTime(350); });
-    
+
     rerender(reqB);
     act(() => { vi.advanceTimersByTime(350); });
 
@@ -312,14 +312,86 @@ describe('useRecommendations (SUBMISSION)', () => {
     });
 
     expect(result.current.data).toEqual(mockResB);
-    
+
     rerender(reqA);
     act(() => { vi.advanceTimersByTime(10); });
-    
+
     // A should not be cached because active was false when it resolved
     const currentCalls = vi.mocked(api.fetchRecommendations).mock.calls.length;
     act(() => { vi.advanceTimersByTime(350); });
     expect(api.fetchRecommendations).toHaveBeenCalledTimes(currentCalls + 1);
+
+    vi.useRealTimers();
+  });
+
+  it('passes an AbortSignal to fetchRecommendations', async () => {
+    vi.useFakeTimers();
+    const req = { work_location: { lat: 10, lng: 10 }, constraints: {}, preferences: {} as any };
+    vi.mocked(api.fetchRecommendations).mockResolvedValueOnce({ recommendations: [], provenance: { calc_versions_used: [] } } as any);
+
+    renderHook(() => useRecommendations(req));
+    act(() => { vi.advanceTimersByTime(350); });
+    await act(async () => { await Promise.resolve(); });
+
+    expect(api.fetchRecommendations).toHaveBeenCalledWith(req, expect.any(AbortSignal));
+    vi.useRealTimers();
+  });
+
+  it('aborts the in-flight request when dependencies change (A -> B)', async () => {
+    vi.useFakeTimers();
+    const reqA = { work_location: { lat: 200, lng: 200 }, constraints: {}, preferences: {} as any };
+    const reqB = { work_location: { lat: 201, lng: 201 }, constraints: {}, preferences: {} as any };
+
+    vi.mocked(api.fetchRecommendations).mockImplementation(() => {
+      return new Promise(() => {}); // never resolves
+    });
+
+    const { rerender } = renderHook((req) => useRecommendations(req), { initialProps: reqA });
+
+    // We must await after advancing timers to let the mock be called and promise created
+    act(() => { vi.advanceTimersByTime(350); });
+    await act(async () => { await Promise.resolve(); });
+
+    const callA = vi.mocked(api.fetchRecommendations).mock.calls[0];
+    const capturedSignalA = callA[1] as AbortSignal;
+    expect(capturedSignalA).toBeDefined();
+    expect(capturedSignalA.aborted).toBe(false);
+
+    // Switch to B, should abort A's signal
+    rerender(reqB);
+    expect(capturedSignalA.aborted).toBe(true);
+
+    vi.useRealTimers();
+  });
+
+  it('intentional AbortError does NOT set the user-facing error state and does NOT cache', async () => {
+    vi.useFakeTimers();
+    const req = { work_location: { lat: 12, lng: 12 }, constraints: {}, preferences: {} as any };
+
+    vi.mocked(api.fetchRecommendations).mockImplementation((r, signal) => {
+      return new Promise((resolve, reject) => {
+        const err = new Error('The operation was aborted');
+        err.name = 'AbortError';
+        reject(err);
+      });
+    });
+
+    const { result, rerender } = renderHook((req) => useRecommendations(req), { initialProps: req });
+    act(() => { vi.advanceTimersByTime(350); });
+    await act(async () => { await Promise.resolve(); });
+
+    // Ensure error state is still null because it was an AbortError
+    expect(result.current.error).toBeNull();
+
+    // Ensure it was not cached. If we mock resolve next, it should call the API again.
+    vi.mocked(api.fetchRecommendations).mockResolvedValueOnce({ recommendations: [], provenance: { calc_versions_used: [] } } as any);
+
+    act(() => { result.current.retry(); });
+    act(() => { vi.advanceTimersByTime(350); });
+    await act(async () => { await Promise.resolve(); });
+
+    expect(result.current.data).toBeDefined();
+    expect(result.current.error).toBeNull();
 
     vi.useRealTimers();
   });

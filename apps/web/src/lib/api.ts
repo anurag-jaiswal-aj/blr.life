@@ -100,6 +100,7 @@ const API_BASE_URL =
 
 export async function fetchRecommendations(
   request: RecommendationRequest,
+  signal?: AbortSignal,
 ): Promise<RecommendationResponse> {
   const response = await fetch(`${API_BASE_URL}/api/v1/recommend`, {
     method: "POST",
@@ -107,6 +108,7 @@ export async function fetchRecommendations(
       "Content-Type": "application/json",
     },
     body: JSON.stringify(request),
+    signal,
   });
 
   if (!response.ok) {

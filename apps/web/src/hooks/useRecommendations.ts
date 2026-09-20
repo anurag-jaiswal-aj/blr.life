@@ -62,8 +62,10 @@ export function useRecommendations(request: RecommendationRequest | null | undef
       }
     }, 5000);
 
+    const controller = new AbortController();
+
     const debounceTimer = setTimeout(() => {
-      fetchRecommendations(currentRequest)
+      fetchRecommendations(currentRequest, controller.signal)
         .then((res) => {
           if (active) {
             clearTimeout(coldStartTimer);
@@ -83,6 +85,10 @@ export function useRecommendations(request: RecommendationRequest | null | undef
           }
         })
         .catch((err) => {
+          if (err.name === "AbortError") {
+            // Intentional cancellation; do nothing
+            return;
+          }
           if (active) {
             clearTimeout(coldStartTimer);
             setError(err.message || 'Unknown error occurred');
@@ -95,6 +101,7 @@ export function useRecommendations(request: RecommendationRequest | null | undef
 
     return () => {
       active = false;
+      controller.abort();
       clearTimeout(coldStartTimer);
       clearTimeout(debounceTimer);
     };
