@@ -129,3 +129,83 @@ export async function fetchRecommendations(
 
   return response.json();
 }
+
+// ------------------------------------------------------------------
+// Locality Static/Read API
+// ------------------------------------------------------------------
+
+export interface LocalityListItem {
+  id: number;
+  name: string;
+  slug: string;
+  parent_zone: string | null;
+}
+
+export interface Coordinates {
+  lat: number;
+  lng: number;
+}
+
+export interface MetroInfo {
+  station_name: string;
+  station_slug: string | null;
+  line: string | null;
+  distance_m: number;
+}
+
+export interface AmenityCounts {
+  cafes: number | null;
+  restaurants: number | null;
+  parks: number | null;
+  healthcare: number | null;
+  nightlife: number | null;
+}
+
+export interface RentInfo {
+  min_inr: number;
+  max_inr: number;
+  confidence: string;
+}
+
+export interface LocalityDetailResponse {
+  id: number;
+  name: string;
+  slug: string;
+  parent_zone: string | null;
+  centroid: Coordinates;
+  metro: MetroInfo | null;
+  amenities: AmenityCounts;
+  rent: RentInfo | null;
+}
+
+export async function fetchLocalities(): Promise<LocalityListItem[]> {
+  // Use absolute URL for server-side fetching, or default to localhost if not set.
+  // Next.js will cache this request by default for static generation unless disabled.
+  const response = await fetch(`${API_BASE_URL}/api/v1/localities`, {
+    next: { tags: ["localities"] },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch localities: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+export async function fetchLocalityDetail(
+  slug: string,
+): Promise<LocalityDetailResponse | null> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/localities/${slug}`, {
+    next: { tags: [`locality-${slug}`] },
+  });
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch locality ${slug}: ${response.statusText}`);
+  }
+
+  return response.json();
+}
