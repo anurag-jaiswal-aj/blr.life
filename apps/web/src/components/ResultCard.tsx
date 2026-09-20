@@ -1,19 +1,25 @@
 import React from "react";
 import { RecommendationResult } from "../lib/api";
-import { Train, MapPin } from "lucide-react";
+import { Heart } from "lucide-react";
 
 interface ResultCardProps {
   result: RecommendationResult;
   selected?: boolean;
+  isSaved?: boolean;
+  maxWorkDistance?: number;
   onSelect?: (id: number) => void;
   onHover?: (id: number | null) => void;
+  onToggleSave?: (id: number) => void;
 }
 
 export function ResultCard({
   result,
   selected = false,
+  isSaved = false,
+  maxWorkDistance,
   onSelect,
   onHover,
+  onToggleSave,
 }: ResultCardProps) {
   const isMetroUnavailable = result.component_scores.metro === null;
 
@@ -63,13 +69,39 @@ export function ResultCard({
 
         {/* Details */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="text-[15px] font-bold text-text-primary truncate tracking-tight">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="text-[15px] font-bold text-text-primary truncate tracking-tight flex-1">
               {result.name}
             </h3>
+            {onToggleSave && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleSave(result.locality_id);
+                }}
+                aria-pressed={isSaved}
+                aria-label={
+                  isSaved
+                    ? `Remove ${result.name} from shortlist`
+                    : `Save ${result.name} to shortlist`
+                }
+                className={`p-1.5 -mr-1.5 -mt-1 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+                  isSaved
+                    ? "text-brand-primary"
+                    : "text-text-muted hover:text-text-primary"
+                }`}
+              >
+                <Heart
+                  className="w-5 h-5"
+                  fill={isSaved ? "currentColor" : "none"}
+                  strokeWidth={isSaved ? 0 : 2}
+                />
+              </button>
+            )}
           </div>
 
-          <div className="flex items-center gap-2 mt-1 text-[13px] text-text-secondary">
+          <div className="flex items-center gap-2 mt-0.5 text-[13px] text-text-secondary">
             <span className="flex items-center whitespace-nowrap tabular-nums">
               {result.raw_metrics.work_distance_km} km away
             </span>
@@ -121,6 +153,16 @@ export function ResultCard({
               )}
             </div>
           )}
+
+          {isSaved &&
+            maxWorkDistance !== undefined &&
+            result.raw_metrics.work_distance_km > maxWorkDistance && (
+              <div className="mt-2 pt-2 border-t border-border-subtle">
+                <span className="inline-flex items-center text-[11px] font-medium text-warning-text bg-warning-bg px-2 py-0.5 rounded-sm border border-warning-text/20">
+                  ⚠ Beyond your selected distance
+                </span>
+              </div>
+            )}
         </div>
       </div>
     </div>

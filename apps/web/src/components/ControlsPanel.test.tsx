@@ -16,8 +16,10 @@ describe("ControlsPanel (CONTROLS)", () => {
     w_cafe: 0,
     w_restaurant: 0,
     w_park: 0,
-    w_healthcare: 0,
-    w_nightlife: 0,
+    w_healthcare: 0.0,
+    w_nightlife: 0.0,
+    loc: null,
+    saved_ids: [],
   };
 
   it("renders preference controls when coordinates are present", () => {
@@ -88,9 +90,13 @@ describe("ControlsPanel (CONTROLS)", () => {
   });
 
   it("displays correct priority labels and accessibility text for sliders", () => {
-    const stateWithMixedWeights: AppState = { ...defaultState, w_work: 0.5, w_metro: 1.0 };
+    const stateWithMixedWeights: AppState = {
+      ...defaultState,
+      w_work: 0.5,
+      w_metro: 1.0,
+    };
     const { getByText, getByLabelText } = render(
-      <ControlsPanel state={stateWithMixedWeights} updateState={vi.fn()} />
+      <ControlsPanel state={stateWithMixedWeights} updateState={vi.fn()} />,
     );
 
     expect(getByText("50% Priority")).toBeInTheDocument();

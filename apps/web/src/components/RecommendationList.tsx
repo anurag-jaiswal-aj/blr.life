@@ -1,24 +1,43 @@
-import React, { useEffect } from 'react';
-import { ResultCard } from './ResultCard';
-import { RecommendationResponse } from '../lib/api';
+import React, { useEffect } from "react";
+import { ResultCard } from "./ResultCard";
+import { RecommendationResponse, RecommendationResult } from "../lib/api";
 
 interface RecommendationListProps {
   data: RecommendationResponse | null;
+  displayRecommendations?: RecommendationResult[];
+  activeView?: "all" | "saved";
   loading: boolean;
   error: string | null;
   isColdStarting?: boolean;
   selectedLocalityId?: number | null;
+  savedLocalityIds?: number[];
+  maxWorkDistance?: number;
   onSelect?: (id: number) => void;
   onHover?: (id: number | null) => void;
   onRetry?: () => void;
+  onToggleSave?: (id: number) => void;
 }
 
-export function RecommendationList({ data, loading, error, isColdStarting, selectedLocalityId, onSelect, onHover, onRetry }: RecommendationListProps) {
+export function RecommendationList({
+  data,
+  displayRecommendations,
+  activeView = "all",
+  loading,
+  error,
+  isColdStarting,
+  selectedLocalityId,
+  savedLocalityIds = [],
+  maxWorkDistance,
+  onSelect,
+  onHover,
+  onRetry,
+  onToggleSave,
+}: RecommendationListProps) {
   useEffect(() => {
     if (selectedLocalityId !== null && selectedLocalityId !== undefined) {
       const el = document.getElementById(`rec-card-${selectedLocalityId}`);
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        el.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
     }
   }, [selectedLocalityId]);
@@ -27,11 +46,13 @@ export function RecommendationList({ data, loading, error, isColdStarting, selec
     return (
       <div className="p-6 bg-error-bg flex flex-col items-start gap-3">
         <div>
-          <p className="text-sm font-bold text-error-text">Error fetching recommendations</p>
+          <p className="text-sm font-bold text-error-text">
+            Error fetching recommendations
+          </p>
           <p className="text-xs text-error-text mt-1 opacity-90">{error}</p>
         </div>
         {onRetry && (
-          <button 
+          <button
             onClick={onRetry}
             className="px-4 py-1.5 bg-surface-primary border border-border-strong rounded-md text-xs font-bold text-text-primary hover:bg-surface-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-1 transition-colors"
           >
@@ -47,11 +68,17 @@ export function RecommendationList({ data, loading, error, isColdStarting, selec
       <div className="flex flex-col divide-y divide-border-subtle">
         {isColdStarting && (
           <div className="p-4 bg-brand-light/30 text-center animate-pulse-slow">
-            <p className="text-sm font-medium text-brand-primary">Starting the recommendation service &mdash; this can take a little longer after inactivity.</p>
+            <p className="text-sm font-medium text-brand-primary">
+              Starting the recommendation service &mdash; this can take a little
+              longer after inactivity.
+            </p>
           </div>
         )}
         {[1, 2, 3].map((i) => (
-          <div key={i} className="animate-pulse bg-surface-primary p-4 md:p-5 flex flex-col justify-between">
+          <div
+            key={i}
+            className="animate-pulse bg-surface-primary p-4 md:p-5 flex flex-col justify-between"
+          >
             <div className="flex gap-4 mb-4">
               <div className="w-12 h-12 bg-surface-secondary rounded-lg"></div>
               <div className="space-y-3 flex-1 pt-1">
@@ -71,29 +98,53 @@ export function RecommendationList({ data, loading, error, isColdStarting, selec
 
   if (!data) return null;
 
-  if (data.recommendations.length === 0) {
+  const actualList = displayRecommendations || data.recommendations;
+
+  if (actualList.length === 0) {
+    if (activeView === "saved") {
+      return (
+        <div className="p-6 bg-surface-primary text-center py-10">
+          <p className="text-sm font-bold text-text-primary">
+            Your shortlist is empty
+          </p>
+          <p className="text-xs text-text-secondary mt-1">
+            Tap the heart icon on any neighbourhood to save it.
+          </p>
+        </div>
+      );
+    }
     return (
       <div className="p-6 bg-surface-primary text-center py-10">
-        <p className="text-sm font-bold text-text-primary">No localities found</p>
-        <p className="text-xs text-text-secondary mt-1">Adjust your workplace or maximum distance.</p>
+        <p className="text-sm font-bold text-text-primary">
+          No localities found
+        </p>
+        <p className="text-xs text-text-secondary mt-1">
+          Adjust your workplace or maximum distance.
+        </p>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col divide-y divide-border-subtle">
-      {data.recommendations.map((rec) => (
-        <ResultCard 
-          key={rec.locality_id} 
-          result={rec} 
+      {actualList.map((rec) => (
+        <ResultCard
+          key={rec.locality_id}
+          result={rec}
           selected={selectedLocalityId === rec.locality_id}
+          isSaved={savedLocalityIds.includes(rec.locality_id)}
+          maxWorkDistance={maxWorkDistance}
           onSelect={onSelect || (() => {})}
           onHover={onHover}
+          onToggleSave={onToggleSave}
         />
       ))}
       <div className="p-4 bg-surface-secondary text-[11px] text-text-secondary text-center uppercase tracking-wider font-bold">
-        Results powered by blr.life deterministic engine.<br/>
-        <span className="opacity-75">v: {data.provenance.calc_versions_used.join(', ')}</span>
+        Results powered by blr.life deterministic engine.
+        <br />
+        <span className="opacity-75">
+          v: {data.provenance.calc_versions_used.join(", ")}
+        </span>
       </div>
     </div>
   );

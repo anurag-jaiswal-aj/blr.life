@@ -6,7 +6,7 @@ export interface WorkLocation {
 export interface RecommendationConstraints {
   max_work_distance_km?: number | null;
   max_budget_inr?: number | null;
-  bhk_type?: '1rk' | '1bhk' | '2bhk' | '3bhk' | null;
+  bhk_type?: "1rk" | "1bhk" | "2bhk" | "3bhk" | null;
 }
 
 export interface RecommendationPreferences {
@@ -24,6 +24,7 @@ export interface RecommendationRequest {
   constraints: RecommendationConstraints;
   preferences: RecommendationPreferences;
   limit?: number;
+  include_locality_ids?: number[];
 }
 
 export interface ComponentScores {
@@ -51,7 +52,8 @@ export interface RecommendationExplanations {
   warnings: string[];
 }
 
-export type AffordabilityStatus = 'affordable' | 'starts_within_budget' | 'over_budget' | 'unknown';
+export type AffordabilityStatus =
+  "affordable" | "starts_within_budget" | "over_budget" | "unknown";
 
 export interface AffordabilityInfo {
   status: AffordabilityStatus;
@@ -93,23 +95,29 @@ export interface RecommendationResponse {
   provenance: RecommendationProvenance;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
-export async function fetchRecommendations(request: RecommendationRequest): Promise<RecommendationResponse> {
+export async function fetchRecommendations(
+  request: RecommendationRequest,
+): Promise<RecommendationResponse> {
   const response = await fetch(`${API_BASE_URL}/api/v1/recommend`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(request),
   });
 
   if (!response.ok) {
-    let errorMsg = 'Failed to fetch recommendations';
+    let errorMsg = "Failed to fetch recommendations";
     try {
       const errorData = await response.json();
       if (errorData.detail) {
-        errorMsg = typeof errorData.detail === 'string' ? errorData.detail : JSON.stringify(errorData.detail);
+        errorMsg =
+          typeof errorData.detail === "string"
+            ? errorData.detail
+            : JSON.stringify(errorData.detail);
       }
     } catch {
       // Ignored
