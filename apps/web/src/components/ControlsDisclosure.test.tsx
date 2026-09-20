@@ -1,5 +1,6 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
 import { ControlsDisclosure } from "./ControlsDisclosure";
 import { AppState } from "../hooks/useUrlState";
@@ -28,7 +29,7 @@ describe("ControlsDisclosure", () => {
   });
 
   it("opens the controls modal when clicked and renders into portal", () => {
-    const { baseElement } = render(
+    render(
       <ControlsDisclosure state={defaultState} updateState={vi.fn()} />,
     );
 
@@ -43,13 +44,62 @@ describe("ControlsDisclosure", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Budget & Home")).toBeInTheDocument();
 
-    const modalContainer = baseElement.querySelector(".z-\\[100\\]");
-    expect(modalContainer).toBeInTheDocument();
-    expect(modalContainer?.parentElement).toBe(document.body);
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toBeInTheDocument();
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+    expect(dialog).toHaveAttribute("aria-labelledby", "refine-dialog-title");
 
     fireEvent.click(screen.getByLabelText("Close filters"));
     expect(
       screen.queryByRole("heading", { name: /Refine recommendations/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("manages focus trapping correctly (accessibility)", async () => {
+    const user = userEvent.setup();
+    render(
+      <div>
+        <ControlsDisclosure state={defaultState} updateState={vi.fn()} />
+        <button id="outside">Outside Element</button>
+      </div>,
+    );
+
+    const trigger = screen.getByRole("button", { name: /Refine/i });
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+
+    await user.click(trigger);
+
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toBeInTheDocument();
+
+    // The first focusable element should be focused (Close button)
+    const closeBtn = screen.getByLabelText("Close filters");
+    expect(document.activeElement).toBe(closeBtn);
+
+    // Tab through elements
+    await user.tab();
+    expect(document.activeElement).not.toBe(closeBtn); // focus moves to next control
+    expect(dialog.contains(document.activeElement)).toBe(true);
+
+    // Tab backwards (Shift+Tab) to return to the close button
+    await user.tab({ shift: true });
+    expect(document.activeElement).toBe(closeBtn);
+
+    // Shift+Tab again should wrap around to the last element in the dialog
+    await user.tab({ shift: true });
+    expect(document.activeElement).not.toBe(closeBtn);
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    expect(document.activeElement?.id).not.toBe("outside"); // Should not escape dialog
+
+    // Test Escape key
+    await user.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    // Focus returns to trigger
+    expect(document.activeElement).toBe(trigger);
   });
 });

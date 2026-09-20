@@ -61,7 +61,11 @@ describe("ControlsPanel (CONTROLS)", () => {
 
     const cafeLabel = getByText("Cafes").parentElement;
     if (cafeLabel) {
-      const mustBtn = cafeLabel.querySelectorAll("button")[2];
+      const buttons = cafeLabel.querySelectorAll("button");
+      expect(buttons[0]).toHaveAttribute("aria-pressed", "true");
+      expect(buttons[1]).toHaveAttribute("aria-pressed", "false");
+
+      const mustBtn = buttons[2];
       fireEvent.click(mustBtn);
       expect(updateSpy).toHaveBeenCalledWith({ w_cafe: 1.0 });
     }
@@ -104,8 +108,10 @@ describe("ControlsPanel (CONTROLS)", () => {
 
     const workSlider = getByLabelText(/Near Work Importance Weight/i);
     const metroSlider = getByLabelText(/Metro Importance Weight/i);
+    const distSlider = getByLabelText(/Maximum Distance/i);
 
     expect(workSlider).toHaveAttribute("aria-valuetext", "50% Priority");
     expect(metroSlider).toHaveAttribute("aria-valuetext", "100% Priority");
+    expect(distSlider).toHaveAttribute("aria-valuetext", "15 km");
   });
 });

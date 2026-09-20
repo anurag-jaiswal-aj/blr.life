@@ -35,6 +35,7 @@ const PrioritySelector = ({
             key={opt.label}
             onClick={() => onChange(opt.val)}
             type="button"
+            aria-pressed={value === opt.val}
             className={`flex-1 text-[11px] py-1 rounded-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50 ${
               value === opt.val
                 ? "bg-surface-primary text-brand-primary shadow-subtle"
@@ -176,6 +177,7 @@ export function ControlsPanel({ state, updateState }: ControlsPanelProps) {
               }
               className="w-full h-1 bg-border-default rounded-full appearance-none accent-brand-primary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50"
               aria-label="Maximum Distance"
+              aria-valuetext={`${state.max_dist} km`}
             />
           </div>
 
