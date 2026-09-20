@@ -586,3 +586,32 @@ def test_forced_inclusion_ordering_and_deduplication() -> None:
     assert results[1].rank == 2
     assert results[2].locality_id == 4
     assert results[2].rank == 3
+
+
+def test_recommendation_request_include_locality_ids_limits() -> None:
+    import pytest
+    from pydantic import ValidationError
+
+    from app.schemas.recommendation import RecommendationRequest, WorkLocation
+
+    base_kwargs = {
+        "work_location": WorkLocation(lat=12.0, lng=77.0),
+        "limit": 10,
+    }
+
+    # 1. include_locality_ids with 50 IDs -> accepted
+    req_50 = RecommendationRequest(**base_kwargs, include_locality_ids=list(range(50)))
+    assert len(req_50.include_locality_ids) == 50
+
+    # 2. include_locality_ids with 51 IDs -> rejected by request validation
+    with pytest.raises(ValidationError) as exc_info:
+        RecommendationRequest(**base_kwargs, include_locality_ids=list(range(51)))
+    assert "List should have at most 50 items" in str(exc_info.value)
+
+    # 3. Empty list -> accepted
+    req_empty = RecommendationRequest(**base_kwargs, include_locality_ids=[])
+    assert len(req_empty.include_locality_ids) == 0
+
+    # 4. Existing recommendation request behavior remains unchanged (default is empty list)
+    req_default = RecommendationRequest(**base_kwargs)
+    assert req_default.include_locality_ids == []

@@ -95,7 +95,9 @@ class RecommendationRequest(BaseModel):
     )
     limit: int = Field(10, ge=1, le=50, description="Maximum number of localities to return")
     include_locality_ids: list[int] = Field(
-        default_factory=list, description="Explicitly included locality IDs to evaluate and return"
+        default_factory=list,
+        max_length=50,
+        description="Explicitly included locality IDs to evaluate and return",
     )
 
     @model_validator(mode="after")
