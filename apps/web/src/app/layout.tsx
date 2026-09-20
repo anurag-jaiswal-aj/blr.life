@@ -13,8 +13,28 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "blr.life",
+  metadataBase: new URL("https://blr.life"),
+  title: {
+    default: "blr.life",
+    template: "%s | blr.life",
+  },
   description: "Bengaluru, made easier.",
+  applicationName: "blr.life",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "blr.life",
+    description: "Bengaluru, made easier.",
+    url: "/",
+    siteName: "blr.life",
+    locale: "en_IN",
+    type: "website",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
