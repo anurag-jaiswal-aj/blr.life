@@ -55,6 +55,38 @@ We strictly distinguish between "Unknown/Low Confidence" (treated as unavailable
 ## Spatial Heuristics vs Routing (V1)
 In V1, OSRM routing is deferred. To maintain determinism without fabricating commute times, the engine relies on a **spatial heuristic proxy**: `work_distance_km`. This represents the geodesic straight-line distance computed dynamically via PostGIS (`ST_DistanceSphere`). Users input a maximum distance tolerance, rather than arbitrary minutes.
 
+## Forced Shortlist Semantics
+The API accepts an `include_locality_ids` parameter to explicitly evaluate and return specific localities. The semantics are as follows:
+
+1. **`include_locality_ids`**
+   - Explicitly requested locality IDs are evaluated and returned when the locality exists and remains eligible under the applicable constraints.
+   - Unknown/nonexistent/inactive locality IDs are ignored.
+
+2. **Normal ranking**
+   - If an explicitly included locality naturally falls within the organic top-N results, it remains in its normal score-based position.
+   - It is not duplicated.
+
+3. **Forced inclusion**
+   - If an explicitly included locality does not make the organic top-N results but is otherwise eligible, it is appended after the organic top-N results.
+   - Forced inclusion does NOT change the locality's calculated score.
+   - The appended position is therefore a presentation/ranking-position behavior, not a score modification.
+
+4. **Work-distance constraint**
+   - Explicit inclusion bypasses the `max_work_distance_km` exclusion only.
+   - The locality still has its actual work distance calculated and returned.
+   - Its score is still calculated normally.
+
+5. **Budget constraint**
+   - Explicit inclusion does NOT bypass max-budget filtering.
+   - If the requested BHK has a known minimum rent strictly greater than `max_budget_inr`, the locality is excluded even when its ID is explicitly included.
+   - Unknown/insufficient rent remains eligible according to the normal budget semantics.
+
+6. **Deduplication**
+   - A locality that is already present in organic top-N is not appended a second time.
+
+7. **Multiple forced IDs**
+   - Preserve the current implementation's existing ordering behavior. Do not invent or alter ordering semantics.
+
 ## Future Evolution
 - OSRM will eventually replace straight-line work distances with precise routing geometries and peak-hour commute times.
 - A machine-learning model (Learning to Rank - LTR) could eventually replace the deterministic weighting step. However, the data contracts (Inputs -> Features -> Explainable Output) must remain the same so the UI doesn't break.

@@ -110,18 +110,18 @@ def test_score_calculation_weights() -> None:
 
     # c1: (1*1 + 1*1) / 2 = 100
     # c3: (1*1 + 1*0) / 2 = 50
-    # c4: (1*1 + 1*0) / 2 = 50
+    # c4: (1*1) / 1 = 100 (metro missing, so denominator is 1)
     # c2: (1*0 + 1*0) / 2 = 0
-    # c5: (1*0 + 1*0) / 2 = 0
+    # c5: (1*0) / 1 = 0 (metro missing, so denominator is 1)
 
     # Sort order (score DESC, slug ASC)
     assert results[0].slug == "hsr-layout"
     assert results[0].total_score == 100.0
-    assert results[1].slug == "indiranagar"
-    assert results[1].total_score == 50.0
-    assert results[2].slug == "missing-metro"
+    assert results[1].slug == "missing-metro"
+    assert results[1].total_score == 100.0
+    assert results[1].component_scores.metro is None
+    assert results[2].slug == "indiranagar"
     assert results[2].total_score == 50.0
-    assert results[2].component_scores.metro is None
     assert results[3].slug == "bellandur"
     assert results[3].total_score == 0.0
     assert results[4].slug == "insufficient-metro"
@@ -344,16 +344,16 @@ def test_amenity_scoring_and_renormalization() -> None:
     results, _ = rank_candidates([c1, c2, c3], constraints, prefs, limit=10)
 
     # c1: (1+1+1+1+0) / 5 = 0.8 = 80.0
-    # c2: (1+1+1+1+0) / 5 = 0.8 = 80.0 (Park is missing, contributes 0)
+    # c2: (1+1+1+1) / 4 = 1.0 = 100.0 (Park is missing, contributes 0, weight removed)
     # c3: (1+1+0+0+1) / 5 = 0.6 = 60.0
 
-    assert results[0].slug == "all-amenities"
-    assert results[0].total_score == 80.0
-    assert results[0].component_scores.park == 0.0
+    assert results[0].slug == "missing-amenity"
+    assert results[0].total_score == 100.0
+    assert results[0].component_scores.park is None
 
-    assert results[1].slug == "missing-amenity"
+    assert results[1].slug == "all-amenities"
     assert results[1].total_score == 80.0
-    assert results[1].component_scores.park is None
+    assert results[1].component_scores.park == 0.0
 
     assert results[2].slug == "low-amenity"
     assert results[2].total_score == 60.0
@@ -456,13 +456,14 @@ def test_score_contributions() -> None:
 
     # miss contrib:
     # metro is None, so score_contributions.metro is None
-    # work = 1.0 * 1.0 / 2.5 * 100 = 40.0
-    # cafe = 16.95
-    # sum = 56.95
+    # active weights = 1.0 (work) + 0.5 (cafe) = 1.5
+    # work = 1.0 * 1.0 / 1.5 * 100 = 66.67
+    # cafe = 0.5 * norm_cafe(0.8474) / 1.5 * 100 = 28.25
+    # sum = 94.92
     assert miss.score_contributions.metro is None
-    assert miss.score_contributions.work_distance == 40.0
-    assert miss.score_contributions.cafe == 16.95
-    assert miss.total_score == 56.95
+    assert miss.score_contributions.work_distance == 66.67
+    assert miss.score_contributions.cafe == 28.25
+    assert miss.total_score == 94.92
     assert (
         miss.score_contributions.work_distance + miss.score_contributions.cafe == miss.total_score
     )
@@ -615,3 +616,128 @@ def test_recommendation_request_include_locality_ids_limits() -> None:
     # 4. Existing recommendation request behavior remains unchanged (default is empty list)
     req_default = RecommendationRequest(**base_kwargs)
     assert req_default.include_locality_ids == []
+
+
+def test_missing_data_semantics_explicitly() -> None:
+    c_case_a = CandidateLocality(
+        id=1, slug="a", name="A", lat=12.0, lng=77.0,
+        work_distance_km=2.0, # norm 1.0
+        metro_distance_m=500.0, metro_confidence="high", # norm 1.0
+        cafe_count=59.0, cafe_confidence="high", # norm 1.0
+    )
+    c_case_b = CandidateLocality(
+        id=2, slug="b", name="B", lat=12.0, lng=77.0,
+        work_distance_km=2.0, # norm 1.0
+        metro_distance_m=None, metro_confidence=None, # norm None (missing)
+        cafe_count=59.0, cafe_confidence="high", # norm 1.0
+    )
+    c_case_c = CandidateLocality(
+        id=3, slug="c", name="C", lat=12.0, lng=77.0,
+        work_distance_km=2.0, # norm 1.0
+        metro_distance_m=3000.0, metro_confidence="high", # norm 0.0 (zero)
+        cafe_count=59.0, cafe_confidence="high", # norm 1.0
+    )
+    c_case_d = CandidateLocality(
+        id=4, slug="d", name="D", lat=12.0, lng=77.0,
+        work_distance_km=20.0,  # norm 0.0 (force low to not mask other weights if w_work=0)
+        metro_distance_m=None, metro_confidence=None, # missing
+        cafe_count=None, cafe_confidence=None, # missing
+    )
+
+    constraints = RecommendationConstraints()
+    prefs = RecommendationPreferences(
+        short_commute_weight=1.0,
+        metro_access_weight=1.0,
+        cafe_weight=1.0,
+        restaurant_weight=0.0,
+        park_weight=0.0,
+        healthcare_weight=0.0,
+        nightlife_weight=0.0,
+    )
+
+    results, _ = rank_candidates(
+        [c_case_a, c_case_b, c_case_c, c_case_d], constraints, prefs, limit=10
+    )
+
+    res_a = next(r for r in results if r.slug == "a")
+    res_b = next(r for r in results if r.slug == "b")
+    res_c = next(r for r in results if r.slug == "c")
+
+    # Case A: all selected metrics available (1+1+1) / 3 = 1.0 => 100
+    assert res_a.total_score == 100.0
+
+    # Case B: one selected metric missing. Metro is None. Denominator is 2. (1+1)/2 = 1.0 => 100
+    assert res_b.total_score == 100.0
+
+    # Case C: one metric zero. Metro=0.0. Denominator=3. (1+0+1)/3 = 0.666 => 66.67
+    assert res_c.total_score == 66.67
+
+    # Case D: all weighted metrics missing.
+    # To test this, we pass a preference where all non-None metrics have weight 0.0.
+    # The only metric that is always not None is work_distance. We set short_commute_weight = 0.0.
+    # Other metrics are None.
+    prefs_all_missing = RecommendationPreferences(
+        short_commute_weight=0.0,
+        metro_access_weight=1.0,
+        cafe_weight=1.0,
+    )
+    results_d, _ = rank_candidates([c_case_d], constraints, prefs_all_missing, limit=10)
+    res_d = results_d[0]
+    # Existing intended behavior when total_selected_weights <= 0 is to return 0.0
+    assert res_d.total_score == 0.0
+
+
+def test_budget_filtering() -> None:
+    from app.models.observations import HousingConfiguration
+
+    # Common metrics so they score equally and only budget matters
+    def make_candidate(
+        id: int, slug: str, rent_min: int | None, rent_conf: str | None = "high"
+    ) -> CandidateLocality:
+        return CandidateLocality(
+            id=id, slug=slug, name=slug.capitalize(), lat=12.0, lng=77.0,
+            work_distance_km=2.0, metro_distance_m=500.0, metro_confidence="high",
+            rent_min_inr=rent_min, rent_max_inr=rent_min, rent_confidence=rent_conf
+        )
+
+    c_under = make_candidate(1, "under", 20000)
+    c_exact = make_candidate(2, "exact", 25000)
+    c_over = make_candidate(3, "over", 25001)
+    c_unknown = make_candidate(4, "unknown", None, None)
+    c_insufficient = make_candidate(5, "insufficient", 30000, "insufficient") # Unknown effectively
+
+    all_candidates = [c_under, c_exact, c_over, c_unknown, c_insufficient]
+    prefs = RecommendationPreferences()
+
+    # A. No budget
+    constraints_no_budget = RecommendationConstraints()
+    res_no_budget, _ = rank_candidates(all_candidates, constraints_no_budget, prefs, limit=10)
+    assert len(res_no_budget) == 5
+
+    # F. Mixed candidates with budget 25000
+    constraints_budget = RecommendationConstraints(
+        max_budget_inr=25000, bhk_type=HousingConfiguration.BHK_2
+    )
+    res_budget, _ = rank_candidates(all_candidates, constraints_budget, prefs, limit=10)
+    returned_slugs = {r.slug for r in res_budget}
+    # B. Under budget remains
+    assert "under" in returned_slugs
+    # C. Exact budget boundary remains
+    assert "exact" in returned_slugs
+    # D. Over budget is excluded
+    assert "over" not in returned_slugs
+    # E. Unknown rent remains
+    assert "unknown" in returned_slugs
+    assert "insufficient" in returned_slugs
+
+    # Verify only the over-budget candidate is removed
+    assert len(res_budget) == 4
+    # G. BHK specificity
+    # The database populates CandidateLocality with the rent for the specific BHK.
+    # We simulate this by passing the same candidates but changing the requested BHK.
+    # The service layer only looks at rent_min_inr, so it naturally uses the specific BHK's rent.
+    constraints_budget_bhk3 = RecommendationConstraints(
+        max_budget_inr=25000, bhk_type=HousingConfiguration.BHK_3
+    )
+    res_bhk3, _ = rank_candidates(all_candidates, constraints_budget_bhk3, prefs, limit=10)
+    assert len(res_bhk3) == 4

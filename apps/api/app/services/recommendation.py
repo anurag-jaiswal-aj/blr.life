@@ -219,6 +219,7 @@ def rank_candidates(
                         else None
                     ),
                 )
+                continue
 
         # Normalization
         norm_metro = normalize_metro_distance(
@@ -247,30 +248,34 @@ def rank_candidates(
         w_healthcare = preferences.healthcare_weight
         w_nightlife = preferences.nightlife_weight
 
-        total_selected_weights = (
-            w_metro + w_work + w_cafe + w_restaurant + w_park + w_healthcare + w_nightlife
-        )
+        total_selected_weights = w_work
         score_sum = 0.0
-
-        if norm_metro is not None:
-            score_sum += w_metro * norm_metro
 
         score_sum += w_work * norm_work
 
+        if norm_metro is not None:
+            score_sum += w_metro * norm_metro
+            total_selected_weights += w_metro
+
         if norm_cafe is not None:
             score_sum += w_cafe * norm_cafe
+            total_selected_weights += w_cafe
 
         if norm_restaurant is not None:
             score_sum += w_restaurant * norm_restaurant
+            total_selected_weights += w_restaurant
 
         if norm_park is not None:
             score_sum += w_park * norm_park
+            total_selected_weights += w_park
 
         if norm_healthcare is not None:
             score_sum += w_healthcare * norm_healthcare
+            total_selected_weights += w_healthcare
 
         if norm_nightlife is not None:
             score_sum += w_nightlife * norm_nightlife
+            total_selected_weights += w_nightlife
 
         if total_selected_weights <= 0:
             total_score = 0.0

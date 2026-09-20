@@ -225,14 +225,12 @@ async def test_recommend_affordability(
     recs = data["recommendations"]
     slugs = [r["slug"] for r in recs]
     assert "near-metro" in slugs
-    assert "far-area" in slugs  # Over budget, but NOT filtered out
+    assert "far-area" not in slugs  # Over budget, so filtered out
     assert "starts-area" in slugs
     assert "no-metro" in slugs  # Missing data survives
     l1_rec = next(r for r in recs if r["slug"] == "near-metro")
     assert l1_rec["affordability"]["status"] == "affordable"
     assert l1_rec["affordability"]["confidence"] == "low"
-    l2_rec = next(r for r in recs if r["slug"] == "far-area")
-    assert l2_rec["affordability"]["status"] == "over_budget"
     l4_rec = next(r for r in recs if r["slug"] == "starts-area")
     assert l4_rec["affordability"]["status"] == "starts_within_budget"
     assert l4_rec["affordability"]["confidence"] == "high"
@@ -288,3 +286,57 @@ async def test_recommend_affordability_insufficient(
     # Assert Match Score is preserved
     assert l1_rec["total_score"] == 100.0
     assert any("Rent data unavailable" in w for w in l1_rec["explanations"]["warnings"])
+
+
+@pytest.mark.asyncio
+async def test_recommend_bhk_specificity(
+    async_client: AsyncClient, setup_recommendation_data, async_db_session: AsyncSession
+):
+    from app.models.observations import HousingConfiguration, LocalityRentObservation
+
+    l1, _, _ = setup_recommendation_data
+
+    # 1bhk is affordable (15k <= 20k)
+    r_1bhk = LocalityRentObservation(
+        locality_id=l1.id,
+        housing_config=HousingConfiguration.BHK_1,
+        rent_min_inr=15000,
+        rent_max_inr=18000,
+        confidence=MetricConfidence.HIGH,
+        is_current=True,
+    )
+
+    # 2bhk is unaffordable (25k > 20k)
+    r_2bhk = LocalityRentObservation(
+        locality_id=l1.id,
+        housing_config=HousingConfiguration.BHK_2,
+        rent_min_inr=25000,
+        rent_max_inr=28000,
+        confidence=MetricConfidence.HIGH,
+        is_current=True,
+    )
+
+    async_db_session.add_all([r_1bhk, r_2bhk])
+    await async_db_session.commit()
+    # Request 1: 1BHK with max budget 20000
+    payload_1bhk = {
+        "work_location": {"lat": 12.9716, "lng": 77.5946},
+        "constraints": {"max_budget_inr": 20000, "bhk_type": "1bhk"},
+        "limit": 10,
+    }
+    resp_1bhk = await async_client.post("/api/v1/recommend", json=payload_1bhk)
+    assert resp_1bhk.status_code == 200
+    slugs_1bhk = [r["slug"] for r in resp_1bhk.json()["recommendations"]]
+    # 1BHK is affordable, so it should be returned
+    assert "near-metro" in slugs_1bhk
+    # Request 2: 2BHK with max budget 20000
+    payload_2bhk = {
+        "work_location": {"lat": 12.9716, "lng": 77.5946},
+        "constraints": {"max_budget_inr": 20000, "bhk_type": "2bhk"},
+        "limit": 10,
+    }
+    resp_2bhk = await async_client.post("/api/v1/recommend", json=payload_2bhk)
+    assert resp_2bhk.status_code == 200
+    slugs_2bhk = [r["slug"] for r in resp_2bhk.json()["recommendations"]]
+    # 2BHK is over budget, so it should be filtered out
+    assert "near-metro" not in slugs_2bhk
