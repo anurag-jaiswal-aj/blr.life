@@ -116,10 +116,12 @@ export async function fetchRecommendations(
     try {
       const errorData = await response.json();
       if (errorData.detail) {
-        errorMsg =
-          typeof errorData.detail === "string"
-            ? errorData.detail
-            : JSON.stringify(errorData.detail);
+        if (typeof errorData.detail === "string") {
+          errorMsg = errorData.detail;
+        } else {
+          console.error("Backend validation error:", errorData.detail);
+          errorMsg = "Invalid request parameters provided.";
+        }
       }
     } catch {
       // Ignored

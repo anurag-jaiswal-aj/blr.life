@@ -33,7 +33,7 @@ describe('api (API REQUEST SERIALIZATION)', () => {
     expect(res).toEqual(mockResponse);
   });
 
-  it('throws error with message on failure', async () => {
+  it('throws error with message on failure when detail is a string', async () => {
     vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: false,
       json: async () => ({ detail: 'Validation Error' })
@@ -46,5 +46,33 @@ describe('api (API REQUEST SERIALIZATION)', () => {
     };
 
     await expect(fetchRecommendations(req)).rejects.toThrow('Validation Error');
+  });
+
+  it('throws generic error and logs structured detail for non-string detail', async () => {
+    const structuredDetail = [
+      {
+        type: "value_error",
+        loc: ["body", "preferences"],
+        msg: "internal validation detail"
+      }
+    ];
+
+    vi.mocked(global.fetch).mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ detail: structuredDetail })
+    } as any);
+
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const req = {
+      work_location: { lat: 12.0, lng: 77.0 },
+      constraints: { max_work_distance_km: 15 },
+      preferences: { metro_access_weight: 1.0, short_commute_weight: 1.0, cafe_weight: 0, restaurant_weight: 0, park_weight: 0, healthcare_weight: 0, nightlife_weight: 0 },
+    };
+
+    await expect(fetchRecommendations(req)).rejects.toThrow('Invalid request parameters provided.');
+
+    expect(consoleSpy).toHaveBeenCalledWith("Backend validation error:", structuredDetail);
+    consoleSpy.mockRestore();
   });
 });
