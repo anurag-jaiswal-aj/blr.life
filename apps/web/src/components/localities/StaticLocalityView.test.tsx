@@ -52,11 +52,46 @@ describe("StaticLocalityView", () => {
     expect(screen.getByText("25")).toBeInTheDocument(); // Nightlife
   });
 
-  it("renders rent when present", () => {
-    render(<StaticLocalityView locality={mockLocality} />);
-    expect(screen.getByText(/25,000/)).toBeInTheDocument();
-    expect(screen.getByText(/40,000/)).toBeInTheDocument();
-    expect(screen.getByText(/Confidence: high/i)).toBeInTheDocument();
+  describe("rent rendering", () => {
+    it("renders rent range when both bounds are known", () => {
+      const locality = {
+        ...mockLocality,
+        rent: { min_inr: 20000, max_inr: 30000, confidence: "high" }
+      };
+      expect(() => render(<StaticLocalityView locality={locality} />)).not.toThrow();
+      expect(screen.getByText(/20,000/)).toBeInTheDocument();
+      expect(screen.getByText(/30,000/)).toBeInTheDocument();
+      expect(screen.getByText(/Confidence: high/i)).toBeInTheDocument();
+    });
+
+    it("renders 'From' when only minimum rent is known", () => {
+      const locality = {
+        ...mockLocality,
+        rent: { min_inr: 20000, max_inr: null, confidence: "medium" }
+      };
+      expect(() => render(<StaticLocalityView locality={locality} />)).not.toThrow();
+      expect(screen.getByText(/From/)).toBeInTheDocument();
+      expect(screen.getByText(/20,000/)).toBeInTheDocument();
+    });
+
+    it("renders 'Up to' when only maximum rent is known", () => {
+      const locality = {
+        ...mockLocality,
+        rent: { min_inr: null, max_inr: 30000, confidence: "medium" }
+      };
+      expect(() => render(<StaticLocalityView locality={locality} />)).not.toThrow();
+      expect(screen.getByText(/Up to/)).toBeInTheDocument();
+      expect(screen.getByText(/30,000/)).toBeInTheDocument();
+    });
+
+    it("renders fallback message when both rent bounds are unknown", () => {
+      const locality = {
+        ...mockLocality,
+        rent: { min_inr: null, max_inr: null, confidence: "low" }
+      };
+      expect(() => render(<StaticLocalityView locality={locality} />)).not.toThrow();
+      expect(screen.getByText("Rent data unavailable.")).toBeInTheDocument();
+    });
   });
 
   it("renders fallback messages when data is missing", () => {

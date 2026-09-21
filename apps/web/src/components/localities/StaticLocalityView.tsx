@@ -52,11 +52,17 @@ export function StaticLocalityView({ locality }: StaticLocalityViewProps) {
               </svg>
               Observed Rent Range
             </h2>
-            {locality.rent ? (
+            {locality.rent && (locality.rent.min_inr !== null || locality.rent.max_inr !== null) ? (
               <div>
                 <p className="text-2xl font-bold text-gray-900">
-                  &#8377;{locality.rent.min_inr.toLocaleString()} &ndash; &#8377;{locality.rent.max_inr.toLocaleString()}
-                  <span className="text-base font-normal text-gray-500">/month</span>
+                  {locality.rent.min_inr !== null && locality.rent.max_inr !== null ? (
+                    <>&#8377;{locality.rent.min_inr.toLocaleString()} &ndash; &#8377;{locality.rent.max_inr.toLocaleString()}</>
+                  ) : locality.rent.min_inr !== null ? (
+                    <>From &#8377;{locality.rent.min_inr.toLocaleString()}</>
+                  ) : (
+                    <>Up to &#8377;{locality.rent.max_inr?.toLocaleString()}</>
+                  )}
+                  <span className="text-base font-normal text-gray-500 ml-1">/month</span>
                 </p>
                 {locality.rent.confidence && (
                   <p className="text-sm text-gray-500 mt-2 uppercase tracking-wide font-medium">

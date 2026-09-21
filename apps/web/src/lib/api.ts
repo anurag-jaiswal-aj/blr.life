@@ -162,8 +162,8 @@ export interface AmenityCounts {
 }
 
 export interface RentInfo {
-  min_inr: number;
-  max_inr: number;
+  min_inr: number | null;
+  max_inr: number | null;
   confidence: string;
 }
 
