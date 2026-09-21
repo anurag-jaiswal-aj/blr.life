@@ -32,7 +32,7 @@ function isGeocodingResult(r: unknown): r is GeocodingResult {
 /**
  * Search for places by name using our server-side geocoding proxy.
  *
- * - Calls our own /api/geocode route (which proxies Nominatim server-side).
+ * - Calls our FastAPI backend /api/v1/geocode route (which proxies Nominatim server-side).
  * - Does NOT call Nominatim directly from the browser.
  * - Validates all returned coordinates before returning them.
  * - Throws on network errors so callers can display an appropriate error state.

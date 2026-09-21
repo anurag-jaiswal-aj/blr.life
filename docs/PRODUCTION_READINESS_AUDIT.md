@@ -13,9 +13,9 @@ The intended production architecture explicitly targets a **₹0/month** distrib
 - **Docker**: `docker-compose.prod.yml` and `apps/api/Dockerfile` are verified correct. The API builds into a slim, stateless, non-root user image binding to `0.0.0.0:${PORT}`.
 
 ## 3. Frontend Deployment Requirements (Vercel)
-*Evidence: `apps/web/package.json` and `apps/web/src/app/api/geocode/route.ts`*
+*Evidence: `apps/web/package.json`*
 - **Compatibility**: 100% compatible. Vercel automatically detects Next.js.
-- **Server-side Behavior**: The Geocoding proxy (`route.ts`) acts as a serverless edge function pacing requests to Nominatim.
+- **Server-side Behavior**: The frontend geocoding client securely delegates geocoding to the backend.
 - **Environment Variables**: Requires `NEXT_PUBLIC_API_URL` and `NOMINATIM_USER_AGENT`.
 
 ## 4. Backend Deployment Requirements (Render)
@@ -31,8 +31,8 @@ The intended production architecture explicitly targets a **₹0/month** distrib
 - **Connection**: Requires `postgresql+asyncpg://` schema for the backend SQLAlchemy engine, and `postgresql://` schema for GitHub Actions `pg_dump`.
 
 ## 6. External Service Requirements (Map & Geocoding)
-*Evidence: `apps/web/src/components/MapContainer.tsx` and `apps/web/src/app/api/geocode/route.ts`*
-- **Geocoding**: OpenStreetMap Nominatim. *Verified*: The Next.js API route includes strict caching, pacing (1000ms), and custom User-Agent injection to comply with OSM usage policies.
+*Evidence: `apps/web/src/components/MapContainer.tsx` and `apps/api/app/api/v1/endpoints/geocode.py`*
+- **Geocoding**: OpenStreetMap Nominatim. *Verified*: The architecture follows this path: Frontend geocoding client → FastAPI `/api/v1/geocode` → Nominatim. The backend API includes strict caching, pacing (1000ms), and custom User-Agent injection to comply with OSM usage policies.
  36: - **Map Tiles**: Migrated to OpenFreeMap for high-traffic, production-ready vector tile serving without token restrictions.
  37:
  38: ## 7. Environment Variables
@@ -44,7 +44,7 @@ The intended production architecture explicitly targets a **₹0/month** distrib
  44: | `TRUSTED_HOSTS` | Backend | YES | NO | Restrict Host headers |
  45: | `FORWARDED_ALLOW_IPS` | Backend | YES | NO | Trust Render's proxy |
  46: | `NEXT_PUBLIC_API_URL` | Frontend | YES | NO | Point Next.js to Render URL |
- 47: | `NOMINATIM_USER_AGENT`| Frontend | YES | NO | Identify to OSM Nominatim |
+ 47: | `NOMINATIM_USER_AGENT`| Backend | YES | NO | Identify to OSM Nominatim |
  48:
  49: ## 8. Security Findings
  50: - **SQL Injection**: Safely parameterized via SQLAlchemy.
@@ -62,7 +62,7 @@ The intended production architecture explicitly targets a **₹0/month** distrib
  62: - **Backend Unavailable**: Frontend fails gracefully.
  63: - **Database Sleeps (Neon)**: Neon wakes in ~500ms. The API will await the connection.
  64: - **Map Provider Blocked**: Tiles will fail to load, showing a blank background behind markers.
- 65: - **Geocoding Unavailable**: The Next.js proxy returns `502`, preventing search.
+ 65: - **Geocoding Unavailable**: The FastAPI backend returns `502`, preventing search.
  66:
  67: ## 11. ₹0 Cost Analysis
  68: | Component | Current | Required for V1 | Free option | Limit/Risk | Decision |

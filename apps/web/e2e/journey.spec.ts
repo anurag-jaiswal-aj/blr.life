@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('V1 Critical User Journey', () => {
   test('Search work location, adjust controls, and view recommendations', async ({ page }) => {
     // 1. Mock the geocoding API to prevent live Nominatim calls and ensure determinism.
-    await page.route('**/api/geocode*', async route => {
+    await page.route(/\/api\/v1\/geocode/, async route => {
       const url = new URL(route.request().url());
       const query = url.searchParams.get('q');
       
