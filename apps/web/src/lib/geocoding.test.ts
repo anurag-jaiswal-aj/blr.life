@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { searchPlaces } from './geocoding';
+import { API_BASE_URL } from './api';
 
 describe('Geocoding Service', () => {
   beforeEach(() => {
@@ -26,7 +27,7 @@ describe('Geocoding Service', () => {
 
     const results = await searchPlaces('bangalore');
     
-    expect(fetchSpy).toHaveBeenCalledWith('/api/geocode?q=bangalore', { method: 'GET' });
+    expect(fetchSpy).toHaveBeenCalledWith(`${API_BASE_URL}/api/v1/geocode?q=bangalore`, { method: 'GET' });
     expect(results).toEqual(mockResults);
   });
 

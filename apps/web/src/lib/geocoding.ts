@@ -1,3 +1,5 @@
+import { API_BASE_URL } from "./api";
+
 export interface GeocodingResult {
   place_id: number;
   lat: number;
@@ -41,7 +43,7 @@ export async function searchPlaces(query: string): Promise<GeocodingResult[]> {
     return [];
   }
 
-  const url = `/api/geocode?q=${encodeURIComponent(trimmed)}`;
+  const url = `${API_BASE_URL}/api/v1/geocode?q=${encodeURIComponent(trimmed)}`;
   const response = await fetch(url, { method: 'GET' });
 
   if (!response.ok) {
