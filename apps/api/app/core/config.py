@@ -27,6 +27,12 @@ class Settings(BaseSettings):
     TRUSTED_HOSTS: list[str] = ["*"]
     FORWARDED_ALLOW_IPS: str | list[str] = "127.0.0.1"
     RATE_LIMIT_PER_MINUTE: int = Field(default=10, ge=1)
+
+    # Nominatim Configuration
+    NOMINATIM_URL: str = "https://nominatim.openstreetmap.org/search"
+    NOMINATIM_USER_AGENT: str = "blr.life/1.0-dev (local development)"
+    NOMINATIM_TIMEOUT_SECONDS: float = 10.0
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
