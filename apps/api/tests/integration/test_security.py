@@ -272,3 +272,75 @@ async def test_untrusted_proxy_spoofing_prevented(monkeypatch: pytest.MonkeyPatc
         assert response.json() == {"detail": "Too many requests. Please try again later."}
 
     app.dependency_overrides.clear()
+
+
+def test_rate_limit_client_ip_extraction() -> None:
+    from fastapi import Request
+
+    from app.core.config import settings
+    from app.core.middleware import RateLimitMiddleware
+
+    # Temporarily override settings to simulate production for testing extraction logic
+    original_env = settings.ENVIRONMENT
+    settings.ENVIRONMENT = "production"
+
+    try:
+        class MockClient:
+            host = "1.2.3.4"
+
+        def make_request(headers: list[tuple[bytes, bytes]], client_exists: bool = True) -> Request:
+            scope = {
+                "type": "http",
+                "headers": headers,
+                "client": (MockClient.host, 1234) if client_exists else None,
+            }
+            return Request(scope)
+
+        middleware = RateLimitMiddleware(app=None)
+
+        # 1. No forwarded header
+        assert middleware._get_client_ip(make_request([])) == "1.2.3.4"
+
+        # 2. Single forwarded IP
+        req2 = make_request([(b"x-forwarded-for", b"8.8.8.8")])
+        assert middleware._get_client_ip(req2) == "8.8.8.8"
+
+        # 3. Render-style appended chain
+        req3 = make_request([(b"x-forwarded-for", b"8.8.8.8, 203.0.113.10")])
+        assert middleware._get_client_ip(req3) == "203.0.113.10"
+
+        # 4. Multiple forwarded addresses
+        req4 = make_request([(b"x-forwarded-for", b"1.1.1.1, 2.2.2.2, 3.3.3.3")])
+        assert middleware._get_client_ip(req4) == "3.3.3.3"
+
+        # 5. Whitespace
+        req5 = make_request([(b"x-forwarded-for", b" 1.1.1.1 , 2.2.2.2 ")])
+        assert middleware._get_client_ip(req5) == "2.2.2.2"
+
+        # 6. Empty/malformed forwarded list fallback
+        req6 = make_request([(b"x-forwarded-for", b" , , ")])
+        assert middleware._get_client_ip(req6) == "1.2.3.4"
+        req7 = make_request([(b"x-forwarded-for", b"")])
+        assert middleware._get_client_ip(req7) == "1.2.3.4"
+
+        # 7. Regression test for the exact production vulnerability
+        req8 = make_request([(b"x-forwarded-for", b"spoofed_ip, real_ip")])
+        assert middleware._get_client_ip(req8) == "real_ip"
+
+        # No client fallback
+        assert middleware._get_client_ip(make_request([], client_exists=False)) == "unknown"
+
+    finally:
+        settings.ENVIRONMENT = original_env
+
+
+def test_proxy_headers_middleware_config_regression() -> None:
+    from app.core.config import Settings
+
+    # Prove that the configuration safely sanitizes *
+    # This prevents the vulnerability where ProxyHeadersMiddleware takes the left-most IP
+    test_settings = Settings(FORWARDED_ALLOW_IPS="*")
+    assert test_settings.FORWARDED_ALLOW_IPS == "127.0.0.1"
+
+    test_settings_2 = Settings(FORWARDED_ALLOW_IPS="1.1.1.1, 2.2.2.2")
+    assert test_settings_2.FORWARDED_ALLOW_IPS == ["1.1.1.1", "2.2.2.2"]

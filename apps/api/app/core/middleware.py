@@ -68,17 +68,28 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     self._history[ip] = valid_times
             self._last_cleanup = now
 
+    def _get_client_ip(self, request: Request) -> str:
+        if settings.ENVIRONMENT == "production":
+            forwarded = request.headers.get("x-forwarded-for")
+            if forwarded:
+                addresses = [addr.strip() for addr in forwarded.split(",")]
+                valid_addresses = [addr for addr in addresses if addr]
+                if valid_addresses:
+                    # SECURITY ASSUMPTION: Production runs behind Render's proxy, which appends
+                    # the true client IP to the right side of X-Forwarded-For. The rate limiter
+                    # therefore uses the right-most address and ignores attacker-controlled
+                    # prefixes. This logic is specific to Render's proxy behavior and must be
+                    # re-evaluated if the deployment infrastructure changes.
+                    return valid_addresses[-1]
+
+        return request.client.host if request.client else "unknown"
+
     async def dispatch(
         self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
         # We specifically target only computationally expensive endpoints
         if request.method == "POST" and request.url.path.endswith("/api/v1/recommend"):
-            # Note: The direct peer IP is used. If deployed behind a reverse proxy
-            # (e.g. Nginx, Caddy), `uvicorn --proxy-headers` MUST be used so that
-            # `request.client.host` reflects the true client.
-            # Otherwise, all users will share the same bucket and experience systemic DoS.
-            # We intentionally do NOT blindly parse X-Forwarded-For here for safety in V1.
-            ip = request.client.host if request.client else "unknown"
+            ip = self._get_client_ip(request)
             now = time.monotonic()
 
             # Concurrency Note: There are no `await` yields between reading the history length
