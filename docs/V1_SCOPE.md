@@ -40,3 +40,4 @@ It must be realistically shippable within approximately 21 development days usin
 - **Mobile Apps**: iOS/Android native apps are out of scope. Web only.
 - **Real Estate Listings**: We are recommending *areas*, not linking to specific broker listings for houses.
 - **User-generated Content**: No crowdsourcing of data or reviews in V1. All data is managed by the system.
+- **Advanced UX Features**: "Office days per week" commute scaling and "Side-by-side" locality comparison tables are explicitly deferred to post-V1 to aggressively protect the MVP timeline.

@@ -23,7 +23,7 @@ Moving to or navigating Bengaluru housing is overwhelming. Commutes are notoriou
 ## Primary V1 Journey
 1. **Landing Page**: User lands on a clean, modern interface explaining the value proposition.
 2. **Input Constraints**: User enters work location (pin drop or search), housing type (1BHK/2BHK/etc.), and monthly rent budget.
-3. **Input Preferences**: User specifies office days per week, maximum commute, and lifestyle priorities (e.g., quietness, cafes, metro). *Note: Quietness is currently deferred / unsupported in the V1 implementation.*
+3. **Input Preferences**: User specifies office days per week, maximum commute, and lifestyle priorities (e.g., quietness, cafes, metro). *Note: Quietness and office days per week are currently deferred / unsupported in the V1 implementation.*
 4. **Processing**: System calculates and ranks neighbourhoods.
 5. **Results**: User sees top 3-5 ranked neighbourhoods with an overall "BLR Score".
 6. **Inspection**: User clicks a neighbourhood to see exactly *why* it was recommended (pros, cons, commute estimates, budget fit).
@@ -34,7 +34,7 @@ Moving to or navigating Bengaluru housing is overwhelming. Commutes are notoriou
 - **Constraint Filtering**: Exclude neighbourhoods that strictly violate budget or max commute constraints.
 - **Preference Scoring**: Rank remaining neighbourhoods based on weighted user priorities.
 - **Explainability**: Generate human-readable explanations for positive (e.g., "Great metro access") and negative (e.g., "Commute exceeds ideal time by 10 mins") factors.
-- **Comparison**: Side-by-side view of key metrics for top recommendations.
+- **Comparison**: Side-by-side view of key metrics for top recommendations. *(Deferred post-V1)*
 - **Sharing**: Generate shareable URLs for specific recommendation results.
 
 ## Non-Functional Requirements
