@@ -38,11 +38,11 @@ graph TD
 - **Recommendation Boundary**: The engine reads strictly from normalized metric tables in the DB. It does not perform live network calls to external APIs to score a neighbourhood, ensuring sub-second response times.
 
 ## Deployment Concept (V1)
-For V1, a single Docker Compose environment containing:
-1. `frontend` (Next.js Node server)
-2. `backend` (FastAPI Uvicorn server)
-3. `db` (PostgreSQL + PostGIS container)
-This runs on a single VPS (e.g., DigitalOcean Droplet, AWS EC2, or Hetzner).
+For V1, a zero-cost distributed architecture is used:
+1. `frontend` (Vercel - Next.js)
+2. `backend` (Render - FastAPI Docker container)
+3. `db` (Neon - PostgreSQL + PostGIS)
+This avoids the maintenance and cost of a dedicated VPS.
 
 ## Things we are intentionally NOT doing yet
 - **Microservices**: Adds network overhead and complexity without resolving a real scaling need.

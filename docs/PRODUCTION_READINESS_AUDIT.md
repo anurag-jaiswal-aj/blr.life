@@ -56,7 +56,7 @@ The intended production architecture explicitly targets a **₹0/month** distrib
  56: *Evidence: Local DB state verified in previous audit.*
  57: - **Coverage**: 37 localities and 65 metro stations.
  58: - **Missing Data**: Handled elegantly. Distance and amenity math works beautifully.
- 59: - **Affordability**: Missing, but explicitly hidden in the UI (`{false && ...}` in `ControlsPanel.tsx`). The product is honest.
+ 59: - **Affordability**: Data is sparse but actively exposed in the UI. `ControlsPanel.tsx` collects budget constraints, and `ResultCard.tsx` renders affordability status and ranges when data exists. If data is missing, it explicitly falls back to an "unknown" state rather than hallucinating.
  60:
  61: ## 10. Failure-Mode Analysis
  62: - **Backend Unavailable**: Frontend fails gracefully.

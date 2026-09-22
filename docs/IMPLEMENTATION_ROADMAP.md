@@ -25,7 +25,7 @@
 ## Phase 3: Bengaluru Data & Geospatial Foundation (Days 7-10)
 - **Objective**: Ingest real or highly realistic baseline data for Bengaluru.
 - **Deliverables**:
-  - Scripts to ingest major neighbourhood boundaries (GeoJSON).
+  - Scripts to ingest major neighbourhood point centroids (full OSM polygon boundary matching is deferred post-V1).
   - Scripts to ingest Namma Metro stations.
   - Scripts to establish baseline `AreaMetric` data (rent ranges, commute anchors).
 - **Validation**: Database contains ~50 areas with complete baseline metrics.
@@ -48,6 +48,7 @@
   - Constraint and Preference input forms (Sliders/Toggles).
   - Results page with interactive MapLibre map.
   - Shareable URL generation (encoding parameters in URL).
+  - Ability to save/remove recommended localities to a Shortlist.
 - **Validation**: Can complete the primary user journey entirely in the browser.
 - **Checkpoint 6**: End-to-end product flow.
 
@@ -56,7 +57,7 @@
 - **Deliverables**:
   - Rate limiting.
   - Production Docker builds (optimizing image size).
-  - Setting up a basic VPS (e.g., DigitalOcean).
+  - Setting up a zero-cost serverless architecture (Vercel/Render/Neon).
   - TLS/SSL configuration.
 - **Validation**: System is accessible via the public internet securely, and E2E tests pass in production.
 - **Checkpoint 7 & 8**: Production hardening & V1 launch.
