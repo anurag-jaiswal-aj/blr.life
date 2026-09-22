@@ -16,7 +16,7 @@ The intended production architecture explicitly targets a **₹0/month** distrib
 *Evidence: `apps/web/package.json`*
 - **Compatibility**: 100% compatible. Vercel automatically detects Next.js.
 - **Server-side Behavior**: The frontend geocoding client securely delegates geocoding to the backend.
-- **Environment Variables**: Requires `NEXT_PUBLIC_API_URL` and `NOMINATIM_USER_AGENT`.
+- **Environment Variables**: Requires `NEXT_PUBLIC_API_URL`.
 
 ## 4. Backend Deployment Requirements (Render)
 *Evidence: `apps/api/Dockerfile` and `apps/api/app/core/config.py`*

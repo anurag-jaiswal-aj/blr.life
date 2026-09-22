@@ -13,7 +13,7 @@ The product requires extremely basic mapping capabilities:
 - **Interactions**: Basic panning, zooming, and click-to-drop-pin.
 - **Zoom Levels**: City to neighborhood scale (approx 10 to 15).
 - **Features NOT Required**: Routing, live traffic, satellite imagery, directions, turn-by-turn.
-- **Geocoding**: Yes (Currently implemented via a Next.js proxy to Nominatim, which is acceptable if paced).
+- **Geocoding**: Yes (Currently implemented via a FastAPI proxy to Nominatim (`/api/v1/geocode`), paced properly on the backend).
 
 ## Map Provider Comparison
 

@@ -8,14 +8,14 @@ This document outlines the actionable data plan for blr.life V1, detailing what 
 - **Metro Stations**: Static station coordinates from official BMRCL open data or validated community datasets.
 - **Commute/Routing**: Distance matrix via PostGIS `ST_Distance` combined with a manually calibrated Bengaluru traffic heuristic (e.g. 20 km/h average speed), acknowledging that self-hosting OSRM exceeds our ₹0 hosting budget.
 - **Rent Baselines**: Coarse affordability categories ($, $$, $$$) and extremely broad, low-confidence ranges transcribed from market reports and trackers.
-- **Geocoding**: A small curated list of major employment hubs for drop-down selection, falling back to a manual map pin click. Self-hosting Photon exceeds our ₹0 memory budget.
+- **Geocoding**: A server-side FastAPI proxy (`/api/v1/geocode`) querying OSM Nominatim, restricted to India/Bengaluru with a process-local TTL cache and pacing. (Self-hosting Photon exceeded our ₹0 memory budget, so we opted for a paced proxy to comply with OSM usage policies).
 - **Map Rendering**: MapLibre GL JS with Stadia Maps free tier (up to 200k req/mo).
 
 ## 2. What Data V1 Will NOT Use
 - **Real-Time Traffic**: Too expensive/complex for V1 without paid Google Maps APIs.
 - **Live Rent Listings**: No scraping of property portals (violates ToS).
 - **Full Public Transit Routing (GTFS)**: Too complex for a V1 timeline; we will use nearest Metro station distance as a proxy for transit connectivity instead of calculating exact multi-modal transit times.
-- **Public API Dependency for Core Logic**: We will not rely on live calls to Nominatim or Overpass API due to rate limits.
+- **Public API Dependency for Core Logic**: We will not rely on live calls to Overpass API for core ranking logic. (Live Nominatim calls are only used for search input geocoding via a paced proxy).
 
 ## 3. Data Acquisition & Validation
 - **Acquisition**: A CLI-driven offline ingestion pipeline. We will download the `karnataka-latest.osm.pbf` extract from Geofabrik and process it locally to seed PostgreSQL/PostGIS.
@@ -60,7 +60,7 @@ Concepts like `DatasetSnapshot` or `ImportRun` can wait for V2.
 ## 9. Zero-Cost Deployment Reality
 blr.life V1 must be realistically deployable at near-zero cost (e.g., AWS t2.micro or similar 1GB RAM free tier).
 - **FastAPI + Next.js + PostgreSQL/PostGIS**: Can comfortably run on 1GB RAM if optimized.
-- **Photon Geocoding**: Requires Elasticsearch and ~2GB+ RAM. **Cannot self-host for ₹0**. We must use a curated dropdown + manual map pin instead.
+- **Photon Geocoding**: Requires Elasticsearch and ~2GB+ RAM. **Cannot self-host for ₹0**. Instead, we implemented a strict process-local paced proxy to OSM Nominatim via our FastAPI backend.
 - **OSRM Routing**: Requires ~1-2GB RAM just to load Karnataka. **Cannot self-host for ₹0**. We must use PostGIS `ST_Distance` heuristics instead.
 
 ## 10. Proposed Initial Coverage
@@ -83,7 +83,7 @@ blr.life V1 must be realistically deployable at near-zero cost (e.g., AWS t2.mic
 | Commute time | None (Free limit exceeded)| UNSUITABLE | N/A | N/A | Heuristic (Dist / 20km/h) | Straight-line heuristic |
 | Traffic | None (Free) | UNSUITABLE | N/A | N/A | Omit real-time traffic | Static heuristic |
 | Rent | Reports / bengaluru.rent | USABLE WITH CAVEATS| Requires Validation | Low | Coarse Affordability ($) | Omit Rent filter |
-| Geocoding | Curated List + Map Pin | VERIFIED | N/A | High | Dropdown + Manual Pin | None |
+| Geocoding | OSM Nominatim (via API Proxy) | VERIFIED | Yes (ODbL) | High | FastAPI Proxy with Pacing | Manual Pin |
 | Map tiles | MapLibre + Stadia Maps | VERIFIED | Yes (BSD/Terms) | High | Stadia Free Tier | None |
 
 ---

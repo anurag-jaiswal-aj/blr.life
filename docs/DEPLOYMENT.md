@@ -1,5 +1,7 @@
 # blr.life V1 Zero-Cost Deployment Guide
 
+**NOTE:** This is a FUTURE deployment guide. The application is currently NOT deployed. Any domain values shown (like `<frontend-domain.example>`) are placeholders to be replaced when deployment is actually performed. `blr.life` refers exclusively to the product name, not a registered domain.
+
 This guide documents the production deployment architecture for blr.life V1.
 The infrastructure is designed to cost **₹0/month** by leveraging free tiers from Vercel, Render, and Neon.
 
@@ -12,7 +14,7 @@ The infrastructure is designed to cost **₹0/month** by leveraging free tiers f
              v
    [ Vercel Next.js ]
              |
-             |  (HTTPS / api.blr.life)
+             |  (HTTPS / <api-domain.example>)
              v
  [ Render FastAPI (Docker) ] ---> [ OSM Nominatim ]
              |
@@ -55,28 +57,28 @@ The infrastructure is designed to cost **₹0/month** by leveraging free tiers f
  54: 4. Set the Dockerfile path to `apps/api/Dockerfile` (if necessary, override root directory to `apps/api`).
  55: 5. Set Exposed Port to `8000` (Render overrides PORT automatically, but ensure config matches).
  56: 6. Configure the Health Check path to `/health` (HTTP).
- 57: 7. Add Environment Variables:
- 58:    - `ENVIRONMENT` = `production`
- 59:    - `DATABASE_URL` = (The async Neon URL)
- 60:    - `CORS_ORIGINS` = `["https://blr.life", "https://www.blr.life"]`
- 61:    - `TRUSTED_HOSTS` = `["api.blr.life", "*.onrender.com"]`
- 62:    - `FORWARDED_ALLOW_IPS` = `*` (Render proxy)
- 63: 8. Choose the **Free** instance type. Note: Render free instances sleep after 15 minutes of inactivity.
+7. Add Environment Variables:
+   - `ENVIRONMENT` = `production`
+   - `DATABASE_URL` = (The async Neon URL)
+   - `CORS_ORIGINS` = `["https://<frontend-domain.example>"]` (Example of the required frontend URL)
+   - `TRUSTED_HOSTS` = `["<api-domain.example>", "*.onrender.com"]` (Example including Render's wildcard if appropriate)
+   - `FORWARDED_ALLOW_IPS` = (Configure trusted proxy addresses appropriate to the hosting provider's topology. The application intentionally sanitizes `*` to `127.0.0.1` for security. Do NOT blindly trust arbitrary X-Forwarded-For values.)
+   - `NOMINATIM_USER_AGENT` = `blr.life/1.0 (contact@your-email.com)` (Example requiring a real contact address)
+8. Choose the **Free** instance type. Note: Render free instances sleep after 15 minutes of inactivity.
  64:
  65: ## 7. Vercel Frontend Configuration (Next.js)
  66: 1. Create a new Project on [Vercel](https://vercel.com).
  67: 2. Select **Next.js** framework.
  68: 3. Set the Root Directory to `apps/web`.
  69: 4. Add Environment Variables:
- 70:    - `NEXT_PUBLIC_API_URL` = `https://api.blr.life` (or the Render `.onrender.com` URL)
- 71:    - `NOMINATIM_USER_AGENT` = `blr.life/1.0 (contact@your-email.com)`
+ 70:    - `NEXT_PUBLIC_API_URL` = `https://<api-domain.example>` (Example future deployment value, or use Render's `.onrender.com` URL)
  72:
  73: ## 8. Nominatim Identification Configuration
  74: OpenStreetMap policy requires a valid `User-Agent`.
- 75: Configure the `NOMINATIM_USER_AGENT` environment variable in Vercel to include your contact email.
+ 75: Configure the `NOMINATIM_USER_AGENT` environment variable in the backend API (Render/FastAPI) to include your contact email.
  76:
  77: ## 9. CORS Configuration
- 78: Ensure Render's `CORS_ORIGINS` variable matches the Vercel domains exactly (e.g., `["https://blr.life"]`).
+ 78: Ensure Render's `CORS_ORIGINS` variable matches the chosen frontend domains exactly (e.g., `["https://<frontend-domain.example>"]`).
  79:
  80: ## 10. GitHub Backup Secret
  81: To enable the zero-cost GitHub Actions backup workflow:
@@ -84,15 +86,15 @@ The infrastructure is designed to cost **₹0/month** by leveraging free tiers f
  83: 2. Add a new repository secret named `NEON_DATABASE_URL` with the standard (not asyncpg) Neon connection string.
  84:
  85: ## 11. Custom Domains
- 86: - Map `blr.life` to Vercel (via A/CNAME records provided by Vercel).
- 87: - Map `api.blr.life` to Render (via CNAME record to the `.onrender.com` address).
+ 86: - Configure the chosen frontend domain to point to the Vercel project (via A/CNAME records provided by Vercel).
+ 87: - Configure the chosen API domain to point to the Render service (via CNAME record to the `.onrender.com` address).
  88:
  89: ## 12. DNS
  90: Manage DNS via your domain registrar (e.g., Cloudflare, Namecheap). Point the records to the respective platform endpoints.
  91:
  92: ## 13. TLS
- 93: - Vercel automatically issues and renews Let's Encrypt certificates for `blr.life`.
- 94: - Render automatically issues and renews certificates for `api.blr.life`.
+ 93: - Vercel automatically issues and renews Let's Encrypt certificates for the chosen frontend domain.
+ 94: - Render automatically issues and renews certificates for the chosen API domain.
  95:
  96: ## 14. Health Checks
  97: The backend provides two endpoints:
@@ -113,7 +115,7 @@ The infrastructure is designed to cost **₹0/month** by leveraging free tiers f
 - **Database:** Neon free tier includes 6 hours of point-in-time recovery (PITR).
 
 ## 17. Production Smoke Test
-After deployment, visit `https://blr.life`.
+After deployment, visit your chosen frontend URL (e.g., `https://<frontend-domain.example>`).
 1. Type a location (e.g., "Indiranagar"). Wait for geocoding.
 2. Select it. Wait for recommendations (this tests the Koyeb to Neon connection).
 3. If successful, V1 is operational.

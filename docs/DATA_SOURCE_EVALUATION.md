@@ -80,7 +80,7 @@ This document contains the detailed source-by-source research for blr.life V1.
 - **Access Mechanism**: HTTP API (Nominatim) or Self-hosted (Photon).
 - **License**: ODbL (OSM data). Photon software is Apache 2.0.
 - **Operational Risks**: Public Nominatim forbids bulk usage (1 req/sec limit). Self-hosting Photon requires Elasticsearch and ~2GB+ RAM, breaking the zero-cost requirement.
-- **V1 Suitability**: **USABLE WITH CAVEATS**. V1 will use a small curated list of major employment hubs (e.g., "Manyata Tech Park", "Embassy Tech Village") as drop-down selections, falling back to an interactive map-click (manual pin) for arbitrary locations. This avoids geocoding API costs entirely.
+- **V1 Suitability**: **USABLE WITH CAVEATS**. V1 uses Nominatim via a strict process-local paced proxy on the FastAPI backend (1 req/sec) with a TTL cache. This respects OSM's bulk usage policy without requiring expensive self-hosting or relying on a static dropdown.
 
 ## 9. MapLibre & Map Tiles
 - **Official Name**: MapLibre GL JS (Library) + Tile Providers
