@@ -12,7 +12,6 @@ from app.services import geocoding
 
 
 class MockResponse:
-
     def __init__(self, data: bytes, status: int = 200):
         self.data = data
         self.status = status
@@ -48,6 +47,7 @@ def reset_cache_and_pacing() -> None:
     # Reset singleton state before each test
     geocoding._cache.cache.clear()
     geocoding._last_upstream_fetch_time = 0.0
+    geocoding._pacing_lock = asyncio.Lock()
 
 
 async def test_short_query(async_client: AsyncClient, mock_urlopen: MagicMock) -> None:
@@ -114,9 +114,7 @@ async def test_malformed_upstream_result(
     assert len(data["results"]) == 1  # Malformed item skipped
 
 
-async def test_upstream_http_failure(
-    async_client: AsyncClient, mock_urlopen: MagicMock
-) -> None:
+async def test_upstream_http_failure(async_client: AsyncClient, mock_urlopen: MagicMock) -> None:
     mock_urlopen.return_value = MockResponse(b"Error", status=500)
     response = await async_client.get("/api/v1/geocode?q=bangalore")
     assert response.status_code == 502
@@ -125,9 +123,7 @@ async def test_upstream_http_failure(
     assert data["error"] == "Upstream geocoding service failed"
 
 
-async def test_upstream_timeout(
-    async_client: AsyncClient, mock_urlopen: MagicMock
-) -> None:
+async def test_upstream_timeout(async_client: AsyncClient, mock_urlopen: MagicMock) -> None:
     mock_urlopen.side_effect = urllib.error.URLError("timeout")
     response = await async_client.get("/api/v1/geocode?q=bangalore")
     assert response.status_code == 502
@@ -201,9 +197,7 @@ async def test_cache_hit_and_expiry(
     assert mock_urlopen.call_count == 2
 
 
-async def test_cache_boundedness(
-    async_client: AsyncClient, mock_urlopen: MagicMock
-) -> None:
+async def test_cache_boundedness(async_client: AsyncClient, mock_urlopen: MagicMock) -> None:
     # Lower maxsize for test
     geocoding._cache.maxsize = 2
 
@@ -248,9 +242,59 @@ async def test_cancellation_error_safety(
 ) -> None:
     # Force an error
     mock_urlopen.side_effect = urllib.error.URLError("fail")
-    
+
     response = await async_client.get("/api/v1/geocode?q=error")
     assert response.status_code == 502
-    
+
     # Ensure lock is released (we can acquire it immediately)
     assert not geocoding._pacing_lock.locked()
+
+
+async def test_queue_exhaustion_timeout(
+    async_client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import time
+
+    def slow_fetch_sync(*args, **kwargs):
+        time.sleep(2.5)  # Longer than the 2.0s lock acquisition timeout
+        return []
+
+    monkeypatch.setattr("app.services.geocoding._fetch_nominatim_sync", slow_fetch_sync)
+
+    # Launch two concurrent requests for different queries
+    # The first acquires the lock and blocks in the thread for 2.5s.
+    # The second attempts to acquire the lock, times out after 2.0s, and fails safely.
+    results = await asyncio.gather(
+        async_client.get("/api/v1/geocode?q=slow1"),
+        async_client.get("/api/v1/geocode?q=slow2"),
+    )
+
+    statuses = [r.status_code for r in results]
+    assert sorted(statuses) == [200, 502]
+
+    # Verify the failed response preserves the safe public API contract
+    failed_response = next(r for r in results if r.status_code == 502)
+    data = failed_response.json()
+    assert data["results"] == []
+    assert data["error"] == "Upstream geocoding service failed"
+
+    # Verify that the shared pacing lock was NOT left permanently locked
+    # due to an asyncio.TimeoutError cancellation race condition.
+    assert not geocoding._pacing_lock.locked()
+
+    # Perform a subsequent request to prove actual recovery and that
+    # the endpoint can successfully serve traffic again.
+    # We must first remove the slow_fetch_sync mock so the request succeeds.
+    monkeypatch.undo()
+
+    # We need to re-mock urlopen so the test remains deterministic and doesn't hit real Nominatim
+    mock_urlopen = MagicMock()
+    mock_data = [
+        {"place_id": 123, "lat": "12.9", "lon": "77.5", "display_name": "Bangalore", "name": "BLR"}
+    ]
+    mock_urlopen.return_value = MockResponse(json.dumps(mock_data).encode("utf-8"))
+    monkeypatch.setattr("app.services.geocoding.urllib.request.urlopen", mock_urlopen)
+
+    recovery_response = await async_client.get("/api/v1/geocode?q=recovery")
+    assert recovery_response.status_code == 200
+    assert len(recovery_response.json()["results"]) == 1

@@ -104,25 +104,33 @@ async def geocode_query(q: str) -> list[GeocodingResult]:
 
     global _last_upstream_fetch_time
 
-    # Acquire lock to pace requests
-    async with _pacing_lock:
-        now = time.monotonic()
-        time_since_last = now - _last_upstream_fetch_time
-        if time_since_last < 1.0:
-            await asyncio.sleep(1.0 - time_since_last)
-        
-        # Update timestamp immediately before upstream fetch
-        _last_upstream_fetch_time = time.monotonic()
+    # Acquire lock with a bounded timeout to prevent queue exhaustion (DoS)
+    # A 2.0s timeout bounds the acquisition wait time, ensuring no individual
+    # request hangs indefinitely.
+    try:
+        async with asyncio.timeout(2.0) as timeout_ctx:
+            async with _pacing_lock:
+                timeout_ctx.reschedule(None)  # Safely remove timeout once acquired
 
-        referer = settings.CORS_ORIGINS[0] if settings.CORS_ORIGINS else None
-        logger.info(f"Geocoding upstream fetch for: {q_clean}")
-        raw_results = await asyncio.to_thread(
-            _fetch_nominatim_sync,
-            url,
-            settings.NOMINATIM_USER_AGENT,
-            referer,
-            settings.NOMINATIM_TIMEOUT_SECONDS,
-        )
+                now = time.monotonic()
+                time_since_last = now - _last_upstream_fetch_time
+                if time_since_last < 1.0:
+                    await asyncio.sleep(1.0 - time_since_last)
+
+                # Update timestamp immediately before upstream fetch
+                _last_upstream_fetch_time = time.monotonic()
+
+                referer = settings.CORS_ORIGINS[0] if settings.CORS_ORIGINS else None
+                logger.info(f"Geocoding upstream fetch for: {q_clean}")
+                raw_results = await asyncio.to_thread(
+                    _fetch_nominatim_sync,
+                    url,
+                    settings.NOMINATIM_USER_AGENT,
+                    referer,
+                    settings.NOMINATIM_TIMEOUT_SECONDS,
+                )
+    except TimeoutError as e:
+        raise GeocodingException("Geocoding service is currently busy (capacity reached)") from e
 
     # Process and validate results safely outside the lock
     results: list[GeocodingResult] = []
@@ -133,7 +141,7 @@ async def geocode_query(q: str) -> list[GeocodingResult]:
             lng = float(item["lon"])  # Note: Nominatim uses 'lon', our schema uses 'lng'
             display_name = str(item["display_name"])
             name = str(item["name"])
-            
+
             results.append(
                 GeocodingResult(
                     place_id=place_id,
