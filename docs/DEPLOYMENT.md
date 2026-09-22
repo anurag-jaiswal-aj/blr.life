@@ -10,16 +10,16 @@ The infrastructure is designed to cost **₹0/month** by leveraging free tiers f
              |
              |  (HTTPS / Vercel Edge)
              v
-   [ Vercel Next.js ] ---> (Geocode proxy) ---> [ OSM Nominatim ]
+   [ Vercel Next.js ]
              |
              |  (HTTPS / api.blr.life)
              v
- 16:  [ Render FastAPI (Docker) ]
- 17:              |
- 18:              |  (PostgreSQL TCP/IP)
- 19:              v
- 20:  [ Neon PostgreSQL + PostGIS ]
- 21: ```
+ [ Render FastAPI (Docker) ] ---> [ OSM Nominatim ]
+             |
+             |  (PostgreSQL TCP/IP)
+             v
+ [ Neon PostgreSQL + PostGIS ]
+```
  22:
  23: ## 1. Neon Setup (Database)
  24: 1. Create a free account at [Neon.tech](https://neon.tech).
