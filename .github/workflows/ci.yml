@@ -111,6 +111,12 @@ jobs:
         working-directory: ./apps/api
         run: uv sync --frozen --all-extras
 
+      - name: Run Database Migrations
+        working-directory: ./apps/api
+        run: uv run alembic upgrade head
+        env:
+          DATABASE_URL: postgresql+asyncpg://blrlife:blrlife_dev_password@localhost:5432/blrlife
+
       - name: Start Backend API
         working-directory: ./apps/api
         run: |
@@ -194,8 +200,11 @@ jobs:
             exit 1
           fi
 
+      - name: Run Database Migrations
+        run: docker exec api-smoke-test alembic upgrade head
+
       - name: Build Frontend Image
-        run: docker build -t blr-life-web:test --build-arg NEXT_PUBLIC_API_URL=http://localhost:8000 ./apps/web
+        run: docker build --network host -t blr-life-web:test --build-arg NEXT_PUBLIC_API_BASE_URL=http://localhost:8000 ./apps/web
 
       - name: Smoke Test Frontend
         run: |
