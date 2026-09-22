@@ -285,6 +285,7 @@ def test_rate_limit_client_ip_extraction() -> None:
     settings.ENVIRONMENT = "production"
 
     try:
+
         class MockClient:
             host = "1.2.3.4"
 

@@ -620,28 +620,52 @@ def test_recommendation_request_include_locality_ids_limits() -> None:
 
 def test_missing_data_semantics_explicitly() -> None:
     c_case_a = CandidateLocality(
-        id=1, slug="a", name="A", lat=12.0, lng=77.0,
-        work_distance_km=2.0, # norm 1.0
-        metro_distance_m=500.0, metro_confidence="high", # norm 1.0
-        cafe_count=59.0, cafe_confidence="high", # norm 1.0
+        id=1,
+        slug="a",
+        name="A",
+        lat=12.0,
+        lng=77.0,
+        work_distance_km=2.0,  # norm 1.0
+        metro_distance_m=500.0,
+        metro_confidence="high",  # norm 1.0
+        cafe_count=59.0,
+        cafe_confidence="high",  # norm 1.0
     )
     c_case_b = CandidateLocality(
-        id=2, slug="b", name="B", lat=12.0, lng=77.0,
-        work_distance_km=2.0, # norm 1.0
-        metro_distance_m=None, metro_confidence=None, # norm None (missing)
-        cafe_count=59.0, cafe_confidence="high", # norm 1.0
+        id=2,
+        slug="b",
+        name="B",
+        lat=12.0,
+        lng=77.0,
+        work_distance_km=2.0,  # norm 1.0
+        metro_distance_m=None,
+        metro_confidence=None,  # norm None (missing)
+        cafe_count=59.0,
+        cafe_confidence="high",  # norm 1.0
     )
     c_case_c = CandidateLocality(
-        id=3, slug="c", name="C", lat=12.0, lng=77.0,
-        work_distance_km=2.0, # norm 1.0
-        metro_distance_m=3000.0, metro_confidence="high", # norm 0.0 (zero)
-        cafe_count=59.0, cafe_confidence="high", # norm 1.0
+        id=3,
+        slug="c",
+        name="C",
+        lat=12.0,
+        lng=77.0,
+        work_distance_km=2.0,  # norm 1.0
+        metro_distance_m=3000.0,
+        metro_confidence="high",  # norm 0.0 (zero)
+        cafe_count=59.0,
+        cafe_confidence="high",  # norm 1.0
     )
     c_case_d = CandidateLocality(
-        id=4, slug="d", name="D", lat=12.0, lng=77.0,
+        id=4,
+        slug="d",
+        name="D",
+        lat=12.0,
+        lng=77.0,
         work_distance_km=20.0,  # norm 0.0 (force low to not mask other weights if w_work=0)
-        metro_distance_m=None, metro_confidence=None, # missing
-        cafe_count=None, cafe_confidence=None, # missing
+        metro_distance_m=None,
+        metro_confidence=None,  # missing
+        cafe_count=None,
+        cafe_confidence=None,  # missing
     )
 
     constraints = RecommendationConstraints()
@@ -695,16 +719,24 @@ def test_budget_filtering() -> None:
         id: int, slug: str, rent_min: int | None, rent_conf: str | None = "high"
     ) -> CandidateLocality:
         return CandidateLocality(
-            id=id, slug=slug, name=slug.capitalize(), lat=12.0, lng=77.0,
-            work_distance_km=2.0, metro_distance_m=500.0, metro_confidence="high",
-            rent_min_inr=rent_min, rent_max_inr=rent_min, rent_confidence=rent_conf
+            id=id,
+            slug=slug,
+            name=slug.capitalize(),
+            lat=12.0,
+            lng=77.0,
+            work_distance_km=2.0,
+            metro_distance_m=500.0,
+            metro_confidence="high",
+            rent_min_inr=rent_min,
+            rent_max_inr=rent_min,
+            rent_confidence=rent_conf,
         )
 
     c_under = make_candidate(1, "under", 20000)
     c_exact = make_candidate(2, "exact", 25000)
     c_over = make_candidate(3, "over", 25001)
     c_unknown = make_candidate(4, "unknown", None, None)
-    c_insufficient = make_candidate(5, "insufficient", 30000, "insufficient") # Unknown effectively
+    c_insufficient = make_candidate(5, "insufficient", 30000, "insufficient")  # Unknown effectively
 
     all_candidates = [c_under, c_exact, c_over, c_unknown, c_insufficient]
     prefs = RecommendationPreferences()

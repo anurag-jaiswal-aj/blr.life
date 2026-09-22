@@ -58,6 +58,21 @@ jobs:
   frontend:
     runs-on: ubuntu-latest
 
+    services:
+      db:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: blrlife
+          POSTGRES_PASSWORD: blrlife_dev_password
+          POSTGRES_DB: blrlife
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U blrlife -d blrlife"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -88,6 +103,27 @@ jobs:
       - name: Test
         working-directory: ./apps/web
         run: npm test -- --run
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install Backend Dependencies
+        working-directory: ./apps/api
+        run: uv sync --frozen --all-extras
+
+      - name: Start Backend API
+        working-directory: ./apps/api
+        run: |
+          uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          for i in {1..30}; do
+            if curl -s -f http://localhost:8000/health > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl -f http://localhost:8000/health
+        env:
+          DATABASE_URL: postgresql+asyncpg://blrlife:blrlife_dev_password@localhost:5432/blrlife
 
       - name: Build
         working-directory: ./apps/web
@@ -137,9 +173,13 @@ jobs:
           docker run -d --name api-smoke-test -p 8000:8000 \
             -e DATABASE_URL=postgresql+asyncpg://blrlife:blrlife_dev_password@localhost:5432/blrlife \
             --network host blr-life-api:test
-          sleep 5
+          for i in {1..30}; do
+            if curl -s -f http://localhost:8000/health > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
           curl -f http://localhost:8000/health
-          docker stop api-smoke-test
 
       - name: Verify Backend Tooling Exclusion
         run: |
@@ -171,3 +211,6 @@ jobs:
             echo "Container is running as root!"
             exit 1
           fi
+
+      - name: Cleanup Services
+        run: docker stop api-smoke-test

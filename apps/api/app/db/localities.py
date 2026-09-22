@@ -64,8 +64,7 @@ async def get_locality_by_slug(session: AsyncSession, slug: str) -> LocalityDeta
         LocalityRentObservation.rent_max_inr,
         LocalityRentObservation.confidence.cast(String).label("confidence"),
     ).where(
-        (LocalityRentObservation.locality_id == locality_id)
-        & LocalityRentObservation.is_current
+        (LocalityRentObservation.locality_id == locality_id) & LocalityRentObservation.is_current
     )
     result_rents = await session.execute(stmt_rents)
     rent_rows = result_rents.all()
