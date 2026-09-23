@@ -106,7 +106,7 @@ describe('useRecommendations (SUBMISSION)', () => {
     vi.useRealTimers();
   });
 
-  it('debounces rapid request changes within 300ms', () => {
+  it('debounces rapid request changes within 300ms', async () => {
     vi.useFakeTimers();
     const mockRes = { recommendations: [], provenance: { calc_versions_used: [] } };
     vi.mocked(api.fetchRecommendations).mockResolvedValue(mockRes as any);
@@ -136,6 +136,10 @@ describe('useRecommendations (SUBMISSION)', () => {
 
     expect(api.fetchRecommendations).toHaveBeenCalledTimes(1);
     expect(api.fetchRecommendations).toHaveBeenCalledWith(reqC, expect.any(AbortSignal));
+
+    await act(async () => {
+      await Promise.resolve();
+    });
 
     vi.useRealTimers();
   });
@@ -318,8 +322,17 @@ describe('useRecommendations (SUBMISSION)', () => {
 
     // A should not be cached because active was false when it resolved
     const currentCalls = vi.mocked(api.fetchRecommendations).mock.calls.length;
+    
+    let resolveC: (val: any) => void;
+    vi.mocked(api.fetchRecommendations).mockImplementationOnce(() => new Promise(r => { resolveC = r; }));
+
     act(() => { vi.advanceTimersByTime(350); });
     expect(api.fetchRecommendations).toHaveBeenCalledTimes(currentCalls + 1);
+
+    await act(async () => {
+      resolveC!({ recommendations: [], provenance: { calc_versions_used: [] } });
+      await Promise.resolve();
+    });
 
     vi.useRealTimers();
   });
