@@ -370,8 +370,7 @@ describe("RecommendationWorkspace", () => {
     expect(secondCard).toHaveAttribute("aria-pressed", "false");
   });
 
-  it("prevents selecting more than 4 localities for comparison", () => {
-    const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => {});
+  it("prevents selecting more than 4 localities for comparison and shows an inline toast", () => {
     const updateStateMock = vi.fn();
     const defaultState = {
       lat: 12.97,
@@ -428,13 +427,11 @@ describe("RecommendationWorkspace", () => {
     const compareBtn = screen.getAllByRole("button", { name: /Add Fifth Rec to comparison/i })[0];
     fireEvent.click(compareBtn);
 
-    // It should alert the user and NOT call updateState
-    expect(alertMock).toHaveBeenCalledWith(
+    // It should show the inline toast message and NOT call updateState
+    expect(screen.getByRole("alert")).toHaveTextContent(
       "You can compare up to 4 localities at a time. Please remove one before adding another."
     );
     expect(updateStateMock).not.toHaveBeenCalled();
-
-    alertMock.mockRestore();
   });
 
   it("allows clearing comparison selection without affecting save behavior", () => {

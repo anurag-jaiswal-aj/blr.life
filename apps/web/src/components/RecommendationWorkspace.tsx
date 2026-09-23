@@ -13,7 +13,7 @@ import { ControlsDisclosure } from "../components/ControlsDisclosure";
 import { ShareButton } from "../components/ShareButton";
 import { ComparisonActionBar } from "../components/ComparisonActionBar";
 import { ComparisonView } from "../components/ComparisonView";
-import { MapPin, SlidersHorizontal, Map as MapIcon, X } from "lucide-react";
+import { MapPin, SlidersHorizontal, Map as MapIcon, X, AlertCircle } from "lucide-react";
 
 export function RecommendationWorkspace() {
   const { state, updateState, getApiRequest } = useUrlState();
@@ -29,6 +29,14 @@ export function RecommendationWorkspace() {
   );
   const [activeView, setActiveView] = useState<"all" | "saved">("all");
   const [isComparing, setIsComparing] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
 
   const hasLocation = state.lat !== null && state.lng !== null;
 
@@ -56,7 +64,7 @@ export function RecommendationWorkspace() {
         );
       } else {
         if (state.compare_ids.length >= 4) {
-          window.alert(
+          setToastMessage(
             "You can compare up to 4 localities at a time. Please remove one before adding another.",
           );
           return;
@@ -406,6 +414,25 @@ export function RecommendationWorkspace() {
           onClear={handleClearCompare}
           onCompare={handleCompareAction}
         />
+      )}
+
+      {/* TOAST NOTIFICATION */}
+      {toastMessage && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-300 w-[90%] max-w-sm pointer-events-none">
+          <div className="bg-surface-primary border border-border-default shadow-elevated rounded-xl px-4 py-3 flex items-start gap-3 pointer-events-auto">
+            <AlertCircle size={18} className="text-warning-text shrink-0 mt-0.5" />
+            <span role="alert" aria-live="assertive" className="text-[13px] font-medium text-text-primary leading-snug flex-1">
+              {toastMessage}
+            </span>
+            <button
+              onClick={() => setToastMessage(null)}
+              className="p-1 -mr-2 -mt-1 rounded text-text-muted hover:text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-primary transition-colors shrink-0"
+              aria-label="Dismiss message"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
