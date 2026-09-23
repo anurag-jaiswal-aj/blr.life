@@ -36,6 +36,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: LocalityPageProps): Promise<Metadata> {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   const resolvedParams = await params;
   const locality = await fetchLocalityDetail(resolvedParams.slug);
   if (!locality) {
@@ -49,12 +50,12 @@ export async function generateMetadata({
     title: `${locality.name} - Neighbourhood Guide | blr.life`,
     description,
     alternates: {
-      canonical: `https://blr.life/localities/${resolvedParams.slug}`,
+      canonical: `${baseUrl}/localities/${resolvedParams.slug}`,
     },
     openGraph: {
       title: `${locality.name} - Neighbourhood Guide | blr.life`,
       description,
-      url: `https://blr.life/localities/${resolvedParams.slug}`,
+      url: `${baseUrl}/localities/${resolvedParams.slug}`,
     },
   };
 }
