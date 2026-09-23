@@ -16,6 +16,8 @@ interface RecommendationListProps {
   onHover?: (id: number | null) => void;
   onRetry?: () => void;
   onToggleSave?: (id: number) => void;
+  compareLocalityIds?: number[];
+  onToggleCompare?: (id: number) => void;
 }
 
 export function RecommendationList({
@@ -32,6 +34,8 @@ export function RecommendationList({
   onHover,
   onRetry,
   onToggleSave,
+  compareLocalityIds = [],
+  onToggleCompare,
 }: RecommendationListProps) {
   useEffect(() => {
     if (selectedLocalityId !== null && selectedLocalityId !== undefined) {
@@ -137,6 +141,8 @@ export function RecommendationList({
           onSelect={onSelect || (() => {})}
           onHover={onHover}
           onToggleSave={onToggleSave}
+          isCompared={compareLocalityIds.includes(rec.locality_id)}
+          onToggleCompare={onToggleCompare}
         />
       ))}
       <div className="p-4 bg-surface-secondary text-[11px] text-text-secondary text-center uppercase tracking-wider font-bold">

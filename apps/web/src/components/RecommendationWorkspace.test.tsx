@@ -284,7 +284,7 @@ describe("RecommendationWorkspace", () => {
       mounted: true,
     });
     vi.mocked(urlState.useUrlState).mockReturnValue({
-      state: { lat: 12.9, lng: 77.6, max_dist: 5, saved_ids: [] } as unknown as urlState.AppState,
+      state: { lat: 12.9, lng: 77.6, max_dist: 5, saved_ids: [], compare_ids: [] } as unknown as urlState.AppState,
       updateState: vi.fn(),
       getApiRequest: vi.fn(),
     });
@@ -368,5 +368,119 @@ describe("RecommendationWorkspace", () => {
 
     expect(firstCard).toHaveAttribute("aria-pressed", "true");
     expect(secondCard).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("prevents selecting more than 4 localities for comparison", () => {
+    const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    const updateStateMock = vi.fn();
+    const defaultState = {
+      lat: 12.97,
+      lng: 77.59,
+      max_dist: 15,
+      max_budget_inr: null,
+      bhk_type: null,
+      w_metro: 1,
+      w_work: 1,
+      w_cafe: 1,
+      w_restaurant: 1,
+      w_park: 1,
+      w_healthcare: 1,
+      w_nightlife: 1,
+      loc: null,
+      saved_ids: [],
+      compare_ids: [100, 200, 300, 400],
+    };
+
+    vi.mocked(urlState.useUrlState).mockReturnValue({
+      state: defaultState,
+      updateState: updateStateMock,
+      getApiRequest: vi.fn(),
+    });
+
+    vi.mocked(recommendations.useRecommendations).mockReturnValue({
+      data: {
+        recommendations: [
+          {
+            locality_id: 500,
+            name: "Fifth Rec",
+            rank: 5,
+            total_score: 50,
+            score_contributions: {},
+            component_scores: {},
+            raw_metrics: {},
+            metadata: {},
+            affordability: null,
+            explanations: { pros: [], warnings: [] },
+          } as unknown as RecommendationResult,
+        ],
+        provenance: { calc_versions_used: [] },
+      },
+      loading: false,
+      error: null,
+      isValidating: false,
+      isColdStarting: false,
+      retry: vi.fn(),
+    });
+
+    render(<RecommendationWorkspace />);
+
+    // Try to compare the 5th locality
+    const compareBtn = screen.getAllByRole("button", { name: /Add Fifth Rec to comparison/i })[0];
+    fireEvent.click(compareBtn);
+
+    // It should alert the user and NOT call updateState
+    expect(alertMock).toHaveBeenCalledWith(
+      "You can compare up to 4 localities at a time. Please remove one before adding another."
+    );
+    expect(updateStateMock).not.toHaveBeenCalled();
+
+    alertMock.mockRestore();
+  });
+
+  it("allows clearing comparison selection without affecting save behavior", () => {
+    const updateStateMock = vi.fn();
+    const defaultState = {
+      lat: 12.97,
+      lng: 77.59,
+      max_dist: 15,
+      max_budget_inr: null,
+      bhk_type: null,
+      w_metro: 1,
+      w_work: 1,
+      w_cafe: 1,
+      w_restaurant: 1,
+      w_park: 1,
+      w_healthcare: 1,
+      w_nightlife: 1,
+      loc: null,
+      saved_ids: [100, 200],
+      compare_ids: [100, 300],
+    };
+
+    vi.mocked(urlState.useUrlState).mockReturnValue({
+      state: defaultState,
+      updateState: updateStateMock,
+      getApiRequest: vi.fn(),
+    });
+
+    vi.mocked(recommendations.useRecommendations).mockReturnValue({
+      data: { recommendations: [], provenance: { calc_versions_used: [] } },
+      loading: false,
+      error: null,
+      isValidating: false,
+      isColdStarting: false,
+      retry: vi.fn(),
+    });
+
+    render(<RecommendationWorkspace />);
+
+    // Clear comparison
+    const clearBtn = screen.getByRole("button", { name: /Clear comparison selection/i });
+    fireEvent.click(clearBtn);
+
+    expect(updateStateMock).toHaveBeenCalledWith(
+      { compare_ids: [] },
+      { history: "replace" }
+    );
   });
 });

@@ -1,6 +1,6 @@
 import React from "react";
 import { RecommendationResult } from "../lib/api";
-import { Heart } from "lucide-react";
+import { Heart, Scale } from "lucide-react";
 
 interface ResultCardProps {
   result: RecommendationResult;
@@ -10,6 +10,8 @@ interface ResultCardProps {
   onSelect?: (id: number) => void;
   onHover?: (id: number | null) => void;
   onToggleSave?: (id: number) => void;
+  isCompared?: boolean;
+  onToggleCompare?: (id: number) => void;
 }
 
 export function ResultCard({
@@ -20,6 +22,8 @@ export function ResultCard({
   onSelect,
   onHover,
   onToggleSave,
+  isCompared = false,
+  onToggleCompare,
 }: ResultCardProps) {
   const isMetroUnavailable = result.component_scores.metro === null;
 
@@ -73,32 +77,56 @@ export function ResultCard({
             <h3 className="text-[15px] font-bold text-text-primary truncate tracking-tight flex-1">
               {result.name}
             </h3>
-            {onToggleSave && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleSave(result.locality_id);
-                }}
-                aria-pressed={isSaved}
-                aria-label={
-                  isSaved
-                    ? `Remove ${result.name} from shortlist`
-                    : `Save ${result.name} to shortlist`
-                }
-                className={`p-1.5 -mr-1.5 -mt-1 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
-                  isSaved
-                    ? "text-brand-primary"
-                    : "text-text-muted hover:text-text-primary"
-                }`}
-              >
-                <Heart
-                  className="w-5 h-5"
-                  fill={isSaved ? "currentColor" : "none"}
-                  strokeWidth={isSaved ? 0 : 2}
-                />
-              </button>
-            )}
+            <div className="flex items-center gap-1 shrink-0">
+              {onToggleCompare && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleCompare(result.locality_id);
+                  }}
+                  aria-pressed={isCompared}
+                  aria-label={
+                    isCompared
+                      ? `Remove ${result.name} from comparison`
+                      : `Add ${result.name} to comparison`
+                  }
+                  className={`p-1.5 -mr-1 -mt-1 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+                    isCompared
+                      ? "text-brand-primary bg-brand-primary/10"
+                      : "text-text-muted hover:text-text-primary"
+                  }`}
+                >
+                  <Scale className="w-[18px] h-[18px]" />
+                </button>
+              )}
+              {onToggleSave && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleSave(result.locality_id);
+                  }}
+                  aria-pressed={isSaved}
+                  aria-label={
+                    isSaved
+                      ? `Remove ${result.name} from shortlist`
+                      : `Save ${result.name} to shortlist`
+                  }
+                  className={`p-1.5 -mr-1.5 -mt-1 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+                    isSaved
+                      ? "text-brand-primary"
+                      : "text-text-muted hover:text-text-primary"
+                  }`}
+                >
+                  <Heart
+                    className="w-[18px] h-[18px]"
+                    fill={isSaved ? "currentColor" : "none"}
+                    strokeWidth={isSaved ? 0 : 2}
+                  />
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-2 mt-0.5 text-[13px] text-text-secondary">

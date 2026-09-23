@@ -1,12 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
 import { RecommendationResult } from "../lib/api";
-import { AlertTriangle, Info, X, Heart, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, Info, X, Heart, CheckCircle2, Scale } from "lucide-react";
 
 interface NeighbourhoodDetailProps {
   recommendation: RecommendationResult;
   isSaved?: boolean;
   maxWorkDistance?: number;
   onToggleSave?: (id: number) => void;
+  isCompared?: boolean;
+  onToggleCompare?: (id: number) => void;
 }
 
 interface FactorRowProps {
@@ -72,6 +74,8 @@ export function NeighbourhoodDetail({
   isSaved = false,
   maxWorkDistance,
   onToggleSave,
+  isCompared = false,
+  onToggleCompare,
 }: NeighbourhoodDetailProps) {
   const r = recommendation;
   const cs = r.component_scores;
@@ -142,29 +146,50 @@ export function NeighbourhoodDetail({
               <h2 className="text-[20px] font-bold text-text-primary tracking-tight leading-tight truncate">
                 {r.name}
               </h2>
-              {onToggleSave && (
-                <button
-                  type="button"
-                  onClick={() => onToggleSave(r.locality_id)}
-                  aria-pressed={isSaved}
-                  aria-label={
-                    isSaved
-                      ? `Remove ${r.name} from shortlist`
-                      : `Save ${r.name} to shortlist`
-                  }
-                  className={`p-1.5 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary shrink-0 ${
-                    isSaved
-                      ? "text-brand-primary"
-                      : "text-text-muted hover:text-text-primary"
-                  }`}
-                >
-                  <Heart
-                    className="w-[18px] h-[18px]"
-                    fill={isSaved ? "currentColor" : "none"}
-                    strokeWidth={isSaved ? 0 : 2}
-                  />
-                </button>
-              )}
+              <div className="flex items-center gap-1 shrink-0">
+                {onToggleCompare && (
+                  <button
+                    type="button"
+                    onClick={() => onToggleCompare(r.locality_id)}
+                    aria-pressed={isCompared}
+                    aria-label={
+                      isCompared
+                        ? `Remove ${r.name} from comparison`
+                        : `Add ${r.name} to comparison`
+                    }
+                    className={`p-1.5 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary shrink-0 ${
+                      isCompared
+                        ? "text-brand-primary bg-brand-primary/10"
+                        : "text-text-muted hover:text-text-primary"
+                    }`}
+                  >
+                    <Scale className="w-[18px] h-[18px]" />
+                  </button>
+                )}
+                {onToggleSave && (
+                  <button
+                    type="button"
+                    onClick={() => onToggleSave(r.locality_id)}
+                    aria-pressed={isSaved}
+                    aria-label={
+                      isSaved
+                        ? `Remove ${r.name} from shortlist`
+                        : `Save ${r.name} to shortlist`
+                    }
+                    className={`p-1.5 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary shrink-0 ${
+                      isSaved
+                        ? "text-brand-primary"
+                        : "text-text-muted hover:text-text-primary"
+                    }`}
+                  >
+                    <Heart
+                      className="w-[18px] h-[18px]"
+                      fill={isSaved ? "currentColor" : "none"}
+                      strokeWidth={isSaved ? 0 : 2}
+                    />
+                  </button>
+                )}
+              </div>
             </div>
             {nearestStation && (
               <p className="text-[11px] text-text-muted mt-1 flex items-center gap-1.5">

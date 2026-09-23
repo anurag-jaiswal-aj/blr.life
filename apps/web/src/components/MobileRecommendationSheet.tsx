@@ -20,6 +20,8 @@ interface MobileRecommendationSheetProps {
   onRetry?: () => void;
   onToggleSave?: (id: number) => void;
   onToggleView?: () => void;
+  compareLocalityIds?: number[];
+  onToggleCompare?: (id: number) => void;
 }
 
 import { RecommendationResult } from "../lib/api";
@@ -40,6 +42,8 @@ export function MobileRecommendationSheet({
   onRetry,
   onToggleSave,
   onToggleView,
+  compareLocalityIds = [],
+  onToggleCompare,
 }: MobileRecommendationSheetProps) {
   const [expanded, setExpanded] = useState(false);
   const [view, setView] = useState<"list" | "detail">("list");
@@ -148,6 +152,8 @@ export function MobileRecommendationSheet({
               onHover={onHover}
               onRetry={onRetry}
               onToggleSave={onToggleSave}
+              compareLocalityIds={compareLocalityIds}
+              onToggleCompare={onToggleCompare}
             />
           </div>
         </>
@@ -174,6 +180,10 @@ export function MobileRecommendationSheet({
               )}
               maxWorkDistance={maxWorkDistance}
               onToggleSave={onToggleSave}
+              isCompared={compareLocalityIds.includes(
+                selectedRecommendation.locality_id,
+              )}
+              onToggleCompare={onToggleCompare}
             />
           </div>
         </div>

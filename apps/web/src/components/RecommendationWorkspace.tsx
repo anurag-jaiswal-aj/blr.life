@@ -11,6 +11,7 @@ import { WorkLocationInput } from "../components/WorkLocationInput";
 import { MobileRecommendationSheet } from "../components/MobileRecommendationSheet";
 import { ControlsDisclosure } from "../components/ControlsDisclosure";
 import { ShareButton } from "../components/ShareButton";
+import { ComparisonActionBar } from "../components/ComparisonActionBar";
 import { MapPin, SlidersHorizontal, Map as MapIcon, X } from "lucide-react";
 
 export function RecommendationWorkspace() {
@@ -42,6 +43,40 @@ export function RecommendationWorkspace() {
     },
     [state.saved_ids, updateState],
   );
+
+  const handleToggleCompare = useCallback(
+    (localityId: number) => {
+      const isSelected = state.compare_ids.includes(localityId);
+      if (isSelected) {
+        updateState(
+          { compare_ids: state.compare_ids.filter((id) => id !== localityId) },
+          { history: "replace" },
+        );
+      } else {
+        if (state.compare_ids.length >= 4) {
+          window.alert(
+            "You can compare up to 4 localities at a time. Please remove one before adding another.",
+          );
+          return;
+        }
+        updateState(
+          { compare_ids: [...state.compare_ids, localityId] },
+          { history: "replace" },
+        );
+      }
+    },
+    [state.compare_ids, updateState],
+  );
+
+  const handleClearCompare = useCallback(() => {
+    updateState({ compare_ids: [] }, { history: "replace" });
+  }, [updateState]);
+
+  const handleCompareAction = useCallback(() => {
+    // Placeholder callback for actual V2 comparison UI transition
+    console.log("Trigger comparison UI with", state.compare_ids);
+  }, [state.compare_ids]);
+
 
   const displayRecommendations = React.useMemo(() => {
     if (!data?.recommendations) return [];
@@ -262,6 +297,8 @@ export function RecommendationWorkspace() {
                     onHover={setHoveredLocalityId}
                     onRetry={retry}
                     onToggleSave={handleToggleSave}
+                    compareLocalityIds={state.compare_ids}
+                    onToggleCompare={handleToggleCompare}
                   />
                 ) : null}
               </div>
@@ -280,6 +317,10 @@ export function RecommendationWorkspace() {
                 )}
                 onToggleSave={handleToggleSave}
                 maxWorkDistance={state.max_dist}
+                isCompared={state.compare_ids.includes(
+                  selectedRecommendation.locality_id,
+                )}
+                onToggleCompare={handleToggleCompare}
               />
             ) : (
               <div className="flex-1 flex items-center justify-center p-6">
@@ -330,6 +371,8 @@ export function RecommendationWorkspace() {
                 onToggleView={() =>
                   setActiveView((v) => (v === "all" ? "saved" : "all"))
                 }
+                compareLocalityIds={state.compare_ids}
+                onToggleCompare={handleToggleCompare}
               />
             ) : (
               <div className="absolute bottom-0 left-0 right-0 bg-surface-primary rounded-t-3xl shadow-[0_-8px_30px_rgba(0,0,0,0.12)] z-40">
@@ -341,6 +384,11 @@ export function RecommendationWorkspace() {
             ))}
         </div>
       </main>
+      <ComparisonActionBar
+        compareCount={state.compare_ids.length}
+        onClear={handleClearCompare}
+        onCompare={handleCompareAction}
+      />
     </div>
   );
 }

@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { ResultCard } from './ResultCard';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 describe('ResultCard', () => {
   const mockResult: any = {
@@ -66,5 +66,17 @@ describe('ResultCard', () => {
     const estResult = { ...mockResult, affordability: { status: 'affordable', rent_min_inr: 15000, rent_max_inr: 20000, confidence: 'low' } };
     render(<ResultCard result={estResult} />);
     expect(screen.getByText(/\(Est\.\)/i)).toBeInTheDocument();
+  });
+
+  it('supports compare toggle and reflects state', () => {
+    const mockOnToggleCompare = vi.fn();
+    const { rerender } = render(<ResultCard result={mockResult} onToggleCompare={mockOnToggleCompare} isCompared={false} />);
+    const compareBtn = screen.getByLabelText(/Add HSR Layout to comparison/i);
+    fireEvent.click(compareBtn);
+    expect(mockOnToggleCompare).toHaveBeenCalledWith(1);
+
+    rerender(<ResultCard result={mockResult} onToggleCompare={mockOnToggleCompare} isCompared={true} />);
+    const activeCompareBtn = screen.getByLabelText(/Remove HSR Layout from comparison/i);
+    expect(activeCompareBtn).toBeInTheDocument();
   });
 });

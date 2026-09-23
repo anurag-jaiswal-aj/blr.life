@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { NeighbourhoodDetail } from './NeighbourhoodDetail';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { RecommendationResult } from '../lib/api';
 
 const mockRecommendation: RecommendationResult = {
@@ -97,5 +97,17 @@ describe('NeighbourhoodDetail (MATCH SCORE EXPLANATION)', () => {
     // 8. Escape closes it
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('supports compare toggle and reflects state', () => {
+    const mockOnToggleCompare = vi.fn();
+    const { rerender } = render(<NeighbourhoodDetail recommendation={mockRecommendation} onToggleCompare={mockOnToggleCompare} isCompared={false} />);
+    const compareBtn = screen.getByLabelText(/Add Test Locality to comparison/i);
+    fireEvent.click(compareBtn);
+    expect(mockOnToggleCompare).toHaveBeenCalledWith(1);
+
+    rerender(<NeighbourhoodDetail recommendation={mockRecommendation} onToggleCompare={mockOnToggleCompare} isCompared={true} />);
+    const activeCompareBtn = screen.getByLabelText(/Remove Test Locality from comparison/i);
+    expect(activeCompareBtn).toBeInTheDocument();
   });
 });
