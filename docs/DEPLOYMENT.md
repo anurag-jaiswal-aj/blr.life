@@ -117,5 +117,5 @@ The infrastructure is designed to cost **₹0/month** by leveraging free tiers f
 ## 17. Production Smoke Test
 After deployment, visit your chosen frontend URL (e.g., `https://<frontend-domain.example>`).
 1. Type a location (e.g., "Indiranagar"). Wait for geocoding.
-2. Select it. Wait for recommendations (this tests the Koyeb to Neon connection).
+2. Select it. Wait for recommendations (this tests the Render to Neon connection).
 3. If successful, V1 is operational.

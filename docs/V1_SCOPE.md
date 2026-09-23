@@ -23,9 +23,9 @@ It must be realistically shippable within approximately 21 development days usin
 - **UI/UX**: Must work flawlessly on mobile and desktop web.
 
 ### Launch Criteria
-- V1 is deployed to a production environment (e.g., VPS or PaaS).
 - CI/CD pipeline runs tests and linters successfully.
-- Baseline datasets are seeded into the production database.
+- Baseline datasets are seeded into the database.
+- *Note: Production deployment (e.g., VPS or PaaS) is explicitly deferred to Post-V1.*
 
 ## OUT OF SCOPE (V1)
 *These features are explicitly excluded from the first public release.*
