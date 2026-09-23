@@ -6,10 +6,10 @@ V1 relies entirely on deterministic data. We must acquire, normalize, and store 
 
 ### 1. Bengaluru Neighbourhood Boundaries (Areas)
 - **Why**: To know where an area is, calculate distances, and display on a map.
-- **Source**: OpenStreetMap (OSM) administrative boundaries (polygons).
+- **Source**: OpenStreetMap (OSM) points (verified point centroids).
 - **Free/Open**: Yes (OSM ODbL).
-- **Confidence**: High for verified polygons, lower for fallback buffers.
-- **Status**: V1 will use OSM polygons where available. If missing, V1 will fall back to a 1.5km buffer around the OSM point (centroid).
+- **Confidence**: High for verified point centroids.
+- **Status**: V1 locality geography uses verified point centroids exclusively. Full locality polygon boundaries are deferred post-V1.
 
 ### 2. Rent Estimates
 - **Why**: To filter out unaffordable areas.

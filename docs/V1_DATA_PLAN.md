@@ -3,7 +3,7 @@
 This document outlines the actionable data plan for blr.life V1, detailing what data we will use, what we will avoid, and how we will maintain it.
 
 ## 1. What Data V1 WILL Use
-- **Geographic Boundaries & Centroids**: Sourced from OpenStreetMap (OSM) via Geofabrik regional extracts.
+- **Geographic Boundaries & Centroids**: Sourced from OpenStreetMap (OSM) via Geofabrik regional extracts. (Note: V1 relies exclusively on verified point centroids; full polygon boundary matching is deferred post-V1).
 - **Amenities (Restaurants, Cafes, Parks, Hospitals)**: Sourced from OSM (offline ingestion).
 - **Metro Stations**: Static station coordinates from official BMRCL open data or validated community datasets.
 - **Commute/Routing**: Distance matrix via PostGIS `ST_Distance` combined with a manually calibrated Bengaluru traffic heuristic (e.g. 20 km/h average speed), acknowledging that self-hosting OSRM exceeds our ₹0 hosting budget.
@@ -43,7 +43,7 @@ We will strictly import ONLY localities and amenities. We will NOT import the en
   - *High*: Confirmed static data (e.g., distance, metro stations).
   - *Medium*: OSM amenity density (subject to mapping completeness).
   - *Low*: Rent bands (approximate baselines).
-- **Fallback**: If an OSM locality polygon is missing or it is a road-corridor (e.g., Sarjapur Road), we will use a manually curated GeoJSON boundary.
+- **Fallback (Post-V1)**: For future polygon ingestion, if an OSM locality polygon is missing or it is a road-corridor (e.g., Sarjapur Road), we will use a manually curated GeoJSON boundary. V1 relies exclusively on verified point centroids.
 
 ## 7. Provenance Implementation Requirements
 We need to answer: *Which dataset produced this metric? When was it imported? What confidence does it have?*
@@ -74,7 +74,7 @@ blr.life V1 must be realistically deployable at near-zero cost (e.g., AWS t2.mic
 | Data Need | Candidate Source | Verified? | License Clear? | Quality | V1 Decision | Fallback |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | Neighbourhood names | OSM / Curated List | VERIFIED | Yes (ODbL) | High | Curated Static List | None |
-| Neighbourhood boundaries | OSM Polygons | VERIFIED | Yes (ODbL) | Variable | OSM Polygons | Curated GeoJSON |
+| Neighbourhood boundaries | OSM Polygons | VERIFIED | Yes (ODbL) | Variable | Deferred Post-V1 | Curated GeoJSON |
 | Centroids | OSM | VERIFIED | Yes (ODbL) | High | OSM Points | Geocoding service |
 | Amenities | OSM (Geofabrik) | VERIFIED | Yes (ODbL) | Medium | Offline PBF Ingestion | None |
 | Metro stations | Community GeoJSON | USABLE WITH CAVEATS | Yes (CC-BY/ODbL) | High | Static Seed | None |
@@ -106,7 +106,7 @@ blr.life V1 must be realistically deployable at near-zero cost (e.g., AWS t2.mic
    **YES**. By downloading a regional extract (`karnataka-latest.osm.pbf`) and processing it offline into our database, we comply with ODbL.
 
 6. **Can V1 obtain adequate neighbourhood geometry?**
-   **YES, WITH LIMITATIONS**. OSM has polygons for most major layouts, but missing ones and road-corridors will require manual GeoJSON curation.
+   **YES**. By relying exclusively on verified point centroids for V1, we ensure high coverage. Full polygon boundaries and manual GeoJSON curation are deferred to post-V1.
 
 7. **What are the three biggest unresolved data risks?**
    - **Rent Accuracy**: Static affordability bands might frustrate users looking for exact budgets.

@@ -8,10 +8,10 @@ This document defines the conceptual geographic model for blr.life V1. This does
 - **Identifier**: A canonical, human-readable string ID (e.g., `koramangala`).
 - **Display Name**: The formatted, standard name presented in the UI (e.g., "Koramangala").
 
-## 2. Geometry
+## 2. Geometry (Deferred Post-V1)
 - **Primary Geometry**: A PostGIS `POLYGON` or `MULTIPOLYGON`.
 - **Source**: Ideally derived from OpenStreetMap boundaries where the `place=suburb` or `place=neighbourhood` tag provides a well-defined area.
-- **Usage**: Used for spatial joins (e.g., counting the number of restaurants strictly inside the locality) and rendering boundaries on the UI map.
+- **Usage**: Used for spatial joins (e.g., counting the number of restaurants strictly inside the locality) and rendering boundaries on the UI map. *Note: V1 locality geography uses verified point centroids exclusively; full polygon boundaries are deferred post-V1.*
 
 ## 3. Centroid
 - **Concept**: A PostGIS `POINT` representing the geographic center of the locality.
@@ -20,12 +20,12 @@ This document defines the conceptual geographic model for blr.life V1. This does
   - If only a point node exists in OSM (e.g., an area mapped only as a point), this point serves directly as the centroid.
 - **Usage**: Used for distance-based commute calculations (e.g., distance from workplace to Locality Centroid) and radius-based amenity searches (e.g., hospitals within 2km).
 
-## 4. Fallback Geometry
-- **Concept**: Not all colloquial localities have perfectly mapped polygons in OSM.
+## 4. Future Polygon Strategy (Post-V1)
+- **Concept**: Not all colloquial localities have perfectly mapped polygons in OSM. While V1 strictly uses verified point centroids, future polygon ingestion will use this fallback strategy:
 - **Strategy**:
   - **Tier 1 (Optimal)**: OSM Polygon exists and maps well to the colloquial definition.
-  - **Tier 2 (Curated Fallback)**: For missing polygons, ambiguous points, or road-corridors (e.g., Sarjapur Road), V1 will use a manually curated GeoJSON boundary. A fixed radius (like 1.5km) is rejected because locality extents vary wildly in Bengaluru.
-  - **Tier 3 (Centroid Radius)**: If curation is pending, use a variable radius assigned per-locality (e.g., 500m for a dense inner-city point, 2km for a suburban expansion) rather than a hardcoded global constant.
+  - **Tier 2 (Curated Fallback)**: For missing polygons, ambiguous points, or road-corridors (e.g., Sarjapur Road), we will use manually curated GeoJSON boundaries.
+  - **Tier 3 (Centroid Radius)**: If curation is pending, use a variable radius assigned per-locality (e.g., 500m for a dense inner-city point, 2km for a suburban expansion).
 
 ## 5. Alias
 - **Concept**: Alternate names or common misspellings for a locality.
