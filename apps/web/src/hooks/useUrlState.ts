@@ -17,6 +17,7 @@ export interface AppState {
   bhk_type: "1rk" | "1bhk" | "2bhk" | "3bhk" | null;
   loc?: string | null;
   saved_ids: number[];
+  compare_ids: number[];
 }
 
 export type HistoryMode = "replace" | "push";
@@ -36,6 +37,7 @@ const DEFAULT_STATE: AppState = {
   bhk_type: null,
   loc: null,
   saved_ids: [],
+  compare_ids: [],
 };
 
 export function useUrlState() {
@@ -59,6 +61,7 @@ export function useUrlState() {
     const maxBudgetStr = searchParams.get("max_budget");
     const bhkTypeStr = searchParams.get("bhk");
     const savedStr = searchParams.get("saved");
+    const compStr = searchParams.get("comp");
 
     let lat = latStr ? parseFloat(latStr) : DEFAULT_STATE.lat;
     let lng = lngStr ? parseFloat(lngStr) : DEFAULT_STATE.lng;
@@ -121,6 +124,15 @@ export function useUrlState() {
       saved_ids = Array.from(new Set(parsed)).sort((a, b) => a - b);
     }
 
+    let compare_ids: number[] = [];
+    if (compStr) {
+      const parsed = compStr
+        .split(",")
+        .map((s) => parseInt(s.trim(), 10))
+        .filter((n) => !isNaN(n) && n > 0);
+      compare_ids = Array.from(new Set(parsed)).sort((a, b) => a - b).slice(0, 4);
+    }
+
     return {
       lat,
       lng,
@@ -136,6 +148,7 @@ export function useUrlState() {
       bhk_type: bhk_type as AppState["bhk_type"],
       loc,
       saved_ids,
+      compare_ids,
     };
   }, [searchParams]);
 
@@ -175,6 +188,13 @@ export function useUrlState() {
         );
         params.set("saved", uniqueSorted.join(","));
       }
+      if (merged.compare_ids && merged.compare_ids.length > 0) {
+        const uniqueSortedComp = Array.from(new Set(merged.compare_ids))
+          .filter((n) => !isNaN(n) && n > 0)
+          .sort((a, b) => a - b)
+          .slice(0, 4);
+        params.set("comp", uniqueSortedComp.join(","));
+      }
 
       const query = params.toString();
       const url = query ? `${pathname}?${query}` : pathname;
@@ -204,6 +224,10 @@ export function useUrlState() {
       constraints.bhk_type = state.bhk_type;
     }
 
+    const combined_ids = Array.from(
+      new Set([...(state.saved_ids || []), ...(state.compare_ids || [])])
+    );
+
     return {
       work_location: { lat: state.lat, lng: state.lng },
       constraints,
@@ -216,8 +240,8 @@ export function useUrlState() {
         healthcare_weight: state.w_healthcare,
         nightlife_weight: state.w_nightlife,
       },
-      ...(state.saved_ids && state.saved_ids.length > 0
-        ? { include_locality_ids: state.saved_ids }
+      ...(combined_ids.length > 0
+        ? { include_locality_ids: combined_ids }
         : {}),
     };
   }, [state]);

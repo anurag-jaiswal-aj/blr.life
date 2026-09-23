@@ -20,6 +20,7 @@ describe("ControlsPanel (CONTROLS)", () => {
     w_nightlife: 0.0,
     loc: null,
     saved_ids: [],
+    compare_ids: [],
   };
 
   it("renders preference controls when coordinates are present", () => {

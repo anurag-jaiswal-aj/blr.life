@@ -20,6 +20,7 @@ describe("ControlsDisclosure", () => {
     w_healthcare: 0.5,
     w_nightlife: 0.5,
     saved_ids: [],
+    compare_ids: [],
     loc: null,
   };
 

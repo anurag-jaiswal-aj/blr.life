@@ -46,6 +46,7 @@ describe("RecommendationWorkspace", () => {
       w_nightlife: 0.5,
       loc: null,
       saved_ids: [],
+      compare_ids: [],
     };
     vi.mocked(urlState.useUrlState).mockReturnValue({
       state: defaultState,
@@ -94,6 +95,7 @@ describe("RecommendationWorkspace", () => {
       w_nightlife: 0.5,
       loc: null,
       saved_ids: [],
+      compare_ids: [],
     };
 
     vi.mocked(urlState.useUrlState).mockReturnValue({
@@ -145,6 +147,7 @@ describe("RecommendationWorkspace", () => {
       w_nightlife: 0.5,
       loc: null,
       saved_ids: [],
+      compare_ids: [],
     };
     vi.mocked(urlState.useUrlState).mockReturnValue({
       state: defaultState,
@@ -199,6 +202,7 @@ describe("RecommendationWorkspace", () => {
       w_nightlife: 0.5,
       loc: null,
       saved_ids: [],
+      compare_ids: [],
     };
     vi.mocked(urlState.useUrlState).mockReturnValue({
       state: defaultState,
@@ -245,6 +249,7 @@ describe("RecommendationWorkspace", () => {
       w_nightlife: 0.5,
       loc: null,
       saved_ids: [],
+      compare_ids: [],
     };
     vi.mocked(urlState.useUrlState).mockReturnValue({
       state: defaultState,

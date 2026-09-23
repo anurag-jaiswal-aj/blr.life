@@ -27,6 +27,7 @@ describe("useUrlState", () => {
       bhk_type: null,
       loc: null,
       saved_ids: [],
+      compare_ids: [],
     });
   });
 
@@ -50,6 +51,7 @@ describe("useUrlState", () => {
       bhk_type: null,
       loc: null,
       saved_ids: [],
+      compare_ids: [],
     });
   });
 
@@ -73,6 +75,7 @@ describe("useUrlState", () => {
       bhk_type: null,
       loc: null,
       saved_ids: [],
+      compare_ids: [],
     });
   });
 
@@ -280,5 +283,96 @@ describe("useUrlState", () => {
     const replaceUrl = replaceMock.mock.calls[0][0];
     // URL search params encodes commas
     expect(replaceUrl).toContain("saved=101%2C102");
+  });
+
+  it("parses compare_ids from URL correctly (one valid ID)", () => {
+    (navigation as any).__setSearchParams("lat=12.9&lng=77.6&comp=42");
+    const { result } = renderHook(() => useUrlState());
+    expect(result.current.state.compare_ids).toEqual([42]);
+    const req = result.current.getApiRequest();
+    expect(req?.include_locality_ids).toEqual([42]);
+  });
+
+  it("parses compare_ids from URL correctly (multiple valid IDs)", () => {
+    (navigation as any).__setSearchParams("lat=12.9&lng=77.6&comp=10,20,30");
+    const { result } = renderHook(() => useUrlState());
+    expect(result.current.state.compare_ids).toEqual([10, 20, 30]);
+    const req = result.current.getApiRequest();
+    expect(req?.include_locality_ids).toEqual([10, 20, 30]);
+  });
+
+  it("deduplicates compare_ids", () => {
+    (navigation as any).__setSearchParams("lat=12.9&lng=77.6&comp=15,15,15,16");
+    const { result } = renderHook(() => useUrlState());
+    expect(result.current.state.compare_ids).toEqual([15, 16]);
+  });
+
+  it("enforces a maximum of 4 compare_ids", () => {
+    (navigation as any).__setSearchParams("lat=12.9&lng=77.6&comp=1,2,3,4,5,6");
+    const { result } = renderHook(() => useUrlState());
+    expect(result.current.state.compare_ids).toEqual([1, 2, 3, 4]);
+  });
+
+  it("ignores malformed and non-positive compare_ids", () => {
+    (navigation as any).__setSearchParams("lat=12.9&lng=77.6&comp=abc,-5,0,42,NaN");
+    const { result } = renderHook(() => useUrlState());
+    expect(result.current.state.compare_ids).toEqual([42]);
+  });
+
+  it("does not alter existing saved_ids behavior when compare_ids is empty", () => {
+    (navigation as any).__setSearchParams("lat=12.9&lng=77.6&saved=99,100");
+    const { result } = renderHook(() => useUrlState());
+    expect(result.current.state.compare_ids).toEqual([]);
+    expect(result.current.state.saved_ids).toEqual([99, 100]);
+    const req = result.current.getApiRequest();
+    expect(req?.include_locality_ids).toEqual([99, 100]);
+  });
+
+  it("unions compare_ids and saved_ids in getApiRequest without duplicating", () => {
+    (navigation as any).__setSearchParams("lat=12.9&lng=77.6&saved=100,200&comp=200,300");
+    const { result } = renderHook(() => useUrlState());
+    expect(result.current.state.saved_ids).toEqual([100, 200]);
+    expect(result.current.state.compare_ids).toEqual([200, 300]);
+
+    const req = result.current.getApiRequest();
+    // 100, 200, 300 (deduplicated)
+    expect(req?.include_locality_ids).toEqual([100, 200, 300]);
+  });
+
+  it("serializes compare_ids correctly and preserves other state", () => {
+    const replaceMock = (navigation as any).__getReplaceMock();
+    const { result } = renderHook(() => useUrlState());
+
+    act(() => {
+      result.current.updateState({
+        lat: 13.0,
+        lng: 77.5,
+        saved_ids: [10],
+        compare_ids: [25, 20, 25, -1, NaN], // should normalize to 20, 25
+      });
+    });
+
+    const replaceUrl = replaceMock.mock.calls[0][0];
+    expect(replaceUrl).toContain("lat=13");
+    expect(replaceUrl).toContain("lng=77.5");
+    expect(replaceUrl).toContain("saved=10");
+    expect(replaceUrl).toContain("comp=20%2C25");
+  });
+
+  it("does not emit comp when compare_ids is empty", () => {
+    const replaceMock = (navigation as any).__getReplaceMock();
+    const { result } = renderHook(() => useUrlState());
+
+    act(() => {
+      result.current.updateState({
+        lat: 13.0,
+        lng: 77.5,
+        compare_ids: [],
+      });
+    });
+
+    const replaceUrl = replaceMock.mock.calls[0][0];
+    expect(replaceUrl).not.toContain("comp=");
+    expect(replaceUrl).toContain("lat=13");
   });
 });
