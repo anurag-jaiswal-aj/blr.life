@@ -23,7 +23,7 @@ V1 is a consumer-facing application with minimal sensitive data. The primary thr
 - Use simple in-memory or Postgres-backed rate limiting for V1 (no Redis required yet).
 
 ## CORS & CSRF
-- **CORS**: Strictly limited to the production frontend domain (e.g., `https://blr.life`).
+- **CORS**: Strictly limited to the configured frontend origin via environment variables (production deployment is deferred post-V1).
 - **CSRF**: As V1 relies on stateless, anonymous POST requests without session cookies, CSRF is largely mitigated. If sessions are added, standard CSRF tokens will be implemented.
 
 ## Secrets Management

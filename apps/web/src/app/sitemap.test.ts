@@ -16,8 +16,8 @@ describe("sitemap", () => {
 
     const entries = await sitemap();
     expect(entries).toHaveLength(2);
-    expect(entries[0].url).toBe("https://blr.life/");
-    expect(entries[1].url).toBe("https://blr.life/localities/locality-a");
+    expect(entries[0].url).toBe("http://localhost:3000/");
+    expect(entries[1].url).toBe("http://localhost:3000/localities/locality-a");
   });
 
   it("throws an error when fetchLocalities fails, intentionally crashing the build", async () => {

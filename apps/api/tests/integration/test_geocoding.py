@@ -190,7 +190,9 @@ async def test_cache_hit_and_expiry(
     assert mock_urlopen.call_count == 1  # Still 1
 
     # Fast-forward time to expire cache
-    monkeypatch.setattr("app.services.geocoding.time.monotonic", lambda: 999999.0)
+    import time
+    future_time = time.monotonic() + 1000.0
+    monkeypatch.setattr("app.services.geocoding.time.monotonic", lambda: future_time)
 
     # Third call - cache miss (expired)
     await async_client.get("/api/v1/geocode?q=cache")

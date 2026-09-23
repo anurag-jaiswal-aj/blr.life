@@ -52,12 +52,12 @@
 - **Validation**: Can complete the primary user journey entirely in the browser.
 - **Checkpoint 6**: End-to-end product flow.
 
-## Phase 6: Production Hardening & V1 Launch (Days 19-21)
-- **Objective**: Prepare the system for public usage.
+## Phase 6: Production Hardening (Days 19-21)
+- **Objective**: Prepare the system for public usage (deployment is explicitly deferred post-V1).
 - **Deliverables**:
   - Rate limiting.
   - Production Docker builds (optimizing image size).
-  - Setting up a zero-cost serverless architecture (Vercel/Render/Neon).
-  - TLS/SSL configuration.
-- **Validation**: System is accessible via the public internet securely, and E2E tests pass in production.
-- **Checkpoint 7 & 8**: Production hardening & V1 launch.
+  - *Deferred (Post-V1)*: Setting up a zero-cost serverless architecture (Vercel/Render/Neon).
+  - *Deferred (Post-V1)*: TLS/SSL configuration.
+- **Validation**: System is hardened and ready for eventual public internet access.
+- **Checkpoint 7 & 8**: Production hardening (ready for deferred V1 launch).

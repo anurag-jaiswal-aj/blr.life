@@ -2,9 +2,11 @@ import { MetadataRoute } from "next";
 import { fetchLocalities } from "@/lib/api";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
   const sitemapEntries: MetadataRoute.Sitemap = [
     {
-      url: "https://blr.life/",
+      url: `${baseUrl}/`,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 1,
@@ -15,7 +17,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const localities = await fetchLocalities();
     for (const locality of localities) {
       sitemapEntries.push({
-        url: `https://blr.life/localities/${locality.slug}`,
+        url: `${baseUrl}/localities/${locality.slug}`,
         lastModified: new Date(),
         changeFrequency: "weekly",
         priority: 0.8,
