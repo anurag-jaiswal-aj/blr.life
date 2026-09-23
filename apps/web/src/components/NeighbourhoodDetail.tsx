@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { RecommendationResult } from "../lib/api";
-import { AlertTriangle, Info, X, Heart } from "lucide-react";
+import { AlertTriangle, Info, X, Heart, CheckCircle2 } from "lucide-react";
 
 interface NeighbourhoodDetailProps {
   recommendation: RecommendationResult;
@@ -355,6 +355,27 @@ export function NeighbourhoodDetail({
           />
         </div>
       </div>
+      {/* Pros */}
+      {r.explanations.pros.length > 0 && (
+        <div className="px-5 pt-2 pb-2 border-t border-border-subtle">
+          <h3 className="text-[10px] font-bold text-text-secondary uppercase tracking-[0.08em] mb-1.5">
+            Pros
+          </h3>
+          <div className="flex flex-col gap-1.5">
+            {r.explanations.pros.map((pro, i) => (
+              <div key={`pro-${i}`} className="flex items-start gap-2">
+                <CheckCircle2
+                  size={13}
+                  className="text-success-text shrink-0 mt-0.5"
+                />
+                <span className="text-[13px] text-text-secondary leading-snug">
+                  {pro}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Trade-offs */}
       {r.explanations.warnings.length > 0 && (
