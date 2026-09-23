@@ -12,6 +12,7 @@ import { MobileRecommendationSheet } from "../components/MobileRecommendationShe
 import { ControlsDisclosure } from "../components/ControlsDisclosure";
 import { ShareButton } from "../components/ShareButton";
 import { ComparisonActionBar } from "../components/ComparisonActionBar";
+import { ComparisonView } from "../components/ComparisonView";
 import { MapPin, SlidersHorizontal, Map as MapIcon, X } from "lucide-react";
 
 export function RecommendationWorkspace() {
@@ -27,6 +28,7 @@ export function RecommendationWorkspace() {
     null,
   );
   const [activeView, setActiveView] = useState<"all" | "saved">("all");
+  const [isComparing, setIsComparing] = useState(false);
 
   const hasLocation = state.lat !== null && state.lng !== null;
 
@@ -73,9 +75,8 @@ export function RecommendationWorkspace() {
   }, [updateState]);
 
   const handleCompareAction = useCallback(() => {
-    // Placeholder callback for actual V2 comparison UI transition
-    console.log("Trigger comparison UI with", state.compare_ids);
-  }, [state.compare_ids]);
+    setIsComparing(true);
+  }, []);
 
 
   const displayRecommendations = React.useMemo(() => {
@@ -306,7 +307,18 @@ export function RecommendationWorkspace() {
           )}
         </section>
 
-        {/* Pane 2: Detail */}
+        {isComparing ? (
+          <ComparisonView
+            localities={
+              data?.recommendations?.filter((r) =>
+                state.compare_ids.includes(r.locality_id),
+              ) || []
+            }
+            onClose={() => setIsComparing(false)}
+          />
+        ) : (
+          <>
+            {/* Pane 2: Detail */}
         {hasLocation && (
           <section className="hidden lg:flex w-[360px] xl:w-[400px] shrink-0 h-full flex-col border-r border-border-default bg-surface-primary z-10 relative animate-in slide-in-from-left-4 fade-in duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]">
             {selectedRecommendation ? (
@@ -347,9 +359,12 @@ export function RecommendationWorkspace() {
             isPreSearch={!hasLocation}
           />
         </section>
+          </>
+        )}
 
         {/* MOBILE Recommendation Sheet or Setup */}
-        <div className="lg:hidden">
+        {!isComparing && (
+          <div className="lg:hidden">
           {mounted &&
             !isDesktop &&
             (hasLocation ? (
@@ -383,12 +398,15 @@ export function RecommendationWorkspace() {
               </div>
             ))}
         </div>
+        )}
       </main>
-      <ComparisonActionBar
-        compareCount={state.compare_ids.length}
-        onClear={handleClearCompare}
-        onCompare={handleCompareAction}
-      />
+      {!isComparing && (
+        <ComparisonActionBar
+          compareCount={state.compare_ids.length}
+          onClear={handleClearCompare}
+          onCompare={handleCompareAction}
+        />
+      )}
     </div>
   );
 }
