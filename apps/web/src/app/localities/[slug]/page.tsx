@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { fetchLocalities, fetchLocalityDetail } from "@/lib/api";
 import { StaticLocalityView } from "@/components/localities/StaticLocalityView";
 
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 interface LocalityPageProps {
   params: {
@@ -12,10 +12,25 @@ interface LocalityPageProps {
 }
 
 export async function generateStaticParams() {
-  const localities = await fetchLocalities();
-  return localities.map((locality) => ({
-    slug: locality.slug,
-  }));
+  try {
+    const localities = await fetchLocalities();
+    return localities.map((locality) => ({
+      slug: locality.slug,
+    }));
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      (error.message.includes("fetch failed") ||
+        error.message.includes("Failed to fetch localities") ||
+        error.message.includes("ECONNREFUSED"))
+    ) {
+      console.warn(
+        "API unavailable during build. Falling back to on-demand generation for locality pages.",
+      );
+      return [];
+    }
+    throw error;
+  }
 }
 
 export async function generateMetadata({
