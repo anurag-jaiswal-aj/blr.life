@@ -16,7 +16,7 @@ The intended future production architecture explicitly targets a **₹0/month** 
 *Evidence: `apps/web/package.json`*
 - **Compatibility**: 100% compatible. Vercel automatically detects Next.js.
 - **Server-side Behavior**: The frontend geocoding client securely delegates geocoding to the backend.
-- **Environment Variables**: Requires `NEXT_PUBLIC_API_URL`.
+- **Environment Variables**: Requires `NEXT_PUBLIC_API_BASE_URL`.
 
 ## 4. Future Backend Deployment Requirements (Render)
 *Evidence: `apps/api/Dockerfile` and `apps/api/app/core/config.py`*
@@ -42,7 +42,7 @@ The intended future production architecture explicitly targets a **₹0/month** 
 | `CORS_ORIGINS` | Backend | YES | NO | Restrict API to Vercel domain |
 | `TRUSTED_HOSTS` | Backend | YES | NO | Restrict Host headers |
 | `FORWARDED_ALLOW_IPS` | Backend | YES | NO | Trust Render's proxy |
-| `NEXT_PUBLIC_API_URL` | Frontend | YES | NO | Point Next.js to Render URL |
+| `NEXT_PUBLIC_API_BASE_URL` | Frontend | YES | NO | Point Next.js to Render URL |
 | `NOMINATIM_USER_AGENT`| Backend | YES | NO | Identify to OSM Nominatim |
 ## 8. Security Findings
 - **SQL Injection**: Safely parameterized via SQLAlchemy.

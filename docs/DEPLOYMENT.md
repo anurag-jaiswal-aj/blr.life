@@ -71,7 +71,7 @@ The infrastructure is designed to cost **₹0/month** by leveraging free tiers f
  67: 2. Select **Next.js** framework.
  68: 3. Set the Root Directory to `apps/web`.
  69: 4. Add Environment Variables:
- 70:    - `NEXT_PUBLIC_API_URL` = `https://<api-domain.example>` (Example future deployment value, or use Render's `.onrender.com` URL)
+ 70:    - `NEXT_PUBLIC_API_BASE_URL` = `https://<api-domain.example>` (Example future deployment value, or use Render's `.onrender.com` URL)
  72:
  73: ## 8. Nominatim Identification Configuration
  74: OpenStreetMap policy requires a valid `User-Agent`.

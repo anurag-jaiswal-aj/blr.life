@@ -83,7 +83,7 @@ npm run dev
 | `CORS_ORIGINS` | Backend | YES | Allowed CORS origins (e.g. `["http://localhost:3000"]`). |
 | `TRUSTED_HOSTS` | Backend | YES | Allowed Host headers (e.g. `["*"]`). |
 | `FORWARDED_ALLOW_IPS` | Backend | YES | Proxy trust for rate-limiting (e.g. `127.0.0.1`). |
-| `NEXT_PUBLIC_API_URL` | Frontend | YES | The URL pointing to the FastAPI backend. |
+| `NEXT_PUBLIC_API_BASE_URL` | Frontend | YES | The URL pointing to the FastAPI backend. |
 | `NOMINATIM_USER_AGENT` | Frontend | YES | Identifies geocoding requests to OSM Nominatim. |
 
 *(Note: Production MapLibre rendering uses OpenFreeMap; no Mapbox API token is required.)*
