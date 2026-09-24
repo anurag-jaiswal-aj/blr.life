@@ -439,4 +439,71 @@ describe("useUrlState", () => {
     const replaceUrl = replaceMock.mock.calls[0][0];
     expect(replaceUrl).not.toContain("days=");
   });
+
+  describe("getApiRequest with Office Days scaling", () => {
+    it("preserves the existing work weight when days=5 (100%)", () => {
+      (navigation as any).__setSearchParams("lat=12.9&lng=77.6&w_work=1.0&days=5");
+      const { result } = renderHook(() => useUrlState());
+      const req = result.current.getApiRequest();
+      expect(req?.preferences.short_commute_weight).toBe(1.0);
+    });
+
+    it("scales work weight correctly for days=4 (80%)", () => {
+      (navigation as any).__setSearchParams("lat=12.9&lng=77.6&w_work=1.0&days=4");
+      const { result } = renderHook(() => useUrlState());
+      const req = result.current.getApiRequest();
+      expect(req?.preferences.short_commute_weight).toBe(0.8);
+    });
+
+    it("scales work weight correctly for days=3 (60%)", () => {
+      (navigation as any).__setSearchParams("lat=12.9&lng=77.6&w_work=1.0&days=3");
+      const { result } = renderHook(() => useUrlState());
+      const req = result.current.getApiRequest();
+      expect(req?.preferences.short_commute_weight).toBe(0.6);
+    });
+
+    it("scales work weight correctly for days=2 (40%)", () => {
+      (navigation as any).__setSearchParams("lat=12.9&lng=77.6&w_work=1.0&days=2");
+      const { result } = renderHook(() => useUrlState());
+      const req = result.current.getApiRequest();
+      expect(req?.preferences.short_commute_weight).toBe(0.4);
+    });
+
+    it("scales work weight correctly for days=1 (20%)", () => {
+      (navigation as any).__setSearchParams("lat=12.9&lng=77.6&w_work=1.0&days=1");
+      const { result } = renderHook(() => useUrlState());
+      const req = result.current.getApiRequest();
+      expect(req?.preferences.short_commute_weight).toBe(0.2);
+    });
+
+    it("scales work weight correctly for days=0 (0%)", () => {
+      (navigation as any).__setSearchParams("lat=12.9&lng=77.6&w_work=1.0&days=0");
+      const { result } = renderHook(() => useUrlState());
+      const req = result.current.getApiRequest();
+      expect(req?.preferences.short_commute_weight).toBe(0);
+    });
+
+    it("scales Low base weight (0.5) correctly across days", () => {
+      (navigation as any).__setSearchParams("lat=12.9&lng=77.6&w_work=0.5&days=3");
+      const { result } = renderHook(() => useUrlState());
+      const req = result.current.getApiRequest();
+      expect(req?.preferences.short_commute_weight).toBe(0.3);
+    });
+
+    it("leaves other recommendation weights unchanged", () => {
+      (navigation as any).__setSearchParams("lat=12.9&lng=77.6&w_work=1.0&w_metro=1.0&days=2");
+      const { result } = renderHook(() => useUrlState());
+      const req = result.current.getApiRequest();
+      expect(req?.preferences.short_commute_weight).toBe(0.4);
+      expect(req?.preferences.metro_access_weight).toBe(1.0);
+    });
+
+    it("does not send an office_days field to the API", () => {
+      (navigation as any).__setSearchParams("lat=12.9&lng=77.6&w_work=1.0&days=2");
+      const { result } = renderHook(() => useUrlState());
+      const req = result.current.getApiRequest();
+      expect(req as any).not.toHaveProperty("office_days");
+      expect(req?.preferences).not.toHaveProperty("office_days");
+    });
+  });
 });

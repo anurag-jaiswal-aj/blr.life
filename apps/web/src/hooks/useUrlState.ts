@@ -242,7 +242,7 @@ export function useUrlState() {
       constraints,
       preferences: {
         metro_access_weight: state.w_metro,
-        short_commute_weight: state.w_work,
+        short_commute_weight: state.w_work * (state.days / 5.0),
         cafe_weight: state.w_cafe,
         restaurant_weight: state.w_restaurant,
         park_weight: state.w_park,
