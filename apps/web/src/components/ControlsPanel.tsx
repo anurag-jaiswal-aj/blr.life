@@ -209,6 +209,42 @@ export function ControlsPanel({ state, updateState }: ControlsPanelProps) {
             />
           </div>
 
+          {state.w_work > 0 && (
+            <div className="flex flex-col gap-2">
+              <div className="flex justify-between items-center">
+                <label
+                  htmlFor="days"
+                  className="text-sm font-medium text-text-primary"
+                >
+                  Days per week
+                </label>
+                <span className="text-sm font-bold text-brand-primary tabular-nums">
+                  {state.days === 0
+                    ? "Fully remote"
+                    : `${state.days} ${state.days === 1 ? "day" : "days"}/week`}
+                </span>
+              </div>
+              <input
+                id="days"
+                type="range"
+                min="0"
+                max="5"
+                step="1"
+                value={state.days}
+                onChange={(e) =>
+                  updateState({ days: parseInt(e.target.value, 10) })
+                }
+                className="w-full h-1 bg-border-default rounded-full appearance-none accent-brand-primary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/50"
+                aria-label="Days per week"
+                aria-valuetext={
+                  state.days === 0
+                    ? "Fully remote"
+                    : `${state.days} ${state.days === 1 ? "day" : "days"} per week`
+                }
+              />
+            </div>
+          )}
+
           <div className="flex flex-col gap-2">
             <div className="flex justify-between items-center">
               <label

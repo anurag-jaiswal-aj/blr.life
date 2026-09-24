@@ -116,4 +116,61 @@ describe("ControlsPanel (CONTROLS)", () => {
     expect(metroSlider).toHaveAttribute("aria-valuetext", "100% Priority");
     expect(distSlider).toHaveAttribute("aria-valuetext", "15 km");
   });
+
+  describe("Office Days (Days per week) UI", () => {
+    it("shows Days per week control when Commute is High (w_work=1.0)", () => {
+      const state = { ...defaultState, w_work: 1.0 };
+      render(<ControlsPanel state={state} updateState={vi.fn()} />);
+      expect(screen.getByLabelText(/Days per week/i)).toBeInTheDocument();
+    });
+
+    it("shows Days per week control when Commute is Low (w_work=0.5)", () => {
+      const state = { ...defaultState, w_work: 0.5 };
+      render(<ControlsPanel state={state} updateState={vi.fn()} />);
+      expect(screen.getByLabelText(/Days per week/i)).toBeInTheDocument();
+    });
+
+    it("hides Days per week control when Commute is Off (w_work=0.0)", () => {
+      const state = { ...defaultState, w_work: 0.0 };
+      render(<ControlsPanel state={state} updateState={vi.fn()} />);
+      expect(screen.queryByLabelText(/Days per week/i)).not.toBeInTheDocument();
+    });
+
+    it("displays the default value of 5 days correctly", () => {
+      const state = { ...defaultState, w_work: 1.0, days: 5 };
+      render(<ControlsPanel state={state} updateState={vi.fn()} />);
+      const slider = screen.getByLabelText(/Days per week/i);
+      expect(slider).toHaveValue("5");
+      expect(slider).toHaveAttribute("aria-valuetext", "5 days per week");
+      expect(screen.getByText("5 days/week")).toBeInTheDocument();
+    });
+
+    it("updates state correctly when a new day value is selected", () => {
+      const updateSpy = vi.fn();
+      const state = { ...defaultState, w_work: 1.0, days: 5 };
+      render(<ControlsPanel state={state} updateState={updateSpy} />);
+
+      const slider = screen.getByLabelText(/Days per week/i);
+      fireEvent.change(slider, { target: { value: "3" } });
+
+      expect(updateSpy).toHaveBeenCalledWith({ days: 3 });
+    });
+
+    it("formats 1 day correctly (singular)", () => {
+      const state = { ...defaultState, w_work: 1.0, days: 1 };
+      render(<ControlsPanel state={state} updateState={vi.fn()} />);
+      const slider = screen.getByLabelText(/Days per week/i);
+      expect(slider).toHaveAttribute("aria-valuetext", "1 day per week");
+      expect(screen.getByText("1 day/week")).toBeInTheDocument();
+    });
+
+    it("formats 0 days as Fully remote", () => {
+      const state = { ...defaultState, w_work: 1.0, days: 0 };
+      render(<ControlsPanel state={state} updateState={vi.fn()} />);
+      const slider = screen.getByLabelText(/Days per week/i);
+      expect(slider).toHaveAttribute("aria-valuetext", "Fully remote");
+      // Use getByText with a selector to grab the exact span to avoid conflicts if there are multiple texts
+      expect(screen.getAllByText("Fully remote")[0]).toBeInTheDocument();
+    });
+  });
 });
