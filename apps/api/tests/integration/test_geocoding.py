@@ -191,6 +191,7 @@ async def test_cache_hit_and_expiry(
 
     # Fast-forward time to expire cache
     import time
+
     future_time = time.monotonic() + 1000.0
     monkeypatch.setattr("app.services.geocoding.time.monotonic", lambda: future_time)
 
