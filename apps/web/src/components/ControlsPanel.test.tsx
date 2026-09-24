@@ -21,6 +21,7 @@ describe("ControlsPanel (CONTROLS)", () => {
     loc: null,
     saved_ids: [],
     compare_ids: [],
+    days: 5,
   };
 
   it("renders preference controls when coordinates are present", () => {

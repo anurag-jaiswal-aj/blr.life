@@ -22,6 +22,7 @@ describe("ControlsDisclosure", () => {
     saved_ids: [],
     compare_ids: [],
     loc: null,
+    days: 5,
   };
 
   it("renders the Refine button", () => {

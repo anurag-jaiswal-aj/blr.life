@@ -47,6 +47,7 @@ describe("RecommendationWorkspace", () => {
       loc: null,
       saved_ids: [],
       compare_ids: [],
+      days: 5,
     };
     vi.mocked(urlState.useUrlState).mockReturnValue({
       state: defaultState,
@@ -96,6 +97,7 @@ describe("RecommendationWorkspace", () => {
       loc: null,
       saved_ids: [],
       compare_ids: [],
+      days: 5,
     };
 
     vi.mocked(urlState.useUrlState).mockReturnValue({
@@ -148,6 +150,7 @@ describe("RecommendationWorkspace", () => {
       loc: null,
       saved_ids: [],
       compare_ids: [],
+      days: 5,
     };
     vi.mocked(urlState.useUrlState).mockReturnValue({
       state: defaultState,
@@ -203,6 +206,7 @@ describe("RecommendationWorkspace", () => {
       loc: null,
       saved_ids: [],
       compare_ids: [],
+      days: 5,
     };
     vi.mocked(urlState.useUrlState).mockReturnValue({
       state: defaultState,
@@ -250,6 +254,7 @@ describe("RecommendationWorkspace", () => {
       loc: null,
       saved_ids: [],
       compare_ids: [],
+      days: 5,
     };
     vi.mocked(urlState.useUrlState).mockReturnValue({
       state: defaultState,
@@ -388,6 +393,7 @@ describe("RecommendationWorkspace", () => {
       loc: null,
       saved_ids: [],
       compare_ids: [100, 200, 300, 400],
+      days: 5,
     };
 
     vi.mocked(urlState.useUrlState).mockReturnValue({
@@ -452,6 +458,7 @@ describe("RecommendationWorkspace", () => {
       loc: null,
       saved_ids: [100, 200],
       compare_ids: [100, 300],
+      days: 5,
     };
 
     vi.mocked(urlState.useUrlState).mockReturnValue({

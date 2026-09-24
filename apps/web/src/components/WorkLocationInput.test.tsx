@@ -23,6 +23,7 @@ describe("WorkLocationInput", () => {
     loc: null,
     saved_ids: [],
     compare_ids: [],
+    days: 5,
   };
 
   beforeEach(() => {

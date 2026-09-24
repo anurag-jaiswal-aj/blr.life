@@ -18,6 +18,7 @@ export interface AppState {
   loc?: string | null;
   saved_ids: number[];
   compare_ids: number[];
+  days: number;
 }
 
 export type HistoryMode = "replace" | "push";
@@ -38,6 +39,7 @@ const DEFAULT_STATE: AppState = {
   loc: null,
   saved_ids: [],
   compare_ids: [],
+  days: 5,
 };
 
 export function useUrlState() {
@@ -62,6 +64,7 @@ export function useUrlState() {
     const bhkTypeStr = searchParams.get("bhk");
     const savedStr = searchParams.get("saved");
     const compStr = searchParams.get("comp");
+    const daysStr = searchParams.get("days");
 
     let lat = latStr ? parseFloat(latStr) : DEFAULT_STATE.lat;
     let lng = lngStr ? parseFloat(lngStr) : DEFAULT_STATE.lng;
@@ -86,6 +89,7 @@ export function useUrlState() {
     let bhk_type =
       (bhkTypeStr as "1rk" | "1bhk" | "2bhk" | "3bhk" | null) ||
       DEFAULT_STATE.bhk_type;
+    let days = daysStr ? parseInt(daysStr, 10) : DEFAULT_STATE.days;
 
     if (lat !== null && isNaN(lat)) lat = null;
     if (lng !== null && isNaN(lng)) lng = null;
@@ -114,6 +118,7 @@ export function useUrlState() {
       !["1rk", "1bhk", "2bhk", "3bhk"].includes(bhk_type)
     )
       bhk_type = null;
+    if (isNaN(days) || days < 0 || days > 5) days = DEFAULT_STATE.days;
 
     let saved_ids: number[] = [];
     if (savedStr) {
@@ -149,6 +154,7 @@ export function useUrlState() {
       loc,
       saved_ids,
       compare_ids,
+      days,
     };
   }, [searchParams]);
 
@@ -194,6 +200,9 @@ export function useUrlState() {
           .sort((a, b) => a - b)
           .slice(0, 4);
         params.set("comp", uniqueSortedComp.join(","));
+      }
+      if (merged.days !== DEFAULT_STATE.days) {
+        params.set("days", merged.days.toString());
       }
 
       const query = params.toString();

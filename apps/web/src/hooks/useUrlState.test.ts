@@ -28,6 +28,7 @@ describe("useUrlState", () => {
       loc: null,
       saved_ids: [],
       compare_ids: [],
+      days: 5,
     });
   });
 
@@ -52,6 +53,7 @@ describe("useUrlState", () => {
       loc: null,
       saved_ids: [],
       compare_ids: [],
+      days: 5,
     });
   });
 
@@ -76,6 +78,7 @@ describe("useUrlState", () => {
       loc: null,
       saved_ids: [],
       compare_ids: [],
+      days: 5,
     });
   });
 
@@ -374,5 +377,66 @@ describe("useUrlState", () => {
     const replaceUrl = replaceMock.mock.calls[0][0];
     expect(replaceUrl).not.toContain("comp=");
     expect(replaceUrl).toContain("lat=13");
+  });
+  it("parses valid days parameter correctly", () => {
+    (navigation as any).__setSearchParams("lat=12.9&lng=77.6&days=2");
+    const { result } = renderHook(() => useUrlState());
+    expect(result.current.state.days).toBe(2);
+  });
+
+  it("parses days=0 correctly", () => {
+    (navigation as any).__setSearchParams("lat=12.9&lng=77.6&days=0");
+    const { result } = renderHook(() => useUrlState());
+    expect(result.current.state.days).toBe(0);
+  });
+
+  it("falls back to 5 for negative days", () => {
+    (navigation as any).__setSearchParams("lat=12.9&lng=77.6&days=-1");
+    const { result } = renderHook(() => useUrlState());
+    expect(result.current.state.days).toBe(5);
+  });
+
+  it("falls back to 5 for days greater than 5", () => {
+    (navigation as any).__setSearchParams("lat=12.9&lng=77.6&days=6");
+    const { result } = renderHook(() => useUrlState());
+    expect(result.current.state.days).toBe(5);
+  });
+
+  it("falls back to 5 for malformed days", () => {
+    (navigation as any).__setSearchParams("lat=12.9&lng=77.6&days=abc");
+    const { result } = renderHook(() => useUrlState());
+    expect(result.current.state.days).toBe(5);
+  });
+
+  it("serializes days when different from default", () => {
+    const replaceMock = (navigation as any).__getReplaceMock();
+    const { result } = renderHook(() => useUrlState());
+
+    act(() => {
+      result.current.updateState({
+        lat: 13.0,
+        lng: 77.5,
+        days: 3,
+      });
+    });
+
+    const replaceUrl = replaceMock.mock.calls[0][0];
+    expect(replaceUrl).toContain("days=3");
+  });
+
+  it("does not serialize days when it matches default", () => {
+    const replaceMock = (navigation as any).__getReplaceMock();
+    const { result } = renderHook(() => useUrlState());
+
+    act(() => {
+      result.current.updateState({
+        lat: 13.0,
+        lng: 77.5,
+        days: 5,
+      });
+    });
+
+    const replaceUrl = replaceMock.mock.calls[0][0];
+    expect(replaceUrl).not.toContain("days=");
   });
 });
