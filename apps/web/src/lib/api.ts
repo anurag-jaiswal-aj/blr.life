@@ -62,6 +62,9 @@ export interface AffordabilityInfo {
   confidence: string | null;
 }
 
+// Ensure global GeoJSON types are used
+import type { Geometry } from "geojson";
+
 export interface RecommendationResult {
   locality_id: number;
   slug: string;
@@ -84,6 +87,7 @@ export interface RecommendationResult {
   };
   affordability: AffordabilityInfo | null;
   explanations: RecommendationExplanations;
+  geometry_geojson?: Geometry | null;
 }
 
 export interface RecommendationProvenance {
@@ -175,6 +179,7 @@ export interface LocalityDetailResponse {
   slug: string;
   parent_zone: string | null;
   centroid: Coordinates;
+  geometry_geojson?: Geometry | null;
   metro: MetroInfo | null;
   amenities: AmenityCounts;
   rent: RentInfo | null;

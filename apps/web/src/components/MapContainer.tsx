@@ -1,5 +1,6 @@
-import React, { useRef, useEffect } from 'react';
-import Map, { Marker, NavigationControl, MapRef } from 'react-map-gl/maplibre';
+import React, { useRef, useEffect, useMemo } from 'react';
+import Map, { Marker, NavigationControl, MapRef, Source, Layer } from 'react-map-gl/maplibre';
+import type { FeatureCollection } from 'geojson';
 import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { RecommendationResult } from '../lib/api';
@@ -62,6 +63,27 @@ export function MapContainer({
     }
   };
 
+  const geojsonFeatures = useMemo(() => {
+    const features = recommendations
+      .filter((rec) => rec.geometry_geojson)
+      .map((rec) => ({
+        type: 'Feature' as const,
+        geometry: rec.geometry_geojson!,
+        properties: {
+          locality_id: rec.locality_id,
+          name: rec.name,
+          rank: rec.rank,
+        },
+      }));
+
+    if (features.length === 0) return null;
+
+    return {
+      type: 'FeatureCollection' as const,
+      features,
+    } as FeatureCollection;
+  }, [recommendations]);
+
 
   return (
     <div className="w-full h-full relative bg-surface-secondary">
@@ -85,6 +107,29 @@ export function MapContainer({
         interactiveLayerIds={[]}
       >
         <NavigationControl position="top-right" />
+
+        {/* Polygon Layers */}
+        {geojsonFeatures && (
+          <Source id="locality-polygons" type="geojson" data={geojsonFeatures}>
+            <Layer
+              id="locality-polygons-fill"
+              type="fill"
+              paint={{
+                'fill-color': '#0f172a',
+                'fill-opacity': 0.1,
+              }}
+            />
+            <Layer
+              id="locality-polygons-line"
+              type="line"
+              paint={{
+                'line-color': '#0f172a',
+                'line-width': 1.5,
+                'line-opacity': 0.2,
+              }}
+            />
+          </Source>
+        )}
 
         {/* Work Location Marker */}
         {workLat !== null && workLng !== null && (

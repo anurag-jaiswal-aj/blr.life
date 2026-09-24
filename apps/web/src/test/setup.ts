@@ -48,5 +48,17 @@ vi.mock('react-map-gl/maplibre', () => {
       }, props.children);
     },
     NavigationControl: () => React.createElement('div', { 'data-testid': 'mock-nav-control' }),
+    Source: function MockSource(props: any) {
+      return React.createElement('div', {
+        'data-testid': 'mock-source',
+        'data-source-id': props.id,
+      }, props.children);
+    },
+    Layer: function MockLayer(props: any) {
+      return React.createElement('div', {
+        'data-testid': 'mock-layer',
+        'data-layer-id': props.id,
+      });
+    },
   };
 });

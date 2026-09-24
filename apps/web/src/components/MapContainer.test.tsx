@@ -3,6 +3,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MapContainer } from './MapContainer';
 import { describe, it, expect, vi } from 'vitest';
+import * as mapGL from 'react-map-gl/maplibre';
 
 describe('MapContainer (MAP/COORDINATE SYNCHRONIZATION)', () => {
   it('renders MapLibre map and navigation controls safely', () => {
@@ -82,5 +83,73 @@ describe('MapContainer (MAP/COORDINATE SYNCHRONIZATION)', () => {
     // E. Unrelated keys
     fireEvent.keyDown(indiranagarMarker, { key: 'Escape' });
     expect(selectSpy).not.toHaveBeenCalled();
+  });
+
+  it('renders GeoJSON polygons when geometry is provided', () => {
+    const recommendations: any = [
+      {
+        locality_id: 1,
+        name: 'With Polygon',
+        rank: 1,
+        metadata: { coordinates: { lat: 12.9, lng: 77.6 } },
+        geometry_geojson: {
+          type: 'MultiPolygon',
+          coordinates: [[[[77.5, 12.9], [77.6, 12.9], [77.6, 13.0], [77.5, 13.0], [77.5, 12.9]]]]
+        }
+      },
+      {
+        locality_id: 2,
+        name: 'No Polygon',
+        rank: 2,
+        metadata: { coordinates: { lat: 13.0, lng: 77.7 } },
+        geometry_geojson: null
+      },
+    ];
+
+    const sourceSpy = vi.spyOn(mapGL, 'Source');
+
+    render(
+      <MapContainer
+        workLat={null}
+        workLng={null}
+        onWorkLocationSelect={vi.fn()}
+        recommendations={recommendations}
+      />
+    );
+
+    // Should still render 2 markers
+    const markers = screen.getAllByTestId('mock-marker');
+    expect(markers).toHaveLength(2);
+
+    // Should render the GeoJSON source
+    const source = screen.getByTestId('mock-source');
+    expect(source).toBeInTheDocument();
+    expect(source).toHaveAttribute('data-source-id', 'locality-polygons');
+
+    // Assert that the Source was called with exactly the expected FeatureCollection
+    expect(sourceSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'locality-polygons',
+        data: expect.objectContaining({
+          type: 'FeatureCollection',
+          features: [
+            expect.objectContaining({
+              type: 'Feature',
+              geometry: {
+                type: 'MultiPolygon',
+                coordinates: [[[[77.5, 12.9], [77.6, 12.9], [77.6, 13.0], [77.5, 13.0], [77.5, 12.9]]]]
+              }
+            })
+          ]
+        })
+      }),
+      undefined
+    );
+
+    // Should render both fill and line layers
+    const layers = screen.getAllByTestId('mock-layer');
+    expect(layers).toHaveLength(2);
+    expect(layers[0]).toHaveAttribute('data-layer-id', 'locality-polygons-fill');
+    expect(layers[1]).toHaveAttribute('data-layer-id', 'locality-polygons-line');
   });
 });
