@@ -133,7 +133,7 @@
       "parent_zone": "North",
       "is_active": true,
       "centroid_wkt": "POINT(77.5919000 13.0382184)",
-      "geometry_source": "osm_polygon",
+      "geometry_source": "osm_point",
       "geometry_confidence": "medium",
       "external_source_id": "relation/19883365",
       "aliases": []
@@ -155,7 +155,7 @@
       "parent_zone": "South-East",
       "is_active": true,
       "centroid_wkt": "POINT(77.6842915 12.9320495)",
-      "geometry_source": "osm_polygon",
+      "geometry_source": "osm_point",
       "geometry_confidence": "medium",
       "external_source_id": "relation/19884585",
       "aliases": [
@@ -170,7 +170,7 @@
       "parent_zone": "East",
       "is_active": true,
       "centroid_wkt": "POINT(77.6984163 12.9552572)",
-      "geometry_source": "osm_polygon",
+      "geometry_source": "osm_point",
       "geometry_confidence": "medium",
       "external_source_id": "relation/19884550",
       "aliases": []
@@ -331,7 +331,7 @@
       "parent_zone": "Central",
       "is_active": true,
       "centroid_wkt": "POINT(77.5914590 12.9921738)",
-      "geometry_source": "osm_polygon",
+      "geometry_source": "osm_point",
       "geometry_confidence": "medium",
       "external_source_id": "relation/19883309",
       "aliases": []
@@ -384,7 +384,7 @@
       "parent_zone": "North",
       "is_active": true,
       "centroid_wkt": "POINT(77.6068938 13.0784743)",
-      "geometry_source": "osm_polygon",
+      "geometry_source": "osm_point",
       "geometry_confidence": "medium",
       "external_source_id": "relation/19883249",
       "aliases": []
@@ -406,7 +406,7 @@
       "parent_zone": "East",
       "is_active": true,
       "centroid_wkt": "POINT(77.6518539 13.0141618)",
-      "geometry_source": "osm_polygon",
+      "geometry_source": "osm_point",
       "geometry_confidence": "medium",
       "external_source_id": "relation/19883482",
       "aliases": []
