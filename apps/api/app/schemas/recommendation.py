@@ -169,6 +169,7 @@ class RecommendationResult(BaseModel):
         None, description="Affordability status if budget constraints were provided"
     )
     explanations: RecommendationExplanations
+    geometry_geojson: dict[str, Any] | None = None
 
 
 class RecommendationProvenance(BaseModel):

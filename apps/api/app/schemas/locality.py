@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import BaseModel
 
 
@@ -40,6 +42,7 @@ class LocalityDetailResponse(BaseModel):
     slug: str
     parent_zone: str | None = None
     centroid: Coordinates
+    geometry_geojson: dict[str, Any] | None = None
     metro: MetroInfo | None = None
     amenities: AmenityCounts
     rent: RentInfo | None = None

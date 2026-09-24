@@ -22,6 +22,7 @@ class CandidateLocality:
     lat: float
     lng: float
     work_distance_km: float
+    geometry_geojson: dict[str, Any] | None = None
     metro_distance_m: float | None = None
     metro_confidence: str | None = None
     metro_extra_data: dict[str, Any] | None = None
@@ -358,6 +359,7 @@ def rank_candidates(
             metadata=metadata,
             affordability=affordability,
             explanations=explanations,
+            geometry_geojson=candidate.geometry_geojson,
         )
 
         if is_forced:

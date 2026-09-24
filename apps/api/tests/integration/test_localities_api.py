@@ -62,7 +62,15 @@ async def setup_locality_data(async_db_session: AsyncSession):
         is_active=False,
         centroid="SRID=4326;POINT(77.65 13.0)",
     )
-    async_db_session.add_all([l1, l2, l_inactive])
+    l_poly = Locality(
+        name="Poly Locality",
+        slug="poly-locality",
+        is_active=True,
+        centroid="SRID=4326;POINT(77.6 13.0)",
+        geometry="SRID=4326;MULTIPOLYGON(((77.5 12.9, 77.6 12.9, "
+        "77.6 13.0, 77.5 13.0, 77.5 12.9)))",
+    )
+    async_db_session.add_all([l1, l2, l_inactive, l_poly])
     await async_db_session.flush()
 
     # Add metrics for A
@@ -163,9 +171,10 @@ async def test_list_localities(async_client: AsyncClient, setup_locality_data):
     response = await async_client.get("/api/v1/localities")
     assert response.status_code == 200
     data = response.json()
-    assert len(data) == 2  # Only active ones
+    assert len(data) == 3  # Only active ones
     assert data[0]["name"] == "A Locality"
     assert data[1]["name"] == "B Locality"
+    assert data[2]["name"] == "Poly Locality"
     assert data[0]["slug"] == "a-locality"
     assert data[0]["parent_zone"] == "Zone A"
 
@@ -181,6 +190,15 @@ async def test_get_locality_detail(async_client: AsyncClient, setup_locality_dat
     assert data["parent_zone"] == "Zone A"
     assert data["centroid"]["lat"] == 12.9716
     assert data["centroid"]["lng"] == 77.5946
+    assert data.get("geometry_geojson") is None
+
+    # Test poly locality
+    response_poly = await async_client.get("/api/v1/localities/poly-locality")
+    assert response_poly.status_code == 200
+    data_poly = response_poly.json()
+    assert data_poly["geometry_geojson"] is not None
+    assert data_poly["geometry_geojson"]["type"] == "MultiPolygon"
+    assert len(data_poly["geometry_geojson"]["coordinates"]) == 1
 
     assert data["metro"]["station_name"] == "MG Road"
     assert data["metro"]["line"] == "Purple"

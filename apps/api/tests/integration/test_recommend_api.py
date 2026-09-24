@@ -41,6 +41,8 @@ async def setup_recommendation_data(async_db_session):
         slug="near-metro",
         is_active=True,
         centroid="SRID=4326;POINT(77.5946 12.9716)",
+        geometry="SRID=4326;MULTIPOLYGON(((77.5 12.9, 77.6 12.9, "
+        "77.6 13.0, 77.5 13.0, 77.5 12.9)))",
     )
     l2 = Locality(
         name="Far Area", slug="far-area", is_active=True, centroid="SRID=4326;POINT(77.65 13.0)"
@@ -93,11 +95,16 @@ async def test_recommend_success_standard(async_client: AsyncClient, setup_recom
     recs = data["recommendations"]
     assert len(recs) == 3
     assert recs[0]["slug"] == "near-metro"
+    assert recs[0].get("geometry_geojson") is not None
+    assert recs[0]["geometry_geojson"]["type"] == "MultiPolygon"
+    assert len(recs[0]["geometry_geojson"]["coordinates"]) == 1
     assert recs[0]["total_score"] == 100.0  # distance is 0, metro is 500
     assert recs[0]["rank"] == 1
     assert recs[1]["slug"] == "no-metro"
+    assert recs[1].get("geometry_geojson") is None
     assert recs[1]["component_scores"]["metro"] is None
     assert recs[2]["slug"] == "far-area"
+    assert recs[2].get("geometry_geojson") is None
 
 
 @pytest.mark.asyncio

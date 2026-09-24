@@ -40,6 +40,7 @@ async def get_locality_by_slug(session: AsyncSession, slug: str) -> LocalityDeta
         Locality.parent_zone,
         func.ST_Y(Locality.centroid).label("lat"),
         func.ST_X(Locality.centroid).label("lng"),
+        func.ST_AsGeoJSON(Locality.geometry).label("geometry_geojson"),
     ).where((Locality.slug == slug) & Locality.is_active)
     result_loc = await session.execute(stmt_loc)
     loc_row = result_loc.first()
@@ -130,6 +131,7 @@ async def get_locality_by_slug(session: AsyncSession, slug: str) -> LocalityDeta
         slug=loc_row.slug,
         parent_zone=loc_row.parent_zone,
         centroid=Coordinates(lat=float(loc_row.lat), lng=float(loc_row.lng)),
+        geometry_geojson=json.loads(loc_row.geometry_geojson) if loc_row.geometry_geojson else None,
         metro=metro,
         amenities=amenities,
         rent=rent,
