@@ -487,4 +487,91 @@ describe("RecommendationWorkspace", () => {
       { history: "replace" }
     );
   });
+
+  describe("Office Days Explanation Refinement", () => {
+    const defaultState = {
+      lat: 12.97,
+      lng: 77.59,
+      max_dist: 15,
+      max_budget_inr: null,
+      bhk_type: null,
+      w_metro: 1,
+      w_work: 1,
+      w_cafe: 1,
+      w_restaurant: 1,
+      w_park: 1,
+      w_healthcare: 1,
+      w_nightlife: 1,
+      loc: null,
+      saved_ids: [],
+      compare_ids: [],
+      days: 5,
+    };
+
+    const renderWithDaysAndCommute = (days: number, w_work: number) => {
+      vi.mocked(urlState.useUrlState).mockReturnValue({
+        state: { ...defaultState, days, w_work },
+        updateState: vi.fn(),
+        getApiRequest: vi.fn(),
+      });
+
+      vi.mocked(recommendations.useRecommendations).mockReturnValue({
+        data: {
+          recommendations: [
+            {
+              locality_id: 1,
+              name: "Test Locality",
+              rank: 1,
+              total_score: 100,
+              score_contributions: {},
+              component_scores: {},
+              raw_metrics: {},
+              metadata: {},
+              affordability: null,
+              explanations: {
+                pros: ["Close to work", "Other pro"],
+                warnings: ["Far from work location", "Other warning"],
+              },
+            } as unknown as RecommendationResult,
+          ],
+          provenance: { calc_versions_used: [] },
+        },
+        loading: false,
+        error: null,
+        isValidating: false,
+        isColdStarting: false,
+        retry: vi.fn(),
+      });
+
+      render(<RecommendationWorkspace />);
+    };
+
+    it("preserves explanation exactly when days=5 and commute is active", () => {
+      renderWithDaysAndCommute(5, 1.0);
+      expect(screen.getByText("Close to work")).toBeInTheDocument();
+      expect(screen.queryByText(/Close to work \(/)).not.toBeInTheDocument();
+    });
+
+    it("appends '(X days/week)' when days < 5 and commute is active", () => {
+      renderWithDaysAndCommute(3, 1.0);
+      expect(screen.getByText("Close to work (3 days/week)")).toBeInTheDocument();
+    });
+
+    it("appends '(1 day/week)' grammatically when days = 1 and commute is active", () => {
+      renderWithDaysAndCommute(1, 1.0);
+      expect(screen.getByText("Close to work (1 day/week)")).toBeInTheDocument();
+    });
+
+    it("completely removes commute explanations when commute is off (w_work=0)", () => {
+      renderWithDaysAndCommute(5, 0.0);
+      expect(screen.queryByText(/Close to work/)).not.toBeInTheDocument();
+      expect(screen.getByText("Other pro")).toBeInTheDocument();
+    });
+
+    it("completely removes commute explanations when fully remote (days=0)", () => {
+      renderWithDaysAndCommute(0, 1.0);
+      expect(screen.queryByText(/Close to work/)).not.toBeInTheDocument();
+      expect(screen.getByText("Other pro")).toBeInTheDocument();
+    });
+  });
 });

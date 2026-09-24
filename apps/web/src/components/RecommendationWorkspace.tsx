@@ -18,8 +18,40 @@ import { MapPin, SlidersHorizontal, Map as MapIcon, X, AlertCircle } from "lucid
 export function RecommendationWorkspace() {
   const { state, updateState, getApiRequest } = useUrlState();
   const request = getApiRequest();
-  const { data, loading, error, isValidating, isColdStarting, retry } =
+  const { data: rawData, loading, error, isValidating, isColdStarting, retry } =
     useRecommendations(request);
+
+  const data = React.useMemo(() => {
+    if (!rawData?.recommendations) return rawData;
+
+    const processedRecommendations = rawData.recommendations.map((r) => {
+      let pros = [...r.explanations.pros];
+      let warnings = [...r.explanations.warnings];
+
+      if (state.w_work === 0 || state.days === 0) {
+        pros = pros.filter((p) => p !== "Close to work");
+        warnings = warnings.filter((w) => w !== "Far from work location");
+      } else if (state.days < 5) {
+        const daysText = state.days === 1 ? "1 day/week" : `${state.days} days/week`;
+        pros = pros.map((p) =>
+          p === "Close to work" ? `Close to work (${daysText})` : p
+        );
+        warnings = warnings.map((w) =>
+          w === "Far from work location" ? `Far from work location (${daysText})` : w
+        );
+      }
+
+      return {
+        ...r,
+        explanations: { pros, warnings }
+      };
+    });
+
+    return {
+      ...rawData,
+      recommendations: processedRecommendations
+    };
+  }, [rawData, state.days, state.w_work]);
   const { isDesktop, mounted } = useIsDesktop();
   const [selectedLocalityId, setSelectedLocalityId] = useState<number | null>(
     null,
