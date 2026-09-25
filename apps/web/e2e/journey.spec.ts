@@ -15,8 +15,8 @@ test.describe('V1 Critical User Journey', () => {
             results: [
               {
                 place_id: 1,
-                lat: 12.9352,
-                lng: 77.6245,
+                lat: 12.9357366,
+                lng: 77.624081,
                 display_name: 'Koramangala, Bengaluru, India',
                 name: 'Koramangala'
               }
@@ -87,8 +87,8 @@ test.describe('V1 Critical User Journey', () => {
       await option.click();
   
       // Step 5: URL should update with coordinates — workspace appears
-      await expect(page).toHaveURL(/lat=12.9352/);
-      await expect(page).toHaveURL(/lng=77.6245/);
+      await expect(page).toHaveURL(/lat=12\.9357/);
+      await expect(page).toHaveURL(/lng=77\.624/);
 
       // Step 6: Workspace should display results
       const resultTitle = page.getByRole('heading', { name: /HSR Layout \(Mock\)/i }).first();
@@ -120,7 +120,7 @@ test.describe('V1 Critical User Journey', () => {
       await expect(shareButton).toHaveText(/Copied/i);
       
       const clipboardText = await page.evaluate<string>('navigator.clipboard.readText()');
-      expect(clipboardText).toContain('lat=12.9352');
+      expect(clipboardText).toContain('lat=12.9357');
       
       // Step 11: Navigate/open using that URL and verify state restoration
       await page.goto(clipboardText);
