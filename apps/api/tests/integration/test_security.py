@@ -338,10 +338,13 @@ def test_rate_limit_client_ip_extraction() -> None:
 def test_proxy_headers_middleware_config_regression() -> None:
     from app.core.config import Settings
 
-    # Prove that the configuration safely sanitizes *
-    # This prevents the vulnerability where ProxyHeadersMiddleware takes the left-most IP
+    # Default is 127.0.0.1
+    default_settings = Settings()
+    assert default_settings.FORWARDED_ALLOW_IPS == "127.0.0.1"
+
+    # Prove that * is explicitly respected
     test_settings = Settings(FORWARDED_ALLOW_IPS="*")
-    assert test_settings.FORWARDED_ALLOW_IPS == "127.0.0.1"
+    assert test_settings.FORWARDED_ALLOW_IPS == "*"
 
     test_settings_2 = Settings(FORWARDED_ALLOW_IPS="1.1.1.1, 2.2.2.2")
     assert test_settings_2.FORWARDED_ALLOW_IPS == ["1.1.1.1", "2.2.2.2"]

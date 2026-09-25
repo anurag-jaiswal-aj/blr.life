@@ -76,8 +76,6 @@ class Settings(BaseSettings):
     @classmethod
     def assemble_forwarded_allow_ips(cls, v: str | list[str]) -> str | list[str]:
         if isinstance(v, str):
-            if v.strip() == "*":
-                return "127.0.0.1"
             if v.startswith("[") and v.endswith("]"):
                 parsed: list[str] = json.loads(v)
                 return parsed
