@@ -1,6 +1,6 @@
 {
   "data_source_key": "blr_life_curated_locality_registry",
-  "source_version": "v2.0",
+  "source_version": "v2.1",
   "notes": "V1 Canonical Bengaluru Localities with verified OSM centroids",
   "localities": [
     {
